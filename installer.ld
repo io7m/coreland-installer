@@ -1,3 +1,4 @@
+installer.o
 open.a
 sstring.a
 syserr.a

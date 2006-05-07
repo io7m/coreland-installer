@@ -1,1 +1,4 @@
 20060504 version: installer-0.1
+20060507 code: don't crash on missing home.
+20060507 code: updated to cpj-genmk-0.6
+20060507 version: installer-0.11

@@ -93,8 +93,6 @@ int install(const struct install_item *it, unsigned int flags)
   struct group *grp;
   struct passwd *pwd;
 
-  if (!it->home) return 0;
-
   if (it->file) {
     buffer_puts(buffer1, "install ");
     buffer_puts(buffer1, it->file);
