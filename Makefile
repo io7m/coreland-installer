@@ -1,5 +1,5 @@
 # auto generated - do not edit
-# cpj-genmk-0.60
+# cpj-genmk-0.70
 
 SHELL=/bin/sh
 default: all
@@ -61,9 +61,12 @@ fmt_u64o.o:\
 get_opt.o:\
 	compile get_opt.c buffer.h get_opt.h 
 	./compile get_opt get_opt.c 
+install_ln.o:\
+	compile install_ln.c install.h open.h str.h syserr.h 
+	./compile install_ln install_ln.c 
 installer.o:\
-	compile installer.c buffer.h error.h fmt.h get_opt.h install.h \
-	open.h read.h sstring.h syserr.h write.h uint64.h 
+	compile installer.c buffer.h error.h fmt.h fsync.h get_opt.h \
+	install.h open.h read.h sstring.h syserr.h write.h uint64.h 
 	./compile installer installer.c 
 instchk.o:\
 	compile instchk.c buffer.h error.h fmt.h install.h open.h read.h \
@@ -106,14 +109,14 @@ syserr_init.o:\
 phase_compile:\
 	bin_copy.o bin_copyr.o buffer1.o buffer2.o buffer_get.o \
 	buffer_put.o error.o error_str.o fmt_u32.o fmt_u32o.o fmt_u64.o \
-	fmt_u64o.o get_opt.o installer.o instchk.o insthier.o open_ro.o \
-	open_trunc.o sstring_0.o sstring_catb.o sstring_cats.o \
+	fmt_u64o.o get_opt.o install_ln.o installer.o instchk.o insthier.o \
+	open_ro.o open_trunc.o sstring_0.o sstring_catb.o sstring_cats.o \
 	sstring_chop.o sstring_trunc.o str_len.o syserr_die.o syserr_init.o 
 phase_compile_clean:
 	rm -f bin_copy.o bin_copyr.o buffer1.o buffer2.o buffer_get.o \
 	buffer_put.o error.o error_str.o fmt_u32.o fmt_u32o.o fmt_u64.o \
-	fmt_u64o.o get_opt.o installer.o instchk.o insthier.o open_ro.o \
-	open_trunc.o sstring_0.o sstring_catb.o sstring_cats.o \
+	fmt_u64o.o get_opt.o install_ln.o installer.o instchk.o insthier.o \
+	open_ro.o open_trunc.o sstring_0.o sstring_catb.o sstring_cats.o \
 	sstring_chop.o sstring_trunc.o str_len.o syserr_die.o syserr_init.o 
 
 #--LIBRARY--------------------------------------------------------------------
@@ -161,15 +164,15 @@ phase_library_clean:
 #--LINK-----------------------------------------------------------------------
 
 installer:\
-	link installer.ld installer.o open.a sstring.a syserr.a get_opt.a \
-	insthier.a fmt.a buffer.a str.a bin.a error.a 
-	./link installer installer.o open.a sstring.a syserr.a get_opt.a \
-	insthier.a fmt.a buffer.a str.a bin.a error.a 
+	link installer.ld installer.o install_ln.o open.a sstring.a \
+	syserr.a get_opt.a insthier.a fmt.a buffer.a str.a bin.a error.a 
+	./link installer installer.o install_ln.o open.a sstring.a syserr.a \
+	get_opt.a insthier.a fmt.a buffer.a str.a bin.a error.a 
 instchk:\
-	link instchk.ld instchk.o open.a sstring.a syserr.a get_opt.a \
-	insthier.a fmt.a buffer.a str.a bin.a error.a 
-	./link instchk instchk.o open.a sstring.a syserr.a get_opt.a \
-	insthier.a fmt.a buffer.a str.a bin.a error.a 
+	link instchk.ld instchk.o install_ln.o open.a sstring.a syserr.a \
+	get_opt.a insthier.a fmt.a buffer.a str.a bin.a error.a 
+	./link instchk instchk.o install_ln.o open.a sstring.a syserr.a \
+	get_opt.a insthier.a fmt.a buffer.a str.a bin.a error.a 
 
 phase_link:\
 	installer instchk 
@@ -189,17 +192,19 @@ sysdep_clean:
 
 #--TOOLS----------------------------------------------------------------------
 
-mkftools: compile makelib makeso link 
+mkftools: compile makelib sosuffix makeso link 
 compile: conf-shebang conf-cc make-compile 
 	(cat conf-shebang; ./make-compile) > compile; chmod u+x compile;
 link: conf-shebang conf-ld make-link 
 	(cat conf-shebang; ./make-link) > link; chmod u+x link;
 makelib: conf-shebang make-makelib 
 	(cat conf-shebang; ./make-makelib) > makelib; chmod u+x makelib;
-makeso: conf-shebang make-makeso 
+makeso: conf-shebang sosuffix make-makeso 
 	(cat conf-shebang; ./make-makeso) > makeso; chmod u+x makeso;
+sosuffix: conf-shebang make-sosuffix 
+	(cat conf-shebang; ./make-sosuffix) > sosuffix; chmod u+x sosuffix;
 mkftools_clean: 
-	 rm -f compile makelib makeso link 
+	 rm -f compile makelib makeso sosuffix link 
 regen:
 	cpj-genmk > Makefile.tmp
 	mv Makefile.tmp Makefile

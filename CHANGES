@@ -2,3 +2,8 @@
 20060507 code: don't crash on missing home.
 20060507 code: updated to cpj-genmk-0.6
 20060507 version: installer-0.11
+20060512 code: updated to cpj-genmk-0.7
+20060512 code: installer and instchk now have a very basic
+               knowledge of coreproject .lib files.
+20060512 version: installer-0.12
+

@@ -6,6 +6,7 @@
 #include "buffer.h"
 #include "error.h"
 #include "fmt.h"
+#include "fsync.h"
 #include "get_opt.h"
 #include "install.h"
 #include "open.h"
@@ -20,10 +21,12 @@ extern int rename(const char *, const char *);
 extern const struct install_item insthier[];
 extern const unsigned int insthier_size;
 
+static char fbuf3[1024];
 static char fbuf2[1024];
 static char fbuf1[1024];
 static sstring file1 = sstring_INIT(fbuf1);
-static sstring tmpfile = sstring_INIT(fbuf2);
+static sstring file2 = sstring_INIT(fbuf2);
+static sstring tmpfile = sstring_INIT(fbuf3);
 
 static char bbuf1[4096];
 static char bbuf2[4096];
@@ -93,9 +96,15 @@ int install(const struct install_item *it, unsigned int flags)
   struct group *grp;
   struct passwd *pwd;
 
+  sstring_trunc(&file2);
+
   if (it->file) {
+    sstring_cats(&file2, it->file);
+    sstring_0(&file2);
+    if (str_ends(it->file, ".lib"))
+      if (!install_libname(&file2)) return 0;
     buffer_puts(buffer1, "install ");
-    buffer_puts(buffer1, it->file);
+    buffer_puts(buffer1, file2.s);
     buffer_puts(buffer1, " ");
   } else {
     buffer_puts(buffer1, "mkdir ");
@@ -103,9 +112,9 @@ int install(const struct install_item *it, unsigned int flags)
 
   buffer_puts(buffer1, it->home);
 
-  if (it->file) {
+  if (file2.len) {
     buffer_puts(buffer1, "/");
-    buffer_puts(buffer1, it->file);
+    buffer_puts(buffer1, file2.s);
   }
 
   buffer_puts(buffer1, " ");
@@ -145,11 +154,11 @@ int install(const struct install_item *it, unsigned int flags)
   sstring_trunc(&file1);
   sstring_cats(&file1, it->home);
 
-  if (it->file) {
+  if (file2.len) {
     sstring_cats(&file1, "/");
-    sstring_cats(&file1, it->file);
+    sstring_cats(&file1, file2.s);
     sstring_0(&file1);
-    return copy(it->file, file1.s, uid, gid, it->perm);
+    return copy(file2.s, file1.s, uid, gid, it->perm);
   } else {
     if (mkdir(it->home, it->perm) == -1) {
       syserr_warn3sys("error: mkdir: ", it->home, " - "); return 0;

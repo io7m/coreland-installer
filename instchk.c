@@ -17,9 +17,11 @@
 extern const struct install_item insthier[];
 extern const unsigned int insthier_size;
 
-static char fbuf[1024];
-static sstring file = sstring_INIT(fbuf);
-static int install_ok = 1;
+static char fbuf1[1024];
+static char fbuf2[1024];
+static sstring file1 = sstring_INIT(fbuf1);
+static sstring file2 = sstring_INIT(fbuf2);
+static unsigned int install_bad = 0;
 
 const char progname[] = "instchk";
 
@@ -34,14 +36,18 @@ int install_check(const struct install_item *it)
   struct passwd *pwd;
   int fd;
 
-  if (!it->home) return 0;
-
   buffer_puts(buffer1, "check ");
   buffer_puts(buffer1, it->home);
 
+  sstring_trunc(&file2);
+
   if (it->file) {
+    sstring_cats(&file2, it->file);
+    sstring_0(&file2);
+    if (str_ends(file2.s, ".lib"))
+      if (!install_libname(&file2)) return 0;
     buffer_puts(buffer1, "/");
-    buffer_puts(buffer1, it->file);
+    buffer_puts(buffer1, file2.s);
   }
 
   buffer_puts(buffer1, " ");
@@ -76,48 +82,48 @@ int install_check(const struct install_item *it)
   }
   gid = grp->gr_gid;
 
-  sstring_trunc(&file);
-  sstring_cats(&file, it->home);
-  if (it->file) {
-    sstring_cats(&file, "/");
-    sstring_cats(&file, it->file);
+  sstring_trunc(&file1);
+  sstring_cats(&file1, it->home);
+  if (file2.len) {
+    sstring_cats(&file1, "/");
+    sstring_cats(&file1, file2.s);
   }
-  sstring_0(&file);
+  sstring_0(&file1);
 
-  fd = open_ro(file.s);
+  fd = open_ro(file1.s);
   if (fd == -1) {
-    install_ok = 0; syserr_warn3sys("error: open: ", file.s, " - "); return 0;
+    ++install_bad; syserr_warn3sys("error: open: ", file1.s, " - "); return 0;
   }
   /* fstat failing is unlikely to be an install error */
   if (fstat(fd, &sb)) {
-    syserr_warn3sys("error: fstat: ", file.s, " - "); goto ERR;
+    syserr_warn3sys("error: fstat: ", file1.s, " - "); goto ERR;
   }
 
   if (uid != sb.st_uid) {
     cnum[fmt_u64o(cnum, sb.st_uid)] = 0;
     cnum2[fmt_u64o(cnum2, uid)] = 0;
     syserr_warn4x("error: file uid ", cnum, " does not match expected uid ", cnum2);
-    install_ok = 0;
+    ++install_bad;
     goto ERR;
   }
   if (gid != sb.st_gid) {
     cnum[fmt_u64o(cnum, sb.st_gid)] = 0;
     cnum2[fmt_u64o(cnum2, gid)] = 0;
     syserr_warn4x("error: file gid ", cnum, " does not match expected gid ", cnum2);
-    install_ok = 0;
+    ++install_bad;
     goto ERR;
   }
 
   if (it->file) {
     if ((sb.st_mode & S_IFMT) != S_IFREG) {
-      syserr_warn3x("error: ", file.s, " is not a regular file");
-      install_ok = 0;
+      syserr_warn3x("error: ", file1.s, " is not a regular file");
+      ++install_bad;
       goto ERR;
     }
   } else {
     if ((sb.st_mode & S_IFMT) != S_IFDIR) {
-      syserr_warn3x("error: ", file.s, " is not a directory");
-      install_ok = 0;
+      syserr_warn3x("error: ", file1.s, " is not a directory");
+      ++install_bad;
       goto ERR;
     }
   }
@@ -126,7 +132,7 @@ int install_check(const struct install_item *it)
     cnum[fmt_u64o(cnum, sb.st_mode & 07777)] = 0;
     cnum2[fmt_u64o(cnum2, it->perm)] = 0;
     syserr_warn4x("error: file mode ", cnum, " does not match expected mode ", cnum2);
-    install_ok = 0;
+    ++install_bad;
     goto ERR;
   }
 
@@ -144,15 +150,27 @@ int install_check(const struct install_item *it)
 
 int main()
 {
+  char cnum[FMT_UINT32];
+  char cnum2[FMT_UINT32];
   unsigned int ind;
 
   for (ind = 0; ind < insthier_size; ++ind)
     install_check(&insthier[ind]);    
 
-  if (!install_ok)
-    buffer_puts(buffer1, "One or more files were incorrectly installed.\n");
-  else
+  if (install_bad) {
+    if (install_bad == insthier_size) {
+      buffer_puts(buffer1, "None of the files were correctly installed!\n");
+    } else {
+      cnum[fmt_u32(cnum, install_bad)] = 0;
+      cnum2[fmt_u32(cnum2, insthier_size)] = 0;
+      buffer_puts(buffer1, cnum);
+      buffer_puts(buffer1, " out of ");
+      buffer_puts(buffer1, cnum2);
+      buffer_puts(buffer1, " files were incorrectly installed.\n");
+    }
+  } else {
     buffer_puts(buffer1, "All files were correctly installed.\n");
+  }
 
   if (buffer_flush(buffer1) == -1) syserr_die1sys(112, "fatal: write: ");
   return 0;
