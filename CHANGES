@@ -6,4 +6,4 @@
 20060512 code: installer and instchk now have a very basic
                knowledge of coreproject .lib files.
 20060512 version: installer-0.12
-
+20060513 code: rename() bug fix
