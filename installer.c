@@ -66,7 +66,7 @@ static int copy(const char *from, const char *to, uint64 uid, uint64 gid,
   if (fsync(bout.fd) == -1) { syserr_warn1sys("error: fsync: "); goto ERR; }
   if (fchmod(bout.fd, perm)) { syserr_warn1sys("error: fchmod: "); goto ERR; }
   if (fchown(bout.fd, uid, gid)) { syserr_warn1sys("error: fchown: "); goto ERR; }
-  if (rename(to, tmpfile.s)) { syserr_warn1sys("error: rename: "); goto ERR; }
+  if (rename(tmpfile.s, to)) { syserr_warn1sys("error: rename: "); goto ERR; }
   if (close(bin.fd) == -1) syserr_warn1sys("error: close: ");
   if (close(bout.fd) == -1) syserr_warn1sys("error: close: ");
   bin.fd = -1;
