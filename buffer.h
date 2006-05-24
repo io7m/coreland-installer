@@ -4,29 +4,27 @@
 #define BUFFER_OUTSIZE 8192
 #define BUFFER_INSIZE 8192
 
-#include "uint32.h"
-
 typedef struct {
   char *buf;
-  uint32 pos;
-  uint32 size;
+  unsigned int pos;
+  unsigned int size;
   int fd;
   int (*op)(int, char *, unsigned int);
 } buffer;
 
 #define buffer_INIT(op,fd,buf,len) { (buf), 0, (len), (fd), (op) }
 
-void buffer_init(buffer *, int (*)(), int, char *, uint32);
+void buffer_init(buffer *, int (*)(), int, char *, unsigned int);
 
-int buffer_get(buffer *, char *, uint32);
+int buffer_get(buffer *, char *, unsigned int);
 int buffer_feed(buffer *);
 char *buffer_peek(buffer *);
-void  buffer_seek(buffer *, uint32);
+void  buffer_seek(buffer *, unsigned int);
 
 int buffer_flush(buffer *);
-int buffer_put(buffer *, const char *, uint32);
+int buffer_put(buffer *, const char *, unsigned int);
 int buffer_puts(buffer *, const char *);
-int buffer_putflush(buffer *, const char *, uint32);
+int buffer_putflush(buffer *, const char *, unsigned int);
 int buffer_putsflush(buffer *, const char *);
 
 int buffer_copy(buffer *, buffer *);

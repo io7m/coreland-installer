@@ -1,5 +1,7 @@
+#include "close.h"
 #include "install.h"
 #include "open.h"
+#include "read.h"
 #include "str.h"
 #include "syserr.h"
 

@@ -2,10 +2,9 @@
 #include "buffer.h"
 #include "error.h"
 #include "str.h"
-#include "uint32.h"
 
 static int write_all(int (*op)(int, char *, unsigned int),
-                     int fd, const char *s, uint32 len)
+                     int fd, const char *s, unsigned int len)
 {
   int w;
   int (*cop)(int, const char *, unsigned int);
@@ -34,9 +33,9 @@ int buffer_flush(buffer *b)
   return write_all(b->op, b->fd, b->buf, pos);
 }
 
-int buffer_put(buffer *b, const char *s, uint32 len)
+int buffer_put(buffer *b, const char *s, unsigned int len)
 {
-  uint32 n;
+  unsigned int n;
 
   n = b->size;
   if (len > n - b->pos) {
@@ -54,9 +53,9 @@ int buffer_put(buffer *b, const char *s, uint32 len)
   return 0;
 }
 
-int buffer_putalign(buffer *b, const char *s, uint32 len)
+int buffer_putalign(buffer *b, const char *s, unsigned int len)
 {
-  uint32 n;
+  unsigned int n;
 
   while (len > (n = b->size - b->pos)) {
     bin_copy(s, b->buf + b->pos, n);
@@ -80,7 +79,7 @@ int buffer_putsalign(buffer *b, const char *s)
   return buffer_putalign(b, s, str_len(s));
 }
 
-int buffer_putflush(buffer *b, const char *s, uint32 len)
+int buffer_putflush(buffer *b, const char *s, unsigned int len)
 {
   if (buffer_flush(b) == -1) return -1;
   return write_all(b->op, b->fd, s, len);

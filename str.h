@@ -8,8 +8,8 @@ unsigned int str_ncopy(const char *, char *, unsigned int);
 int str_chr(const char *, int);
 int str_rchr(const char *, int);
 
-unsigned int str_same(const char *, const char *);
-  signed int str_diff(const char *, const char *);
+int str_diff(const char *, const char *);
+int str_ndiff(const char *, const char *, unsigned int);
 
 void str_toupper(char *);
 void str_tolower(char *);
@@ -18,5 +18,7 @@ int str_dup(const char *, char **);
 int str_ends(const char *, const char *);
 int str_starts(const char *, const char *);
 
-#endif
+#define str_same(s,t) (str_diff((s),(t)) == 0)
+#define str_nsame(s,t,n) (str_ndiff((s),(t),(n)) == 0)
 
+#endif

@@ -1,10 +1,9 @@
 #include "bin.h"
 #include "buffer.h"
 #include "error.h"
-#include "uint32.h"
 
 static int single_read(int (*op)(int, char *, unsigned int),
-                       int fd, char *buf, uint32 len)
+                       int fd, char *buf, unsigned int len)
 {
   int r;
 
@@ -16,7 +15,7 @@ static int single_read(int (*op)(int, char *, unsigned int),
   }
 }
 
-static int get_this(buffer *b, char *s, uint32 len)
+static int get_this(buffer *b, char *s, unsigned int len)
 {
   if (len > b->pos) len = b->pos;
   b->pos -= len;
@@ -38,7 +37,7 @@ int buffer_feed(buffer *b)
   return r;
 }
 
-int buffer_get(buffer *b, char *s, uint32 len)
+int buffer_get(buffer *b, char *s, unsigned int len)
 {
   int r;
  
@@ -54,7 +53,7 @@ char* buffer_peek(buffer *b)
   return b->buf + b->size;
 }
 
-void buffer_seek(buffer *b, uint32 len)
+void buffer_seek(buffer *b, unsigned int len)
 {
   b->size += len;
   b->pos -= len;
