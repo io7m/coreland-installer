@@ -43,9 +43,15 @@ error_str.o:\
 fmt_uint.o:\
 	compile fmt_uint.c fmt.h 
 	./compile fmt_uint fmt_uint.c 
+fmt_uinto.o:\
+	compile fmt_uinto.c fmt.h 
+	./compile fmt_uinto fmt_uinto.c 
 fmt_ulong.o:\
 	compile fmt_ulong.c fmt.h 
 	./compile fmt_ulong fmt_ulong.c 
+fmt_ulongo.o:\
+	compile fmt_ulongo.c fmt.h fmt.h 
+	./compile fmt_ulongo fmt_ulongo.c 
 get_opt.o:\
 	compile get_opt.c buffer.h get_opt.h 
 	./compile get_opt get_opt.c 
@@ -106,18 +112,18 @@ syserr_init.o:\
 
 phase_compile:\
 	bin_copy.o bin_copyr.o buffer1.o buffer2.o buffer_get.o \
-	buffer_put.o error.o error_str.o fmt_uint.o fmt_ulong.o get_opt.o \
-	install_ln.o installer.o instchk.o insthier.o open_ro.o open_trunc.o \
-	sstring_0.o sstring_catb.o sstring_cats.o sstring_chop.o \
-	sstring_trunc.o str_diff.o str_ends.o str_len.o str_rchr.o \
-	syserr_die.o syserr_init.o 
+	buffer_put.o error.o error_str.o fmt_uint.o fmt_uinto.o fmt_ulong.o \
+	fmt_ulongo.o get_opt.o install_ln.o installer.o instchk.o insthier.o \
+	open_ro.o open_trunc.o sstring_0.o sstring_catb.o sstring_cats.o \
+	sstring_chop.o sstring_trunc.o str_diff.o str_ends.o str_len.o \
+	str_rchr.o syserr_die.o syserr_init.o 
 phase_compile_clean:
 	rm -f bin_copy.o bin_copyr.o buffer1.o buffer2.o buffer_get.o \
-	buffer_put.o error.o error_str.o fmt_uint.o fmt_ulong.o get_opt.o \
-	install_ln.o installer.o instchk.o insthier.o open_ro.o open_trunc.o \
-	sstring_0.o sstring_catb.o sstring_cats.o sstring_chop.o \
-	sstring_trunc.o str_diff.o str_ends.o str_len.o str_rchr.o \
-	syserr_die.o syserr_init.o 
+	buffer_put.o error.o error_str.o fmt_uint.o fmt_uinto.o fmt_ulong.o \
+	fmt_ulongo.o get_opt.o install_ln.o installer.o instchk.o insthier.o \
+	open_ro.o open_trunc.o sstring_0.o sstring_catb.o sstring_cats.o \
+	sstring_chop.o sstring_trunc.o str_diff.o str_ends.o str_len.o \
+	str_rchr.o syserr_die.o syserr_init.o 
 
 #--LIBRARY--------------------------------------------------------------------
 
@@ -131,8 +137,8 @@ error.a:\
 	makelib error.sld error.o error_str.o 
 	./makelib error error.o error_str.o 
 fmt.a:\
-	makelib fmt.sld fmt_uint.o fmt_ulong.o 
-	./makelib fmt fmt_uint.o fmt_ulong.o 
+	makelib fmt.sld fmt_uint.o fmt_uinto.o fmt_ulong.o fmt_ulongo.o 
+	./makelib fmt fmt_uint.o fmt_uinto.o fmt_ulong.o fmt_ulongo.o 
 get_opt.a:\
 	makelib get_opt.sld get_opt.o 
 	./makelib get_opt get_opt.o 
