@@ -3,17 +3,11 @@
 
 SHELL=/bin/sh
 default: all
-all: phase_sysdeps phase_tools phase_compile phase_library \
-	phase_link 
+all: phase_tools phase_compile phase_library phase_link 
 
-clean: phase_sysdeps_clean phase_tools_clean phase_compile_clean \
-	phase_library_clean phase_link_clean 
+clean: phase_tools_clean phase_compile_clean phase_library_clean \
+	phase_link_clean 
 
-
-#--SYSDEPS--------------------------------------------------------------------
-
-phase_sysdeps: sysdeps
-phase_sysdeps_clean: sysdeps_clean
 
 #--TOOLS----------------------------------------------------------------------
 
@@ -184,17 +178,6 @@ phase_link:\
 	installer instchk 
 phase_link_clean:
 	rm -f installer instchk 
-
-#--SYSDEPS-TARGET-------------------------------------------------------------
-
-sysdeps: sysdeps.out
-sysdeps_clean: sysdep_clean
-sysdeps.out:
-	SYSDEPS/sysdep-header sysdeps.out
-	(cd SYSDEPS && make )
-sysdep_clean:
-	(cd SYSDEPS && make clean)
-	rm -f sysdeps.out
 
 #--TOOLS----------------------------------------------------------------------
 
