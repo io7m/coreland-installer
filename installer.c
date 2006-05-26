@@ -6,7 +6,6 @@
 #include "buffer.h"
 #include "error.h"
 #include "fmt.h"
-#include "fsync.h"
 #include "get_opt.h"
 #include "install.h"
 #include "open.h"
@@ -15,9 +14,9 @@
 #include "sstring.h"
 #include "syserr.h"
 #include "write.h"
-#include "uint64.h"
 
 extern int rename(const char *, const char *);
+extern int fsync(int);
 
 extern const struct install_item insthier[];
 extern const unsigned int insthier_size;
@@ -36,8 +35,8 @@ static buffer bout = buffer_INIT(write, -1, bbuf2, sizeof(bbuf2));
 
 const char progname[] = "install";
 
-static int copy(const char *from, const char *to, uint64 uid, uint64 gid,
-                unsigned int perm)
+static int copy(const char *from, const char *to,
+                unsigned int uid, unsigned int gid, unsigned int perm)
 {
   char *s;
   int r;
@@ -91,9 +90,9 @@ static int copy(const char *from, const char *to, uint64 uid, uint64 gid,
 
 int install(const struct install_item *it, unsigned int flags)
 {
-  char cnum[FMT_UINT64ANY];
-  uint64 uid;
-  uint64 gid;
+  char cnum[FMT_ULONG];
+  unsigned int uid;
+  unsigned int gid;
   struct group *grp;
   struct passwd *pwd;
 
@@ -123,7 +122,7 @@ int install(const struct install_item *it, unsigned int flags)
   buffer_puts(buffer1, ":");
   buffer_puts(buffer1, it->group);
   buffer_puts(buffer1, " ");
-  cnum[fmt_u64o(cnum, (uint64) it->perm)] = 0;
+  cnum[fmt_uinto(cnum, it->perm)] = 0;
   buffer_puts(buffer1, cnum);
   buffer_puts(buffer1, "\n");
   buffer_flush(buffer1);

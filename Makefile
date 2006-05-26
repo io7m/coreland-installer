@@ -35,10 +35,10 @@ buffer2.o:\
 	compile buffer2.c buffer.h write.h 
 	./compile buffer2 buffer2.c 
 buffer_get.o:\
-	compile buffer_get.c bin.h buffer.h error.h uint32.h 
+	compile buffer_get.c bin.h buffer.h error.h 
 	./compile buffer_get buffer_get.c 
 buffer_put.o:\
-	compile buffer_put.c bin.h buffer.h error.h str.h uint32.h 
+	compile buffer_put.c bin.h buffer.h error.h str.h 
 	./compile buffer_put buffer_put.c 
 error.o:\
 	compile error.c error.h 
@@ -46,31 +46,26 @@ error.o:\
 error_str.o:\
 	compile error_str.c error.h 
 	./compile error_str error_str.c 
-fmt_u32.o:\
-	compile fmt_u32.c fmt.h 
-	./compile fmt_u32 fmt_u32.c 
-fmt_u32o.o:\
-	compile fmt_u32o.c fmt.h 
-	./compile fmt_u32o fmt_u32o.c 
-fmt_u64.o:\
-	compile fmt_u64.c fmt.h uint64.h 
-	./compile fmt_u64 fmt_u64.c 
-fmt_u64o.o:\
-	compile fmt_u64o.c fmt.h uint64.h 
-	./compile fmt_u64o fmt_u64o.c 
+fmt_uint.o:\
+	compile fmt_uint.c fmt.h 
+	./compile fmt_uint fmt_uint.c 
+fmt_ulong.o:\
+	compile fmt_ulong.c fmt.h 
+	./compile fmt_ulong fmt_ulong.c 
 get_opt.o:\
 	compile get_opt.c buffer.h get_opt.h 
 	./compile get_opt get_opt.c 
 install_ln.o:\
-	compile install_ln.c install.h open.h str.h syserr.h 
+	compile install_ln.c close.h install.h open.h read.h str.h \
+	sstring.h syserr.h 
 	./compile install_ln install_ln.c 
 installer.o:\
-	compile installer.c buffer.h error.h fmt.h fsync.h get_opt.h \
-	install.h open.h read.h sstring.h syserr.h write.h uint64.h 
+	compile installer.c buffer.h error.h fmt.h get_opt.h install.h \
+	open.h read.h str.h sstring.h syserr.h write.h 
 	./compile installer installer.c 
 instchk.o:\
 	compile instchk.c buffer.h error.h fmt.h install.h open.h read.h \
-	sstring.h syserr.h write.h uint64.h 
+	str.h sstring.h syserr.h write.h 
 	./compile instchk instchk.c 
 insthier.o:\
 	compile insthier.c install.h 
@@ -96,9 +91,18 @@ sstring_chop.o:\
 sstring_trunc.o:\
 	compile sstring_trunc.c sstring.h 
 	./compile sstring_trunc sstring_trunc.c 
+str_diff.o:\
+	compile str_diff.c str.h 
+	./compile str_diff str_diff.c 
+str_ends.o:\
+	compile str_ends.c str.h 
+	./compile str_ends str_ends.c 
 str_len.o:\
 	compile str_len.c str.h 
 	./compile str_len str_len.c 
+str_rchr.o:\
+	compile str_rchr.c str.h 
+	./compile str_rchr str_rchr.c 
 syserr_die.o:\
 	compile syserr_die.c buffer.h exit.h syserr.h 
 	./compile syserr_die syserr_die.c 
@@ -108,16 +112,18 @@ syserr_init.o:\
 
 phase_compile:\
 	bin_copy.o bin_copyr.o buffer1.o buffer2.o buffer_get.o \
-	buffer_put.o error.o error_str.o fmt_u32.o fmt_u32o.o fmt_u64.o \
-	fmt_u64o.o get_opt.o install_ln.o installer.o instchk.o insthier.o \
-	open_ro.o open_trunc.o sstring_0.o sstring_catb.o sstring_cats.o \
-	sstring_chop.o sstring_trunc.o str_len.o syserr_die.o syserr_init.o 
+	buffer_put.o error.o error_str.o fmt_uint.o fmt_ulong.o get_opt.o \
+	install_ln.o installer.o instchk.o insthier.o open_ro.o open_trunc.o \
+	sstring_0.o sstring_catb.o sstring_cats.o sstring_chop.o \
+	sstring_trunc.o str_diff.o str_ends.o str_len.o str_rchr.o \
+	syserr_die.o syserr_init.o 
 phase_compile_clean:
 	rm -f bin_copy.o bin_copyr.o buffer1.o buffer2.o buffer_get.o \
-	buffer_put.o error.o error_str.o fmt_u32.o fmt_u32o.o fmt_u64.o \
-	fmt_u64o.o get_opt.o install_ln.o installer.o instchk.o insthier.o \
-	open_ro.o open_trunc.o sstring_0.o sstring_catb.o sstring_cats.o \
-	sstring_chop.o sstring_trunc.o str_len.o syserr_die.o syserr_init.o 
+	buffer_put.o error.o error_str.o fmt_uint.o fmt_ulong.o get_opt.o \
+	install_ln.o installer.o instchk.o insthier.o open_ro.o open_trunc.o \
+	sstring_0.o sstring_catb.o sstring_cats.o sstring_chop.o \
+	sstring_trunc.o str_diff.o str_ends.o str_len.o str_rchr.o \
+	syserr_die.o syserr_init.o 
 
 #--LIBRARY--------------------------------------------------------------------
 
@@ -131,8 +137,8 @@ error.a:\
 	makelib error.sld error.o error_str.o 
 	./makelib error error.o error_str.o 
 fmt.a:\
-	makelib fmt.sld fmt_u32.o fmt_u32o.o fmt_u64.o fmt_u64o.o 
-	./makelib fmt fmt_u32.o fmt_u32o.o fmt_u64.o fmt_u64o.o 
+	makelib fmt.sld fmt_uint.o fmt_ulong.o 
+	./makelib fmt fmt_uint.o fmt_ulong.o 
 get_opt.a:\
 	makelib get_opt.sld get_opt.o 
 	./makelib get_opt get_opt.o 
@@ -148,8 +154,8 @@ sstring.a:\
 	./makelib sstring sstring_0.o sstring_catb.o sstring_cats.o \
 	sstring_chop.o sstring_trunc.o 
 str.a:\
-	makelib str.sld str_len.o 
-	./makelib str str_len.o 
+	makelib str.sld str_ends.o str_diff.o str_len.o str_rchr.o 
+	./makelib str str_ends.o str_diff.o str_len.o str_rchr.o 
 syserr.a:\
 	makelib syserr.sld syserr_die.o syserr_init.o 
 	./makelib syserr syserr_die.o syserr_init.o 

@@ -13,7 +13,6 @@
 #include "sstring.h"
 #include "syserr.h"
 #include "write.h"
-#include "uint64.h"
 
 extern const struct install_item insthier[];
 extern const unsigned int insthier_size;
@@ -28,10 +27,10 @@ const char progname[] = "instchk";
 
 int install_check(const struct install_item *it)
 {
-  char cnum[FMT_UINT64ANY];
-  char cnum2[FMT_UINT64ANY];
-  uint64 uid;
-  uint64 gid;
+  char cnum[FMT_ULONG];
+  char cnum2[FMT_ULONG];
+  unsigned int uid;
+  unsigned int gid;
   struct stat sb;
   struct group *grp;
   struct passwd *pwd;
@@ -56,7 +55,7 @@ int install_check(const struct install_item *it)
   buffer_puts(buffer1, ":");
   buffer_puts(buffer1, it->group);
   buffer_puts(buffer1, " ");
-  cnum[fmt_u64o(cnum, (uint64) it->perm)] = 0;
+  cnum[fmt_uinto(cnum, it->perm)] = 0;
   buffer_puts(buffer1, cnum);
   buffer_puts(buffer1, "\n");
   buffer_flush(buffer1);
@@ -101,15 +100,15 @@ int install_check(const struct install_item *it)
   }
 
   if (uid != sb.st_uid) {
-    cnum[fmt_u64o(cnum, sb.st_uid)] = 0;
-    cnum2[fmt_u64o(cnum2, uid)] = 0;
+    cnum[fmt_ulongo(cnum, sb.st_uid)] = 0;
+    cnum2[fmt_ulongo(cnum2, uid)] = 0;
     syserr_warn4x("error: file uid ", cnum, " does not match expected uid ", cnum2);
     ++install_bad;
     goto ERR;
   }
   if (gid != sb.st_gid) {
-    cnum[fmt_u64o(cnum, sb.st_gid)] = 0;
-    cnum2[fmt_u64o(cnum2, gid)] = 0;
+    cnum[fmt_ulongo(cnum, sb.st_gid)] = 0;
+    cnum2[fmt_ulongo(cnum2, gid)] = 0;
     syserr_warn4x("error: file gid ", cnum, " does not match expected gid ", cnum2);
     ++install_bad;
     goto ERR;
@@ -129,9 +128,9 @@ int install_check(const struct install_item *it)
     }
   }
 
-  if ((uint64) (sb.st_mode & 07777) != it->perm) {
-    cnum[fmt_u64o(cnum, sb.st_mode & 07777)] = 0;
-    cnum2[fmt_u64o(cnum2, it->perm)] = 0;
+  if ((sb.st_mode & 07777) != it->perm) {
+    cnum[fmt_ulongo(cnum, sb.st_mode & 07777)] = 0;
+    cnum2[fmt_ulongo(cnum2, it->perm)] = 0;
     syserr_warn4x("error: file mode ", cnum, " does not match expected mode ", cnum2);
     ++install_bad;
     goto ERR;
@@ -151,8 +150,8 @@ int install_check(const struct install_item *it)
 
 int main()
 {
-  char cnum[FMT_UINT32];
-  char cnum2[FMT_UINT32];
+  char cnum[FMT_ULONG];
+  char cnum2[FMT_ULONG];
   unsigned int ind;
 
   for (ind = 0; ind < insthier_size; ++ind)
@@ -162,8 +161,8 @@ int main()
     if (install_bad == insthier_size) {
       buffer_puts(buffer1, "None of the files were correctly installed!\n");
     } else {
-      cnum[fmt_u32(cnum, install_bad)] = 0;
-      cnum2[fmt_u32(cnum2, insthier_size)] = 0;
+      cnum[fmt_uint(cnum, install_bad)] = 0;
+      cnum2[fmt_uint(cnum2, insthier_size)] = 0;
       buffer_puts(buffer1, cnum);
       buffer_puts(buffer1, " out of ");
       buffer_puts(buffer1, cnum2);

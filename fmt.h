@@ -1,35 +1,34 @@
 #ifndef FMT_H
 #define FMT_H
 
-#define FMT_UINT32 11
-#define FMT_UINT32O 14 + 2
-#define FMT_UINT32X (FMT_UINT32 + 2)
-#define FMT_UINT32ANY 16
+#define FMT_ULONGLONG 128 /* (2 ^ 256) digits rounded up to npow2 */
+#define FMT_ULONG 40
+#define FMT_LEN ((char *) 0)
 
-#define FMT_UINT64 21
-#define FMT_UINT64O 24 + 2
-#define FMT_UINT64X (FMT_UINT64 + 2)
-#define FMT_UINT64ANY 32
+unsigned int fmt_ulong(char *, unsigned long);
+unsigned int fmt_ulongx(char *, unsigned long);
+unsigned int fmt_ulongo(char *, unsigned long);
 
-#define FMT_BYTE 4
-#define FMT_BYTEO 4 + 2
-#define FMT_BYTEX (FMT_BYTE + 2)
-#define FMT_BYTEANY 8
+unsigned int fmt_uint(char *, unsigned int);
+unsigned int fmt_uintx(char *, unsigned int);
+unsigned int fmt_uinto(char *, unsigned int);
 
-#include "uint32.h"
+unsigned int fmt_ushort(char *, unsigned short);
+unsigned int fmt_ushortx(char *, unsigned short);
+unsigned int fmt_ushorto(char *, unsigned short);
 
-unsigned int fmt_u32(char *, uint32);
-unsigned int fmt_u32o(char *, uint32);
-unsigned int fmt_u32x(char *, uint32);
+unsigned int fmt_uchar(char *, unsigned char);
+unsigned int fmt_ucharx(char *, unsigned char);
+unsigned int fmt_ucharo(char *, unsigned char);
 
-#include "uint64.h"
+unsigned int fmt_ulonglong(char *, unsigned long long);
+unsigned int fmt_ulonglongx(char *, unsigned long long);
+unsigned int fmt_ulonglongo(char *, unsigned long long);
 
-unsigned int fmt_u64(char *, uint64);
-unsigned int fmt_u64o(char *, uint64);
-unsigned int fmt_u64x(char *, uint64);
+unsigned int fmt_float(char *, float *);
+unsigned int fmt_double(char *, double *);
 
-unsigned int fmt_byte(char *, unsigned char);
-unsigned int fmt_byteo(char *, unsigned char);
-unsigned int fmt_bytex(char *, unsigned char);
+unsigned int fmt_str(char *, const char *);
+unsigned int fmt_nstr(char *, const char *, unsigned int);
 
 #endif

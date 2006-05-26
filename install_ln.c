@@ -3,6 +3,7 @@
 #include "open.h"
 #include "read.h"
 #include "str.h"
+#include "sstring.h"
 #include "syserr.h"
 
 /* basic understanding of virtual libs */
