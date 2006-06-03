@@ -4,8 +4,9 @@
 #define INSTALL_DRYRUN 0x0001
 
 struct install_item {
-  const char *file;
-  const char *home;
+  const char *from;
+  const char *to;
+  const char *dir;
   unsigned int perm;
   const char *owner;
   const char *group; 

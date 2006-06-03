@@ -37,12 +37,12 @@ int install_check(const struct install_item *it)
   int fd;
 
   buffer_puts(buffer1, "check ");
-  buffer_puts(buffer1, it->home);
+  buffer_puts(buffer1, it->dir);
 
   sstring_trunc(&file2);
 
-  if (it->file) {
-    sstring_cats(&file2, it->file);
+  if (it->to) {
+    sstring_cats(&file2, it->to);
     sstring_0(&file2);
     if (str_ends(file2.s, ".lib"))
       if (!install_libname(&file2)) return 0;
@@ -51,12 +51,12 @@ int install_check(const struct install_item *it)
   }
 
   buffer_puts(buffer1, " ");
+  cnum[fmt_uinto(cnum, it->perm)] = 0;
+  buffer_puts(buffer1, cnum);
+  buffer_puts(buffer1, " ");
   buffer_puts(buffer1, it->owner);
   buffer_puts(buffer1, ":");
   buffer_puts(buffer1, it->group);
-  buffer_puts(buffer1, " ");
-  cnum[fmt_uinto(cnum, it->perm)] = 0;
-  buffer_puts(buffer1, cnum);
   buffer_puts(buffer1, "\n");
   buffer_flush(buffer1);
 
@@ -83,7 +83,7 @@ int install_check(const struct install_item *it)
   gid = grp->gr_gid;
 
   sstring_trunc(&file1);
-  sstring_cats(&file1, it->home);
+  sstring_cats(&file1, it->dir);
   if (file2.len) {
     sstring_cats(&file1, "/");
     sstring_cats(&file1, file2.s);
@@ -114,7 +114,7 @@ int install_check(const struct install_item *it)
     goto ERR;
   }
 
-  if (it->file) {
+  if (it->to) {
     if ((sb.st_mode & S_IFMT) != S_IFREG) {
       syserr_warn3x("error: ", file1.s, " is not a regular file");
       ++install_bad;

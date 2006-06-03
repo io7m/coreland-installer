@@ -24,8 +24,8 @@ extern const unsigned int insthier_size;
 static char fbuf3[1024];
 static char fbuf2[1024];
 static char fbuf1[1024];
-static sstring file1 = sstring_INIT(fbuf1);
-static sstring file2 = sstring_INIT(fbuf2);
+static sstring filefrom = sstring_INIT(fbuf1);
+static sstring fileto = sstring_INIT(fbuf2);
 static sstring tmpfile = sstring_INIT(fbuf3);
 
 static char bbuf1[4096];
@@ -88,7 +88,7 @@ static int copy(const char *from, const char *to,
   return 0;
 }
 
-int install(const struct install_item *it, unsigned int flags)
+int install(const struct install_item *inst, unsigned int flags)
 {
   char cnum[FMT_ULONG];
   unsigned int uid;
@@ -96,75 +96,78 @@ int install(const struct install_item *it, unsigned int flags)
   struct group *grp;
   struct passwd *pwd;
 
-  sstring_trunc(&file2);
+  sstring_trunc(&filefrom);
+  sstring_trunc(&fileto);
+  sstring_trunc(&tmpfile);
 
-  if (it->file) {
-    sstring_cats(&file2, it->file);
-    sstring_0(&file2);
-    if (str_ends(it->file, ".lib"))
-      if (!install_libname(&file2)) return 0;
+  if (inst->to) {
+    sstring_cats(&tmpfile, inst->to);
+    sstring_0(&tmpfile);
+    if (str_ends(tmpfile.s, ".lib"))
+      if (install_libname(&tmpfile)) return 0;
+    sstring_cats(&fileto, inst->dir);
+    sstring_cats(&fileto, "/");
+    sstring_cats(&fileto, tmpfile.s);
+    sstring_0(&fileto);
+
+    sstring_trunc(&tmpfile);
+    sstring_cats(&tmpfile, inst->from);
+    sstring_0(&tmpfile);
+    if (str_ends(tmpfile.s, ".lib"))
+      if (install_libname(&tmpfile)) return 0;
+    sstring_cats(&filefrom, tmpfile.s);
+    sstring_0(&filefrom);
+ 
     buffer_puts(buffer1, "install ");
-    buffer_puts(buffer1, file2.s);
+    buffer_puts(buffer1, filefrom.s);
+    buffer_puts(buffer1, " ");
+    buffer_puts(buffer1, fileto.s);
     buffer_puts(buffer1, " ");
   } else {
     buffer_puts(buffer1, "mkdir ");
   }
 
-  buffer_puts(buffer1, it->home);
-
-  if (file2.len) {
-    buffer_puts(buffer1, "/");
-    buffer_puts(buffer1, file2.s);
-  }
-
-  buffer_puts(buffer1, " ");
-  buffer_puts(buffer1, it->owner);
-  buffer_puts(buffer1, ":");
-  buffer_puts(buffer1, it->group);
-  buffer_puts(buffer1, " ");
-  cnum[fmt_uinto(cnum, it->perm)] = 0;
+  cnum[fmt_uinto(cnum, inst->perm)] = 0;
   buffer_puts(buffer1, cnum);
+  buffer_puts(buffer1, " ");
+  buffer_puts(buffer1, inst->owner);
+  buffer_puts(buffer1, ":");
+  buffer_puts(buffer1, inst->group);
   buffer_puts(buffer1, "\n");
-  buffer_flush(buffer1);
+  if (buffer_flush(buffer1)) syserr_warn1sys("warn: write: ");
 
   errno = 0;
-  pwd = getpwnam(it->owner);
+  pwd = getpwnam(inst->owner);
   if (!pwd) {
     if (errno) {
       syserr_warn1sys("error: getpwnam: "); return 0;
     } else {
-      syserr_warn3x("error: no such user '", it->owner, "'"); return 0;
+      syserr_warn3x("error: no such user '", inst->owner, "'"); return 0;
     }
   }
   uid = pwd->pw_uid;
 
   errno = 0;
-  grp = getgrnam(it->group);
+  grp = getgrnam(inst->group);
   if (!pwd) {
     if (errno) {
       syserr_warn1sys("error: getgrnam: "); return 0;
     } else {
-      syserr_warn3x("error: no such group '", it->group, "'"); return 0;
+      syserr_warn3x("error: no such group '", inst->group, "'"); return 0;
     }
   }
   gid = grp->gr_gid;
 
   if (flags & INSTALL_DRYRUN) return 1;
 
-  sstring_trunc(&file1);
-  sstring_cats(&file1, it->home);
-
-  if (file2.len) {
-    sstring_cats(&file1, "/");
-    sstring_cats(&file1, file2.s);
-    sstring_0(&file1);
-    return copy(file2.s, file1.s, uid, gid, it->perm);
+  if (fileto.len) {
+    return copy(filefrom.s, fileto.s, uid, gid, inst->perm);
   } else {
-    if (mkdir(it->home, it->perm) == -1) {
-      syserr_warn3sys("error: mkdir: ", it->home, " - "); return 0;
+    if (mkdir(inst->dir, inst->perm) == -1) {
+      syserr_warn3sys("error: mkdir: ", inst->dir, " - "); return 0;
     }
-    if (chown(it->home, uid, gid) == -1) {
-      syserr_warn3sys("error: chown: ", it->home, " - "); return 0;
+    if (chown(inst->dir, uid, gid) == -1) {
+      syserr_warn3sys("error: chown: ", inst->dir, " - "); return 0;
     }
     return 1;
   }
