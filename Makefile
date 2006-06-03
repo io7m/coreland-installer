@@ -1,5 +1,5 @@
 # auto generated - do not edit
-# cpj-genmk-0.70
+# cpj-genmk-0.73
 
 SHELL=/bin/sh
 default: all
@@ -50,7 +50,7 @@ fmt_ulong.o:\
 	compile fmt_ulong.c fmt.h 
 	./compile fmt_ulong fmt_ulong.c 
 fmt_ulongo.o:\
-	compile fmt_ulongo.c fmt.h fmt.h 
+	compile fmt_ulongo.c fmt.h 
 	./compile fmt_ulongo fmt_ulongo.c 
 get_opt.o:\
 	compile get_opt.c buffer.h get_opt.h 
