@@ -9,3 +9,9 @@
 20060513 code: rename() bug fix
 20060524 code: new buffer and str from corelib.
 20060524 code: updated installer to fix minor compiler warnings.
+20060603 code: format update -
+               if (TO)
+                 install FROM into file TO in dir DIR with OWNER:GROUP MODE
+               else
+                 make directory DIR with OWNER:GROUP MODE
+               this also nicely enables library versioning.
