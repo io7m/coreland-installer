@@ -15,3 +15,6 @@
                else
                  make directory DIR with OWNER:GROUP MODE
                this also nicely enables library versioning.
+20060604 code: if a target has no 'from' file, the 'to' filename is
+               used.
+20060604 version: installer-0.13
