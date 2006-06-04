@@ -18,3 +18,5 @@
 20060604 code: if a target has no 'from' file, the 'to' filename is
                used.
 20060604 version: installer-0.13
+20060604 code: rmkdir
+20060604 version: installer-0.14
