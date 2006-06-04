@@ -36,6 +36,12 @@ int install_check(const struct install_item *it)
   struct passwd *pwd;
   int fd;
 
+  if (!it->dir) {
+    syserr_warn1x("error: directory undefined");
+    ++install_bad;
+    return 0;
+  }
+
   buffer_puts(buffer1, "check ");
   buffer_puts(buffer1, it->dir);
 

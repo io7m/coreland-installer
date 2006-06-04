@@ -100,7 +100,10 @@ int install(const struct install_item *inst, unsigned int flags)
   sstring_trunc(&fileto);
   sstring_trunc(&tmpfile);
 
+  if (!inst->dir) { syserr_warn1x("error: directory undefined"); return 0; }
+
   if (inst->to) {
+    if (!inst->from) { syserr_warn1x("error: from file undefined"); return 0; }
     sstring_cats(&tmpfile, inst->to);
     sstring_0(&tmpfile);
     if (str_ends(tmpfile.s, ".lib"))
