@@ -95,6 +95,7 @@ int install(const struct install_item *inst, unsigned int flags)
   unsigned int gid;
   struct group *grp;
   struct passwd *pwd;
+  const char *from;
 
   sstring_trunc(&filefrom);
   sstring_trunc(&fileto);
@@ -103,7 +104,11 @@ int install(const struct install_item *inst, unsigned int flags)
   if (!inst->dir) { syserr_warn1x("error: directory undefined"); return 0; }
 
   if (inst->to) {
-    if (!inst->from) { syserr_warn1x("error: from file undefined"); return 0; }
+    if (inst->from)
+      from = inst->from;
+    else
+      from = inst->to;
+
     sstring_cats(&tmpfile, inst->to);
     sstring_0(&tmpfile);
     if (str_ends(tmpfile.s, ".lib"))
@@ -114,7 +119,7 @@ int install(const struct install_item *inst, unsigned int flags)
     sstring_0(&fileto);
 
     sstring_trunc(&tmpfile);
-    sstring_cats(&tmpfile, inst->from);
+    sstring_cats(&tmpfile, from);
     sstring_0(&tmpfile);
     if (str_ends(tmpfile.s, ".lib"))
       if (install_libname(&tmpfile)) return 0;
@@ -128,6 +133,8 @@ int install(const struct install_item *inst, unsigned int flags)
     buffer_puts(buffer1, " ");
   } else {
     buffer_puts(buffer1, "mkdir ");
+    buffer_puts(buffer1, inst->dir);
+    buffer_puts(buffer1, " ");
   }
 
   cnum[fmt_uinto(cnum, inst->perm)] = 0;
