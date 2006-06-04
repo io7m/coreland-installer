@@ -61,7 +61,7 @@ install_ln.o:\
 	./compile install_ln install_ln.c 
 installer.o:\
 	compile installer.c buffer.h error.h fmt.h get_opt.h install.h \
-	open.h read.h str.h sstring.h syserr.h write.h 
+	open.h read.h rmkdir.h str.h sstring.h syserr.h write.h 
 	./compile installer installer.c 
 instchk.o:\
 	compile instchk.c buffer.h error.h fmt.h install.h open.h read.h \
@@ -76,6 +76,9 @@ open_ro.o:\
 open_trunc.o:\
 	compile open_trunc.c open.h 
 	./compile open_trunc open_trunc.c 
+rmkdir.o:\
+	compile rmkdir.c bin.h error.h rmkdir.h str.h 
+	./compile rmkdir rmkdir.c 
 sstring_0.o:\
 	compile sstring_0.c sstring.h 
 	./compile sstring_0 sstring_0.c 
@@ -91,6 +94,9 @@ sstring_chop.o:\
 sstring_trunc.o:\
 	compile sstring_trunc.c sstring.h 
 	./compile sstring_trunc sstring_trunc.c 
+str_chr.o:\
+	compile str_chr.c str.h 
+	./compile str_chr str_chr.c 
 str_diff.o:\
 	compile str_diff.c str.h 
 	./compile str_diff str_diff.c 
@@ -114,16 +120,16 @@ phase_compile:\
 	bin_copy.o bin_copyr.o buffer1.o buffer2.o buffer_get.o \
 	buffer_put.o error.o error_str.o fmt_uint.o fmt_uinto.o fmt_ulong.o \
 	fmt_ulongo.o get_opt.o install_ln.o installer.o instchk.o insthier.o \
-	open_ro.o open_trunc.o sstring_0.o sstring_catb.o sstring_cats.o \
-	sstring_chop.o sstring_trunc.o str_diff.o str_ends.o str_len.o \
-	str_rchr.o syserr_die.o syserr_init.o 
+	open_ro.o open_trunc.o rmkdir.o sstring_0.o sstring_catb.o \
+	sstring_cats.o sstring_chop.o sstring_trunc.o str_chr.o str_diff.o \
+	str_ends.o str_len.o str_rchr.o syserr_die.o syserr_init.o 
 phase_compile_clean:
 	rm -f bin_copy.o bin_copyr.o buffer1.o buffer2.o buffer_get.o \
 	buffer_put.o error.o error_str.o fmt_uint.o fmt_uinto.o fmt_ulong.o \
 	fmt_ulongo.o get_opt.o install_ln.o installer.o instchk.o insthier.o \
-	open_ro.o open_trunc.o sstring_0.o sstring_catb.o sstring_cats.o \
-	sstring_chop.o sstring_trunc.o str_diff.o str_ends.o str_len.o \
-	str_rchr.o syserr_die.o syserr_init.o 
+	open_ro.o open_trunc.o rmkdir.o sstring_0.o sstring_catb.o \
+	sstring_cats.o sstring_chop.o sstring_trunc.o str_chr.o str_diff.o \
+	str_ends.o str_len.o str_rchr.o syserr_die.o syserr_init.o 
 
 #--LIBRARY--------------------------------------------------------------------
 
@@ -148,32 +154,37 @@ insthier.a:\
 open.a:\
 	makelib open.sld open_ro.o open_trunc.o 
 	./makelib open open_ro.o open_trunc.o 
+rmkdir.a:\
+	makelib rmkdir.sld rmkdir.o 
+	./makelib rmkdir rmkdir.o 
 sstring.a:\
 	makelib sstring.sld sstring_0.o sstring_catb.o sstring_cats.o \
 	sstring_chop.o sstring_trunc.o 
 	./makelib sstring sstring_0.o sstring_catb.o sstring_cats.o \
 	sstring_chop.o sstring_trunc.o 
 str.a:\
-	makelib str.sld str_ends.o str_diff.o str_len.o str_rchr.o 
-	./makelib str str_ends.o str_diff.o str_len.o str_rchr.o 
+	makelib str.sld str_chr.o str_diff.o str_ends.o str_len.o \
+	str_rchr.o 
+	./makelib str str_chr.o str_diff.o str_ends.o str_len.o str_rchr.o 
 syserr.a:\
 	makelib syserr.sld syserr_die.o syserr_init.o 
 	./makelib syserr syserr_die.o syserr_init.o 
 
 phase_library:\
-	bin.a buffer.a error.a fmt.a get_opt.a insthier.a open.a sstring.a \
-	str.a syserr.a 
+	bin.a buffer.a error.a fmt.a get_opt.a insthier.a open.a rmkdir.a \
+	sstring.a str.a syserr.a 
 phase_library_clean:
 	rm -f bin.a buffer.a error.a fmt.a get_opt.a insthier.a open.a \
-	sstring.a str.a syserr.a 
+	rmkdir.a sstring.a str.a syserr.a 
 
 #--LINK-----------------------------------------------------------------------
 
 installer:\
-	link installer.ld installer.o install_ln.o open.a sstring.a \
+	link installer.ld installer.o install_ln.o open.a rmkdir.a \
+	sstring.a syserr.a get_opt.a insthier.a fmt.a buffer.a str.a bin.a \
+	error.a 
+	./link installer installer.o install_ln.o open.a rmkdir.a sstring.a \
 	syserr.a get_opt.a insthier.a fmt.a buffer.a str.a bin.a error.a 
-	./link installer installer.o install_ln.o open.a sstring.a syserr.a \
-	get_opt.a insthier.a fmt.a buffer.a str.a bin.a error.a 
 instchk:\
 	link instchk.ld instchk.o install_ln.o open.a sstring.a syserr.a \
 	get_opt.a insthier.a fmt.a buffer.a str.a bin.a error.a 

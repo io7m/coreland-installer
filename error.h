@@ -16,7 +16,10 @@ extern int error_again;
 extern int error_pipe;
 extern int error_perm;
 extern int error_acces;
+extern int error_nodevice;
+extern int error_proto;
+extern int error_isdir;
 
-const char *error_str();
+const char *error_str(int);
 
 #endif

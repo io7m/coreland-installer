@@ -1,6 +1,7 @@
 installer.o
 install_ln.o
 open.a
+rmkdir.a
 sstring.a
 syserr.a
 get_opt.a

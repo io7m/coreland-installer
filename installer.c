@@ -10,6 +10,7 @@
 #include "install.h"
 #include "open.h"
 #include "read.h"
+#include "rmkdir.h"
 #include "str.h"
 #include "sstring.h"
 #include "syserr.h"
@@ -173,9 +174,10 @@ int install(const struct install_item *inst, unsigned int flags)
   if (fileto.len) {
     return copy(filefrom.s, fileto.s, uid, gid, inst->perm);
   } else {
-    if (mkdir(inst->dir, inst->perm) == -1) {
-      syserr_warn3sys("error: mkdir: ", inst->dir, " - "); return 0;
-    }
+    if (rmkdir(inst->dir, inst->perm) == -1)
+      if (errno != error_exist) {
+        syserr_warn3sys("error: mkdir: ", inst->dir, " - "); return 0;
+      }
     if (chown(inst->dir, uid, gid) == -1) {
       syserr_warn3sys("error: chown: ", inst->dir, " - "); return 0;
     }

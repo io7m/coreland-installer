@@ -91,3 +91,24 @@ EACCES;
 #else
 -13;
 #endif
+
+int error_nodevice =
+#ifdef ENXIO
+ENXIO;
+#else
+-14;
+#endif
+
+int error_proto =
+#ifdef EPROTO
+EPROTO;
+#else
+-15;
+#endif
+
+int error_isdir =
+#ifdef EISDIR
+EISDIR;
+#else
+-16;
+#endif

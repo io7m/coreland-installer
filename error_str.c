@@ -7,7 +7,7 @@ const char *error_str(int i)
 {
   X(0,"no error")
   X(error_intr,"interrupted system call")
-  X(error_nomem,"could not allocate memory")
+  X(error_nomem,"out of memory")
   X(error_noent,"file does not exist")
   X(error_txtbsy,"text busy")
   X(error_io,"input/output error")
@@ -17,13 +17,12 @@ const char *error_str(int i)
   X(error_again,"temporary failure")
   X(error_wouldblock,"input/output would block")
   X(error_pipe,"broken pipe")
-  X(error_perm,"operation not permitted")
-  X(error_acces,"permission denied")
+  X(error_perm,"permission denied")
+  X(error_acces,"access denied")
+  X(error_nodevice,"device not configured")
+  X(error_proto,"protocol error")
 #ifdef ESRCH
   X(ESRCH,"no such process")
-#endif
-#ifdef ENXIO
-  X(ENXIO,"device not configured")
 #endif
 #ifdef E2BIG
   X(E2BIG,"argument list too long")
@@ -261,9 +260,6 @@ const char *error_str(int i)
 #endif
 #ifdef ECOMM
   X(ECOMM,"communication error")
-#endif
-#ifdef EPROTO
-  X(EPROTO,"protocol error")
 #endif
 #ifdef EMULTIHOP
   X(EMULTIHOP,"multihop attempted")
