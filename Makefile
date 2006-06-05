@@ -34,6 +34,13 @@ buffer_get.o:\
 buffer_put.o:\
 	compile buffer_put.c bin.h buffer.h error.h str.h 
 	./compile buffer_put buffer_put.c 
+deinstall.o:\
+	compile deinstall.c buffer.h error.h fmt.h get_opt.h install.h \
+	open.h read.h rmkdir.h str.h sstring.h syserr.h write.h 
+	./compile deinstall deinstall.c 
+deinstaller.o:\
+	compile deinstaller.c buffer.h get_opt.h install.h syserr.h 
+	./compile deinstaller deinstaller.c 
 error.o:\
 	compile error.c error.h 
 	./compile error error.c 
@@ -55,13 +62,16 @@ fmt_ulongo.o:\
 get_opt.o:\
 	compile get_opt.c buffer.h get_opt.h 
 	./compile get_opt get_opt.c 
+install.o:\
+	compile install.c buffer.h error.h fmt.h get_opt.h install.h open.h \
+	read.h rmkdir.h str.h sstring.h syserr.h write.h 
+	./compile install install.c 
 install_ln.o:\
 	compile install_ln.c close.h install.h open.h read.h str.h \
 	sstring.h syserr.h 
 	./compile install_ln install_ln.c 
 installer.o:\
-	compile installer.c buffer.h error.h fmt.h get_opt.h install.h \
-	open.h read.h rmkdir.h str.h sstring.h syserr.h write.h 
+	compile installer.c buffer.h get_opt.h install.h syserr.h 
 	./compile installer installer.c 
 instchk.o:\
 	compile instchk.c buffer.h error.h fmt.h install.h open.h read.h \
@@ -118,18 +128,20 @@ syserr_init.o:\
 
 phase_compile:\
 	bin_copy.o bin_copyr.o buffer1.o buffer2.o buffer_get.o \
-	buffer_put.o error.o error_str.o fmt_uint.o fmt_uinto.o fmt_ulong.o \
-	fmt_ulongo.o get_opt.o install_ln.o installer.o instchk.o insthier.o \
-	open_ro.o open_trunc.o rmkdir.o sstring_0.o sstring_catb.o \
-	sstring_cats.o sstring_chop.o sstring_trunc.o str_chr.o str_diff.o \
-	str_ends.o str_len.o str_rchr.o syserr_die.o syserr_init.o 
+	buffer_put.o deinstall.o deinstaller.o error.o error_str.o \
+	fmt_uint.o fmt_uinto.o fmt_ulong.o fmt_ulongo.o get_opt.o install.o \
+	install_ln.o installer.o instchk.o insthier.o open_ro.o open_trunc.o \
+	rmkdir.o sstring_0.o sstring_catb.o sstring_cats.o sstring_chop.o \
+	sstring_trunc.o str_chr.o str_diff.o str_ends.o str_len.o str_rchr.o \
+	syserr_die.o syserr_init.o 
 phase_compile_clean:
 	rm -f bin_copy.o bin_copyr.o buffer1.o buffer2.o buffer_get.o \
-	buffer_put.o error.o error_str.o fmt_uint.o fmt_uinto.o fmt_ulong.o \
-	fmt_ulongo.o get_opt.o install_ln.o installer.o instchk.o insthier.o \
-	open_ro.o open_trunc.o rmkdir.o sstring_0.o sstring_catb.o \
-	sstring_cats.o sstring_chop.o sstring_trunc.o str_chr.o str_diff.o \
-	str_ends.o str_len.o str_rchr.o syserr_die.o syserr_init.o 
+	buffer_put.o deinstall.o deinstaller.o error.o error_str.o \
+	fmt_uint.o fmt_uinto.o fmt_ulong.o fmt_ulongo.o get_opt.o install.o \
+	install_ln.o installer.o instchk.o insthier.o open_ro.o open_trunc.o \
+	rmkdir.o sstring_0.o sstring_catb.o sstring_cats.o sstring_chop.o \
+	sstring_trunc.o str_chr.o str_diff.o str_ends.o str_len.o str_rchr.o \
+	syserr_die.o syserr_init.o 
 
 #--LIBRARY--------------------------------------------------------------------
 
@@ -179,12 +191,20 @@ phase_library_clean:
 
 #--LINK-----------------------------------------------------------------------
 
+deinstaller:\
+	link deinstaller.ld deinstaller.o deinstall.o install_ln.o open.a \
+	rmkdir.a sstring.a syserr.a get_opt.a insthier.a fmt.a buffer.a \
+	str.a bin.a error.a 
+	./link deinstaller deinstaller.o deinstall.o install_ln.o open.a \
+	rmkdir.a sstring.a syserr.a get_opt.a insthier.a fmt.a buffer.a \
+	str.a bin.a error.a 
 installer:\
-	link installer.ld installer.o install_ln.o open.a rmkdir.a \
+	link installer.ld installer.o install.o install_ln.o open.a \
+	rmkdir.a sstring.a syserr.a get_opt.a insthier.a fmt.a buffer.a \
+	str.a bin.a error.a 
+	./link installer installer.o install.o install_ln.o open.a rmkdir.a \
 	sstring.a syserr.a get_opt.a insthier.a fmt.a buffer.a str.a bin.a \
 	error.a 
-	./link installer installer.o install_ln.o open.a rmkdir.a sstring.a \
-	syserr.a get_opt.a insthier.a fmt.a buffer.a str.a bin.a error.a 
 instchk:\
 	link instchk.ld instchk.o install_ln.o open.a sstring.a syserr.a \
 	get_opt.a insthier.a fmt.a buffer.a str.a bin.a error.a 
@@ -192,9 +212,9 @@ instchk:\
 	get_opt.a insthier.a fmt.a buffer.a str.a bin.a error.a 
 
 phase_link:\
-	installer instchk 
+	deinstaller installer instchk 
 phase_link_clean:
-	rm -f installer instchk 
+	rm -f deinstaller installer instchk 
 
 #--TOOLS----------------------------------------------------------------------
 

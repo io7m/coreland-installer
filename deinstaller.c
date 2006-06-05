@@ -7,27 +7,26 @@
 extern const struct install_item insthier[];
 extern const unsigned int insthier_size;
 
-const char progname[] = "install";
+const char progname[] = "deinstall";
 
 int main(int argc, char **argv)
 {
   char ch;
   unsigned int flags;
   unsigned int ind;
-  unsigned int mode;
 
-  mode = umask(022);
   flags = 0;
   while ((ch = get_opt(argc, argv, "n")) != opteof)
     switch (ch) {
-      case 'n': flags |= INSTALL_DRYRUN; break;
+      case 'n': flags |= DEINSTALL_DRYRUN; break;
       default: return 111; break;
     }
 
-  for (ind = 0; ind < insthier_size; ++ind)
-    install(&insthier[ind], flags);    
+  for (ind = insthier_size - 1;; --ind) {
+    deinstall(&insthier[ind], flags);    
+    if (!ind) break;
+  }
 
-  umask(mode);
   if (buffer_flush(buffer1) == -1) syserr_die1sys(112, "fatal: write: ");
   return 0;
 }

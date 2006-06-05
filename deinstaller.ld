@@ -1,5 +1,5 @@
-installer.o
-install.o
+deinstaller.o
+deinstall.o
 install_ln.o
 open.a
 rmkdir.a
