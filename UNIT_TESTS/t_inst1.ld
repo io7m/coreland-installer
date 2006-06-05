@@ -1,0 +1,14 @@
+t_inst1.o
+../install.o
+../install_ln.o
+t_inst1h.o
+../open.a
+../rmkdir.a
+../sstring.a
+../syserr.a
+../get_opt.a
+../fmt.a
+../buffer.a
+../str.a
+../bin.a
+../error.a

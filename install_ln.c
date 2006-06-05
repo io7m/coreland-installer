@@ -11,7 +11,7 @@
 int install_libname(sstring *sstr)
 {
   char *s;
-  char buf[32];
+  char buf[256];
   int n;
   int r;
   int fd;
@@ -23,7 +23,7 @@ int install_libname(sstring *sstr)
   if (n == -1) return 0;
   fd = open_ro(sstr->s);
   if (fd == -1) return 0;
-  r = read(fd, buf, 32);
+  r = read(fd, buf, 256);
   if (r == 0) { ret = 0; goto END; }
   if (r == -1) {
     syserr_warn1sys("error: open: "); ret = 0; goto END;
