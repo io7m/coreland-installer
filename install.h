@@ -21,4 +21,8 @@ int install_libname(sstring *);
 
 int deinstall(const struct install_item *, unsigned int);
 
+extern unsigned int install_failed;
+extern const struct install_item insthier[];
+extern const unsigned int insthier_size;
+
 #endif

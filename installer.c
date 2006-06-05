@@ -4,9 +4,6 @@
 #include "install.h"
 #include "syserr.h"
 
-extern const struct install_item insthier[];
-extern const unsigned int insthier_size;
-
 const char progname[] = "install";
 
 int main(int argc, char **argv)

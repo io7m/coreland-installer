@@ -66,6 +66,10 @@ install.o:\
 	compile install.c buffer.h error.h fmt.h get_opt.h install.h open.h \
 	read.h rmkdir.h str.h sstring.h syserr.h write.h 
 	./compile install install.c 
+install_chk.o:\
+	compile install_chk.c buffer.h error.h fmt.h install.h open.h \
+	read.h str.h sstring.h syserr.h write.h 
+	./compile install_chk install_chk.c 
 install_ln.o:\
 	compile install_ln.c close.h install.h open.h read.h str.h \
 	sstring.h syserr.h 
@@ -74,8 +78,7 @@ installer.o:\
 	compile installer.c buffer.h get_opt.h install.h syserr.h 
 	./compile installer installer.c 
 instchk.o:\
-	compile instchk.c buffer.h error.h fmt.h install.h open.h read.h \
-	str.h sstring.h syserr.h write.h 
+	compile instchk.c buffer.h fmt.h install.h syserr.h 
 	./compile instchk instchk.c 
 insthier.o:\
 	compile insthier.c install.h 
@@ -130,18 +133,18 @@ phase_compile:\
 	bin_copy.o bin_copyr.o buffer1.o buffer2.o buffer_get.o \
 	buffer_put.o deinstall.o deinstaller.o error.o error_str.o \
 	fmt_uint.o fmt_uinto.o fmt_ulong.o fmt_ulongo.o get_opt.o install.o \
-	install_ln.o installer.o instchk.o insthier.o open_ro.o open_trunc.o \
-	rmkdir.o sstring_0.o sstring_catb.o sstring_cats.o sstring_chop.o \
-	sstring_trunc.o str_chr.o str_diff.o str_ends.o str_len.o str_rchr.o \
-	syserr_die.o syserr_init.o 
+	install_chk.o install_ln.o installer.o instchk.o insthier.o \
+	open_ro.o open_trunc.o rmkdir.o sstring_0.o sstring_catb.o \
+	sstring_cats.o sstring_chop.o sstring_trunc.o str_chr.o str_diff.o \
+	str_ends.o str_len.o str_rchr.o syserr_die.o syserr_init.o 
 phase_compile_clean:
 	rm -f bin_copy.o bin_copyr.o buffer1.o buffer2.o buffer_get.o \
 	buffer_put.o deinstall.o deinstaller.o error.o error_str.o \
 	fmt_uint.o fmt_uinto.o fmt_ulong.o fmt_ulongo.o get_opt.o install.o \
-	install_ln.o installer.o instchk.o insthier.o open_ro.o open_trunc.o \
-	rmkdir.o sstring_0.o sstring_catb.o sstring_cats.o sstring_chop.o \
-	sstring_trunc.o str_chr.o str_diff.o str_ends.o str_len.o str_rchr.o \
-	syserr_die.o syserr_init.o 
+	install_chk.o install_ln.o installer.o instchk.o insthier.o \
+	open_ro.o open_trunc.o rmkdir.o sstring_0.o sstring_catb.o \
+	sstring_cats.o sstring_chop.o sstring_trunc.o str_chr.o str_diff.o \
+	str_ends.o str_len.o str_rchr.o syserr_die.o syserr_init.o 
 
 #--LIBRARY--------------------------------------------------------------------
 
@@ -206,10 +209,12 @@ installer:\
 	sstring.a syserr.a get_opt.a insthier.a fmt.a buffer.a str.a bin.a \
 	error.a 
 instchk:\
-	link instchk.ld instchk.o install_ln.o open.a sstring.a syserr.a \
-	get_opt.a insthier.a fmt.a buffer.a str.a bin.a error.a 
-	./link instchk instchk.o install_ln.o open.a sstring.a syserr.a \
-	get_opt.a insthier.a fmt.a buffer.a str.a bin.a error.a 
+	link instchk.ld instchk.o install_ln.o install_chk.o open.a \
+	sstring.a syserr.a get_opt.a insthier.a fmt.a buffer.a str.a bin.a \
+	error.a 
+	./link instchk instchk.o install_ln.o install_chk.o open.a \
+	sstring.a syserr.a get_opt.a insthier.a fmt.a buffer.a str.a bin.a \
+	error.a 
 
 phase_link:\
 	deinstaller installer instchk 

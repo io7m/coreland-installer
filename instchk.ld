@@ -1,5 +1,6 @@
 instchk.o
 install_ln.o
+install_chk.o
 open.a
 sstring.a
 syserr.a

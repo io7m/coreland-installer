@@ -19,9 +19,6 @@
 extern int rename(const char *, const char *);
 extern int fsync(int);
 
-extern const struct install_item insthier[];
-extern const unsigned int insthier_size;
-
 static char fbuf3[1024];
 static char fbuf2[1024];
 static char fbuf1[1024];
