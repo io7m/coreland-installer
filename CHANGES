@@ -20,3 +20,4 @@
 20060604 version: installer-0.13
 20060604 code: rmkdir
 20060604 version: installer-0.14
+20060605 code: deinstaller
