@@ -492,7 +492,7 @@ int deinstall(const struct install_item *inst, unsigned int flags)
     if (buffer_flush(buffer1) == -1) syserr_warn1x("error: write: ");
     if (flags & INSTALL_DRYRUN) return 1;
     if (unlink(target) == -1) {
-      syserr_warn3sys("unlink: ", target, " ");
+      syserr_warn3sys("error: unlink: ", target, " ");
       ++deinstall_failed;
       return 0;
     }
@@ -504,7 +504,7 @@ int deinstall(const struct install_item *inst, unsigned int flags)
     if (buffer_flush(buffer1) == -1) syserr_warn1x("error: write: ");
     if (flags & INSTALL_DRYRUN) return 1;
     if (rmdir(target) == -1) {
-      syserr_warn3sys("rmdir: ", target, " ");
+      syserr_warn3sys("error: rmdir: ", target, " ");
       ++deinstall_failed;
       return 0;
     }
