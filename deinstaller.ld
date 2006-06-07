@@ -1,12 +1,9 @@
 deinstaller.o
-deinstall.o
-install_ln.o
+install.o
+insthier.o
 open.a
-rmkdir.a
-sstring.a
 syserr.a
 get_opt.a
-insthier.a
 fmt.a
 buffer.a
 str.a

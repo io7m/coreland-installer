@@ -1,0 +1,12 @@
+check /usr/lib
+check /usr/lib/file.so.0.2
+error: open: /usr/lib/file.so.0.2 file does not exist
+check /usr/lib/libxyz.a
+error: open: /usr/lib/libxyz.a file does not exist
+check /usr/lib/nonexistant
+error: open: /usr/lib/nonexistant file does not exist
+error: directory not defined
+error: owner not defined
+check dir/file2
+error: open: dir/file2 file does not exist
+4 of 7 failed

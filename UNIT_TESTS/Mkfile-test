@@ -1,0 +1,19 @@
+phase_test: t_deinst1.out t_inst1.out t_instc1.out success
+
+t_deinst1.out: t_deinst1.sh cmp.sh
+	./t_deinst1.sh
+	./cmp.sh t_deinst1
+
+t_inst1.out: t_inst1.sh cmp.sh
+	./t_inst1.sh
+	./cmp.sh t_inst1
+
+t_instc1.out: t_instc1.sh cmp.sh
+	./t_instc1.sh
+	./cmp.sh t_instc1
+
+success:
+	@echo 'The software passed all tests.'
+
+phase_test_clean:
+	rm -f t_deinst1.out t_inst1.out t_instc1.out

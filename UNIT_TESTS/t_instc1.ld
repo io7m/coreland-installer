@@ -1,4 +1,4 @@
-t_inst1.o
+t_instc1.o
 ../install.o
 t_inst1h.o
 ../open.a

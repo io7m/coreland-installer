@@ -1,11 +1,9 @@
 instchk.o
-install_ln.o
-install_chk.o
+install.o
+insthier.o
 open.a
-sstring.a
 syserr.a
 get_opt.a
-insthier.a
 fmt.a
 buffer.a
 str.a

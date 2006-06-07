@@ -21,3 +21,7 @@
 20060604 code: rmkdir
 20060604 version: installer-0.14
 20060605 code: deinstaller
+20060607 code: rewrite to do correct name conversion, stability and so
+               on.
+20060607 code: unit tests
+20060607 version: installer-0.20

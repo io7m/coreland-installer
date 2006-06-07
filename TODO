@@ -1,5 +1,0 @@
-Rewrite.
-
-Correct 'from' and 'to' name conversion with virtual libs.
-
-Don't rely on sstring.

@@ -1,0 +1,7 @@
+rmdir /usr/lib
+unlink /usr/lib/file.so.0.2
+unlink /usr/lib/libxyz.a
+unlink /usr/lib/nonexistant
+error: directory not defined
+unlink to
+unlink dir/file2

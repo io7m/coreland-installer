@@ -1,12 +1,9 @@
 installer.o
 install.o
-install_ln.o
+insthier.o
 open.a
-rmkdir.a
-sstring.a
 syserr.a
 get_opt.a
-insthier.a
 fmt.a
 buffer.a
 str.a
