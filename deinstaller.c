@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     buffer_puts(buffer1, " of ");
     cnum[fmt_uint(cnum, insthier_size)] = 0;
     buffer_puts(buffer1, cnum);
-    buffer_puts(buffer1, " files failed to install\n");
+    buffer_puts(buffer1, " files failed to deinstall\n");
   }
 
   if (buffer_flush(buffer1) == -1) syserr_die1sys(112, "fatal: write: ");
