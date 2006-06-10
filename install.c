@@ -50,7 +50,6 @@ static int base_name(const char *dir, char **out)
   if (len >= MAX_PATHLEN) return 0;
 
   s = dir;
-  t = s;
   t = s + (len - 1);
   while ((t > s) && (t[0] == '/')) --t;
 
