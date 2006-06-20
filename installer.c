@@ -8,7 +8,7 @@ const char progname[] = "install";
 
 int main(int argc, char **argv)
 {
-  char ch;
+  int ch;
   unsigned int flags;
   unsigned int ind;
   unsigned int mode;

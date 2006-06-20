@@ -12,7 +12,7 @@ int main(int argc, char **argv)
   char cnum[FMT_ULONG];
   unsigned int flags;
   unsigned int ind;
-  char ch;
+  int ch;
 
   flags = 0;
   while ((ch = get_opt(argc, argv, "n")) != opteof)
