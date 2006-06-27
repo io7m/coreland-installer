@@ -1,15 +1,13 @@
 #ifndef STR_H
 #define STR_H
 
-unsigned int str_len(const char *);
-unsigned int str_copy(const char *, char *);
-unsigned int str_ncopy(const char *, char *, unsigned int);
+unsigned long str_len(const char *);
 
 int str_chr(const char *, int);
 int str_rchr(const char *, int);
 
 int str_diff(const char *, const char *);
-int str_ndiff(const char *, const char *, unsigned int);
+int str_ndiff(const char *, const char *, unsigned long);
 
 void str_toupper(char *);
 void str_tolower(char *);

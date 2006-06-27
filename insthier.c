@@ -1,7 +1,5 @@
 #include "install.h"
 
-const struct install_item insthier[] = {
-  {"insthier.o", 0, "/usr/local/lib/coreland", 0444, "root", "wheel"},
+struct install_item insthier[] = {
 };
-
-const unsigned int insthier_size = sizeof(insthier) / sizeof(struct install_item);
+unsigned int insthier_size = sizeof(insthier) / sizeof(struct install_item);

@@ -1,6 +1,6 @@
 #include "str.h"
 
-unsigned int str_len(const char *s)
+unsigned long str_len(const char *s)
 {
   register const char* sc;
   for (sc = s;;) {

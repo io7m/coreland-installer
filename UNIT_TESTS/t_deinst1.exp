@@ -1,7 +1,20 @@
-rmdir /usr/lib
-unlink /usr/lib/file.so.0.2
-unlink /usr/lib/libxyz.a
-unlink /usr/lib/nonexistant
+rmdir /usr/lib 
+error: rmdir: /usr/lib - access denied
+unlink /usr/lib/file.so.0.2 
+error: open: /usr/lib/file.so.0.2 - file does not exist
+unlink /usr/lib/xyz.a 
+error: open: /usr/lib/xyz.a - file does not exist
+unlink /usr/lib/libfile.so 
+error: open: /usr/lib/libfile.so - file does not exist
+unlink /usr/lib/libxyz.a 
+error: open: /usr/lib/libxyz.a - file does not exist
+unlink /testlib 
+error: open: /testlib - file does not exist
+unlink /usr/lib/nonexistant 
+error: open: /usr/lib/nonexistant - file does not exist
 error: directory not defined
-unlink to
-unlink dir/file2
+error: from file not defined
+error: owner not defined
+error: owner not defined
+error: group not defined
+error: no such user '1234XNOBODYx123'

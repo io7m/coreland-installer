@@ -3,7 +3,7 @@
 /* copy n bytes from ss to ds  */
 
 void bin_copyr(register char *to, register const char *from,
-               register unsigned int n)
+               register unsigned long n)
 {
   to += n;
   from += n;

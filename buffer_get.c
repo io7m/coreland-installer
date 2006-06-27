@@ -2,8 +2,8 @@
 #include "buffer.h"
 #include "error.h"
 
-static int single_read(int (*op)(int, char *, unsigned int),
-                       int fd, char *buf, unsigned int len)
+static int single_read(int (*op)(int, char *, unsigned long),
+                       int fd, char *buf, unsigned long len)
 {
   int r;
 
@@ -15,7 +15,7 @@ static int single_read(int (*op)(int, char *, unsigned int),
   }
 }
 
-static int get_this(buffer *b, char *s, unsigned int len)
+static int get_this(buffer *b, char *s, unsigned long len)
 {
   if (len > b->pos) len = b->pos;
   b->pos -= len;
@@ -37,7 +37,7 @@ int buffer_feed(buffer *b)
   return r;
 }
 
-int buffer_get(buffer *b, char *s, unsigned int len)
+int buffer_get(buffer *b, char *s, unsigned long len)
 {
   int r;
  
@@ -53,7 +53,7 @@ char* buffer_peek(buffer *b)
   return b->buf + b->size;
 }
 
-void buffer_seek(buffer *b, unsigned int len)
+void buffer_seek(buffer *b, unsigned long len)
 {
   b->size += len;
   b->pos -= len;

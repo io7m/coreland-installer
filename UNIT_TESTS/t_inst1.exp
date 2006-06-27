@@ -1,8 +1,13 @@
 mkdir /usr/lib 755 root:wheel
 install files/file.so.0.2 /usr/lib/file.so.0.2 444 root:wheel
-install files/libxyz.a /usr/lib/libxyz.a 444 root:wheel
+install files/xyz.a /usr/lib/xyz.a 444 root:wheel
+lib-symlink /usr/lib/file.so.0.2 /usr/lib/libfile.so 444 root:wheel
+lib-symlink /usr/lib/xyz.a /usr/lib/libxyz.a 444 root:wheel
+symlink /usr/lib /testlib 755 root:wheel
 install nonexistant /usr/lib/nonexistant 444 root:wheel
+error: directory not defined
+error: from file not defined
 error: owner not defined
 error: owner not defined
-install file dir/file2 444 1234XNOBODYx123:1234XNOBODYx123
+error: group not defined
 error: no such user '1234XNOBODYx123'

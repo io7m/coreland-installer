@@ -1,5 +1,5 @@
 # auto generated - do not edit
-# cpj-genmk-0.74
+# cpj-genmk-0.77
 
 SHELL=/bin/sh
 default: all
@@ -37,7 +37,7 @@ buffer_put.o:\
 	compile buffer_put.c bin.h buffer.h error.h str.h 
 	./compile buffer_put buffer_put.c 
 deinstaller.o:\
-	compile deinstaller.c buffer.h get_opt.h install.h syserr.h 
+	compile deinstaller.c buffer.h get_opt.h fmt.h install.h syserr.h 
 	./compile deinstaller deinstaller.c 
 error.o:\
 	compile error.c error.h 

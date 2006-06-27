@@ -1,8 +1,10 @@
-#include <unistd.h>
-#include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <stdio.h> /* rename() */
 #include <pwd.h>
 #include <grp.h>
+
 #include "bin.h"
 #include "buffer.h"
 #include "error.h"
@@ -14,21 +16,196 @@
 #include "syserr.h"
 #include "write.h"
 
-/* most functions */
-static char tmpfrom[MAX_PATHLEN];
-static char tmpto[MAX_PATHLEN];
+/* these functions are included inline to reduce dependencies
+ * it's not reasonable to expect a project to include all these
+ * files just for the installer.
+ */
 
-/* install_copy() */
-static char bbuf1[4096];
-static char bbuf2[4096];
-static buffer bin = buffer_INIT(read, -1, bbuf1, sizeof(bbuf1));
-static buffer bout = buffer_INIT(write, -1, bbuf2, sizeof(bbuf2));
-extern int rename();
+int open_nofollow(const char *f)
+{
+  return open(f, O_RDONLY | O_NONBLOCK | O_NOFOLLOW);
+}
 
-/* install_check() and deinstall() */
-unsigned int install_failed = 0;
-unsigned int deinstall_failed = 0;
+#define sstr_INIT(s) { (s), (0), (sizeof s) }
+struct sstr {
+  char *s;
+  unsigned int len;
+  unsigned int a;
+};
+unsigned int sstr_catb(struct sstr *ss, const char *s, unsigned int len)
+{
+  register unsigned int n;
+  register char* ssp;
+  n = len; ssp = ss->s;
+  
+  if (ss->len == ss->a) return 0;
+  if ((ss->len + n) > ss->a) n = ss->a - ss->len; /* refuse overflow */
+  ssp += ss->len;
+  for (;;) {
+    if (!n) break; *ssp++ = *s++; --n;
+    if (!n) break; *ssp++ = *s++; --n;
+    if (!n) break; *ssp++ = *s++; --n;
+    if (!n) break; *ssp++ = *s++; --n;
+  }
+  return ss->len = ssp - ss->s;
+}
+unsigned int sstr_cats(struct sstr *ss, const char *s)
+{
+  register const char* t;
+  for (t = s;;) {
+    if (!*t) return sstr_catb(ss, s, t - s); ++t;
+    if (!*t) return sstr_catb(ss, s, t - s); ++t;
+    if (!*t) return sstr_catb(ss, s, t - s); ++t;
+    if (!*t) return sstr_catb(ss, s, t - s); ++t;
+  }
+}
+unsigned int sstr_0(struct sstr *ss)
+{
+  if (ss->len == ss->a) ss->len--;
+  ss->s[ss->len] = 0; return ss->len;
+}
+unsigned int sstr_chop(struct sstr *ss, unsigned int len)
+{
+  char *str;
+  if (len >= ss->a) return ss->a;
+  str = ss->s;
+  str[len] = 0;
+  ss->len = len;
+  return len;
+}
+void sstr_trunc(struct sstr *ss)
+{
+  ss->len = 0;
+}
+unsigned int scan_charset(const char *s, const char *chars)
+{
+  unsigned int len;
+  const char *cmp;
+  char ch;
 
+  len = 0;
+  for (;;) {
+    ch = s[len];
+    if (!ch) break;
+    for (cmp = chars;;) {
+      if (!*cmp) return len; if (*cmp == ch) { ++len; break; } ++cmp;
+      if (!*cmp) return len; if (*cmp == ch) { ++len; break; } ++cmp;
+      if (!*cmp) return len; if (*cmp == ch) { ++len; break; } ++cmp;
+      if (!*cmp) return len; if (*cmp == ch) { ++len; break; } ++cmp;
+    }
+  }
+  return len;
+}
+unsigned int scan_notcharset(const char *s, const char *chars)
+{
+  unsigned int len;
+  const char *cmp;
+  char ch;
+
+  len = 0;
+  for (;;) {
+    ch = s[len];
+    if (!ch) break;
+    for (cmp = chars;;) {
+      if (!*cmp) break; if (*cmp == ch) return len; ++cmp;
+      if (!*cmp) break; if (*cmp == ch) return len; ++cmp;
+      if (!*cmp) break; if (*cmp == ch) return len; ++cmp;
+      if (!*cmp) break; if (*cmp == ch) return len; ++cmp;
+    }
+    ++len;
+  }
+
+  return len;
+}
+
+static char tfr[MAX_PATHLEN];
+static char tfl[MAX_PATHLEN];
+static char tto[MAX_PATHLEN];
+static char tmpbuf[MAX_PATHLEN];
+static struct sstr tmpto = sstr_INIT(tto);
+static struct sstr tmpfrom = sstr_INIT(tfr);
+static struct sstr tmpfn = sstr_INIT(tfl);
+
+static char bbuf_i[BUFFER_INSIZE];
+static char bbuf_o[BUFFER_OUTSIZE];
+static buffer ibuf = buffer_INIT(read, -1, bbuf_i, sizeof(bbuf_i));
+static buffer obuf = buffer_INIT(write, -1, bbuf_o, sizeof(bbuf_o));
+
+unsigned int install_failed;
+unsigned int deinstall_failed;
+
+static int conv_uidgid(const char *sid, unsigned int *uid,
+                       const char *sgd, unsigned int *gid)
+{
+  struct group *grp;
+  struct passwd *pwd;
+
+  errno = 0;
+  pwd = getpwnam(sid);
+  if (!pwd) {
+    if (errno) {
+      syserr_warn1sys("error: getpwnam: "); return 0;
+    } else {
+      syserr_warn3x("error: no such user '", sid, "'"); return 0;
+    }
+  }
+  *uid = pwd->pw_uid;
+
+  errno = 0;
+  grp = getgrnam(sgd);
+  if (!pwd) {
+    if (errno) {
+      syserr_warn1sys("error: getgrnam: "); return 0;
+    } else {
+      syserr_warn3x("error: no such group '", sgd, "'"); return 0;
+    }
+  }
+  *gid = grp->gr_gid;
+  return 1;
+}
+static int libname(const char *fn, char *buf)
+{
+  char *s;
+  char rbuf[MAX_PATHLEN];
+  int n;
+  int r;
+  int fd;
+  int ret;
+  int clean;
+
+  ret = 1;
+  n = str_rchr(fn, '.');
+  if (n == -1) return 0;
+  fd = open_ro(fn);
+  if (fd == -1) {
+    syserr_warn3sys("error: open: ", fn, " - "); return 0;
+  }
+  r = read(fd, rbuf, MAX_PATHLEN);
+  if (r == 0) { ret = 0; goto END; }
+  if (r == -1) {
+    syserr_warn3sys("error: read: ", fn, " - "); ret = 0; goto END;
+  }
+  s = rbuf;
+  clean = 0;
+  while (r) {
+    switch (*s) {
+      case ' ': case '\t': case '\n':
+        s[0] = 0;
+        clean = 1;
+        break;
+      default:
+        break;
+    }
+    if (clean) break;
+    --r; ++s;
+  }
+  bin_copy(rbuf, buf, s - rbuf);
+  buf[s - rbuf] = 0;
+
+  END:
+  if (close(fd) == -1) syserr_warn1sys("error: close: ");
+  return ret;
+}
 static int base_name(const char *dir, char **out)
 {
   static char path[MAX_PATHLEN];
@@ -70,100 +247,7 @@ static int base_name(const char *dir, char **out)
   *out = path;
   return 1;
 }
-
-static int install_libname(const char *fn, char *buf)
-{
-  char *s;
-  char rbuf[MAX_PATHLEN];
-  int n;
-  int r;
-  int fd;
-  int ret;
-  int clean;
-
-  ret = 1;
-  n = str_rchr(fn, '.');
-  if (n == -1) return 0;
-  fd = open_ro(fn);
-  if (fd == -1) return 0;
-  r = read(fd, rbuf, MAX_PATHLEN);
-  if (r == 0) { ret = 0; goto END; }
-  if (r == -1) {
-    syserr_warn3sys("error: open: ", fn, " - "); ret = 0; goto END;
-  }
-  s = rbuf;
-  clean = 0;
-  while (r) {
-    switch (*s) {
-      case ' ':
-      case '\t':
-      case '\n':
-        s[0] = 0;
-        clean = 1;
-        break;
-      default:
-        break;
-    }
-    if (clean) break;
-    --r; ++s;
-  }
-  bin_copy(rbuf, buf, s - rbuf);
-  buf[s - rbuf] = 0;
-
-  END:
-  if (close(fd) == -1) syserr_warn1sys("error: close: ");
-  return ret;
-}
-
-/* mangle names and use temporary buffers if necessary */
-static int name_mangle(const char **from, const char **to, const char *dir)
-{
-  unsigned int dirlen;
-  unsigned int len;
-  const char *pfrom;
-  const char *pto;
-  char *tbase;
-
-  if (!dir) { syserr_warn1x("error: directory not defined"); return 0; }
-  dirlen = str_len(dir);
-  if (dirlen >= MAX_PATHLEN) {
-    syserr_warn3x("error: ", dir, " path too long"); return 0;
-  }
-
-  pfrom = *from;
-  pto = *to;
-
-  if (pfrom) {
-    if (str_ends(pfrom, ".lib")) {
-      if (!install_libname(pfrom, tmpfrom)) return 0;
-      pfrom = tmpfrom;
-    }
-    if (pto) {
-      if (str_ends(pto, ".lib")) {
-        if (!install_libname(pto, tmpto)) return 0;
-        pto = tmpto;
-      }
-    } else pto = pfrom;
-    if (!base_name(pto, &tbase)) {
-      syserr_warn3x("error: ", pto, " filename too long"); return 0;
-    }
-    len = str_len(tbase);
-    if (len + dirlen + 1 >= MAX_PATHLEN) {
-      syserr_warn1x("error: path too long"); return 0;
-    }
-    bin_copy(dir, tmpto, dirlen);
-    tmpto[dirlen] = '/';
-    bin_copy(tbase, tmpto + dirlen + 1, len);
-    tmpto[dirlen + len + 1] = 0;
-    pto = tmpto;    
-  }
-
-  *from = pfrom;
-  *to = pto;
-  return 1;
-}
-
-static int install_rmkdir(const char *path, unsigned int mode)
+static int rmkdir(const char *path, unsigned int mode)
 {
   char pbuf[MAX_PATHLEN];
   const char *ptr;
@@ -210,303 +294,604 @@ static int install_rmkdir(const char *path, unsigned int mode)
   }
   return 0;
 }
-
-int install_copy(const char *from, const char *to, unsigned int uid,
-                 unsigned int gid, unsigned int perm)
-{
-  char tmpbuf[MAX_PATHLEN];
-  char *s;
-  unsigned int to_len;
-  int r;
-  int w;
-
-  to_len = str_len(to);
-  if (to_len >= 1019) {
-    syserr_warn3x("error: ", to, ".tmp filename too long"); return 0;
-  }
-  bin_copy(to, tmpbuf, to_len);
-  bin_copy(".tmp", tmpbuf + to_len, 4);
-  tmpbuf[to_len + 4] = 0;
-
-  bin.fd = open_ro(from);
-  if (bin.fd == -1) { syserr_warn3sys("error: open: ", from, " "); goto bad; }
-  bout.fd = open_trunc(tmpbuf);
-  if (bout.fd == -1) { syserr_warn3sys("error: open: ", tmpbuf, " "); goto bad; }
-
-  for (;;) {
-    r = buffer_feed(&bin);
-    if (r == 0) break;
-    if (r == -1) { syserr_warn1sys("error: read: "); goto bad; }
-    s = buffer_peek(&bin);
-    w = buffer_put(&bout, s, r);
-    if (w == -1) { syserr_warn1sys("error: write: "); goto bad; }
-    buffer_seek(&bin, r);
-  }
-
-  if (buffer_flush(&bout) == -1) { syserr_warn1sys("error: write: "); goto bad; }
-  if (fsync(bout.fd) == -1) { syserr_warn1sys("error: fsync: "); goto bad; }
-  if (fchmod(bout.fd, perm)) { syserr_warn1sys("error: fchmod: "); goto bad; }
-  if (fchown(bout.fd, uid, gid)) { syserr_warn1sys("error: fchown: "); goto bad; }
-  if (rename(tmpbuf, to)) { syserr_warn1sys("error: rename: "); goto bad; }
-  if (close(bin.fd) == -1) syserr_warn1sys("error: close: ");
-  if (close(bout.fd) == -1) syserr_warn1sys("error: close: ");
-  bin.fd = -1;
-  bout.fd = -1;
-
-  return 1;
-
-  bad:
-  if (bin.fd != -1)
-    if (close(bin.fd) == -1) syserr_warn1sys("error: close: ");
-  bin.fd = -1;
-  if (bout.fd != -1) {
-    if (unlink(tmpbuf) == -1)
-      if (errno != error_noent)
-        syserr_warn3sys("error: unlink: ", tmpbuf, " - ");
-    if (close(bout.fd) == -1) syserr_warn1sys("error: close: ");
-  }
-  bout.fd = -1;
-  return 0;
-}
-
-int install(const struct install_item *inst, unsigned int flags)
+void print_op(const char *op, const char *from, const char *to,
+              const char *own, const char *group, unsigned int perm)
 {
   char cnum[FMT_ULONG];
-  struct group *grp;
-  struct passwd *pwd;
-  const char *from;
-  const char *to;
-  const char *dir;
-  const char *owner;
-  const char *group;
-  unsigned int perm;
-  unsigned int uid;
-  unsigned int gid;
-
-  from = inst->from;
-  to = inst->to;
-  dir = inst->dir;
-  perm = inst->perm;
-  owner = inst->owner;
-  group = inst->group;
-
-  if (!owner) { syserr_warn1x("error: owner not defined"); return 0; }
-  if (!group) { syserr_warn1x("error: group not defined"); return 0; }
-
-  if (!name_mangle(&from, &to, dir)) return 0;
-  if (from) {
-    buffer_puts(buffer1, "install ");
-    buffer_puts(buffer1, from);
-    buffer_puts(buffer1, " ");
-    buffer_puts(buffer1, to);
-  } else {
-    buffer_puts(buffer1, "mkdir ");
-    buffer_puts(buffer1, dir);
-  }
-
+  buffer_puts(buffer1, op);
   buffer_puts(buffer1, " ");
-  cnum[fmt_uinto(cnum, perm)] = 0;
-  buffer_puts(buffer1, cnum);
-  buffer_puts(buffer1, " ");
-  buffer_puts(buffer1, owner);
-  buffer_puts(buffer1, ":");
-  buffer_puts(buffer1, group);
-  buffer_puts(buffer1, "\n");
-  if (buffer_flush(buffer1) == -1) syserr_warn1sys("error: write: ");
-
-  errno = 0;
-  pwd = getpwnam(owner);
-  if (!pwd) {
-    if (errno) {
-      syserr_warn1sys("error: getpwnam: "); return 0;
-    } else {
-      syserr_warn3x("error: no such user '", owner, "'"); return 0;
-    }
+  if (from) { buffer_puts(buffer1, from); buffer_puts(buffer1, " "); }
+  if (to) { buffer_puts(buffer1, to); buffer_puts(buffer1, " "); }
+  if (perm) {
+    cnum[fmt_uinto(cnum, perm)] = 0;
+    buffer_puts(buffer1, cnum); buffer_puts(buffer1, " ");
   }
-  uid = pwd->pw_uid;
-
-  errno = 0;
-  grp = getgrnam(group);
-  if (!pwd) {
-    if (errno) {
-      syserr_warn1sys("error: getgrnam: "); return 0;
-    } else {
-      syserr_warn3x("error: no such group '", group, "'"); return 0;
-    }
+  if (own) { buffer_puts(buffer1, own); buffer_puts(buffer1, ":"); }
+  if (group) buffer_puts(buffer1, group);
+  if (buffer_putsflush(buffer1, "\n") == -1)
+    syserr_warn1sys("error: write: ");
+}
+static int ogp(int fd, unsigned int uid, unsigned int gid, unsigned int perm)
+{
+  if (fchown(fd, uid, gid) == -1) {
+    syserr_warn1sys("error: fchown: "); return 0;
   }
-  gid = grp->gr_gid;
-
-  if (flags & INSTALL_DRYRUN) return 1;
-
-  if (from)
-    return install_copy(from, to, uid, gid, perm);
-  else
-    if (install_rmkdir(dir, perm) == -1) {
-      syserr_warn1sys("error: mkdir: "); return 0;
-    }
-
+  if (fchmod(fd, perm) == -1) {
+    syserr_warn1sys("error: fchmod: "); return 0;
+  }
   return 1;
 }
-
-int install_check(const struct install_item *inst)
+static int chkf(int fd, const char *f, unsigned int uid, unsigned int gid,
+                unsigned int perm, int type, const char *typestr)
 {
-  char cnum[FMT_ULONG];
+  char cnum1[FMT_ULONG];
   char cnum2[FMT_ULONG];
-  struct group *grp;
-  struct passwd *pwd;
   struct stat sb;
-  const char *from;
-  const char *to;
-  const char *dir;
-  const char *owner;
-  const char *group;
-  const char *target;
-  unsigned int perm;
-  unsigned int uid;
-  unsigned int gid;
-  int fd;
 
-  from = inst->from;
-  to = inst->to;
-  dir = inst->dir;
-  perm = inst->perm;
-  owner = inst->owner;
-  group = inst->group;
-
-  if (!dir) { syserr_warn1x("error: directory not defined"); return 0; }
-  if (!owner) { syserr_warn1x("error: owner not defined"); return 0; }
-  if (!group) { syserr_warn1x("error: group not defined"); return 0; }
-
-  if (!name_mangle(&from, &to, dir)) return 0;
-  if (to)
-    target = to;
-  else
-    target = dir;
-
-  buffer_puts(buffer1, "check ");
-  buffer_puts(buffer1, target);
-  buffer_puts(buffer1, "\n");
-  if (buffer_flush(buffer1) == -1) syserr_warn1sys("error: write: ");
-
-  fd = open_ro(target);
-  if (fd == -1) {
-    syserr_warn3sys("error: open: ", target, " ");
+  if (fstat(fd, &sb) == -1) {
+    syserr_warn3sys("error: open: ", f, " - "); return 0;
+  }
+  if ((sb.st_mode & S_IFMT) != type) {
+    syserr_warn4x("error: ", f, " - not a ", typestr);
+    ++install_failed;
+    return 0;
+  }
+  if ((sb.st_mode & 0777) != (int) perm) {
+    cnum1[fmt_uint(cnum1, perm)] = 0;
+    cnum2[fmt_uint(cnum2, sb.st_mode)] = 0;
+    syserr_warn4x("error: wrong mode - wanted ", cnum1, " got ", cnum2);
+    ++install_failed;
+    return 0;
+  }
+  if (sb.st_uid != uid) {
+    cnum1[fmt_uint(cnum1, uid)] = 0;
+    cnum2[fmt_uint(cnum2, sb.st_uid)] = 0;
+    syserr_warn4x("error: wrong uid - wanted ", cnum1, " got ", cnum2);
+    ++install_failed;
+    return 0;
+  }
+  if (sb.st_gid != gid) {
+    cnum1[fmt_uint(cnum1, gid)] = 0;
+    cnum2[fmt_uint(cnum2, sb.st_gid)] = 0;
+    syserr_warn4x("error: wrong gid - wanted ", cnum1, " got ", cnum2);
     ++install_failed;
     return 0;
   }
 
-  errno = 0;
-  pwd = getpwnam(owner);
-  if (!pwd) {
-    if (errno) {
-      syserr_warn1sys("error: getpwnam: "); ++install_failed; goto ERR;
-    } else {
-      syserr_warn3x("error: no such user '", owner, "'");
-      ++install_failed;
-      goto ERR;
-    }
-  }
-  uid = pwd->pw_uid;
-
-  errno = 0;
-  grp = getgrnam(group);
-  if (!pwd) {
-    if (errno) {
-      syserr_warn1sys("error: getgrnam: "); ++install_failed; goto ERR;
-    } else {
-      syserr_warn3x("error: no such group '", group, "'");
-      ++install_failed;
-      goto ERR;
-    }
-  }
-  gid = grp->gr_gid;
-
-  if (fstat(fd, &sb)) {
-    syserr_warn3sys("error: fstat: ", target, " "); goto ERR;
-  }
-
-  if (uid != sb.st_uid) {
-    cnum[fmt_ulong(cnum, sb.st_uid)] = 0;
-    cnum2[fmt_ulong(cnum2, uid)] = 0;
-    syserr_warn4x("error: file uid ", cnum, " does not match expected uid ", cnum2);
-    ++install_failed;
-    goto ERR;
-  }
-  if (gid != sb.st_gid) {
-    cnum[fmt_ulong(cnum, sb.st_gid)] = 0;
-    cnum2[fmt_ulong(cnum2, gid)] = 0;
-    syserr_warn4x("error: file gid ", cnum, " does not match expected gid ", cnum2);
-    ++install_failed;
-    goto ERR;
-  }
-
-  /* if from was specified, target must be regular file */
-  if (from) {
-    if ((sb.st_mode & S_IFMT) != S_IFREG) {
-      syserr_warn3x("error: ", target, " is not a regular file");
-      ++install_failed;
-      goto ERR;
-    }
-  } else {
-    if ((sb.st_mode & S_IFMT) != S_IFDIR) {
-      syserr_warn3x("error: ", target, " is not a directory");
-      ++install_failed;
-      goto ERR;
-    }
-  }
- 
-  if ((sb.st_mode & 07777) != perm) {
-    cnum[fmt_ulongo(cnum, sb.st_mode & 07777)] = 0;
-    cnum2[fmt_ulongo(cnum2, perm)] = 0;
-    syserr_warn4x("error: file mode ", cnum, " does not match expected mode ", cnum2);
-    ++install_failed;
-    goto ERR;
-  }
-
-  ERR:
-  if (close(fd) == -1)
-    syserr_warn3sys("error: close: ", target, " ");
-
   return 1;
 }
 
-int deinstall(const struct install_item *inst, unsigned int flags)
+static int ntrans_copy(const char **pfrom, const char **pto, const char *dir)
+{
+  const char *from;
+  const char *to;
+
+  from = *pfrom;
+  to = *pto;
+
+  if (!from) { syserr_warn1x("error: from file not defined"); return 0; }
+  if (!dir) { syserr_warn1x("error: directory not defined"); return 0; }
+  if (!to) to = from;
+
+  sstr_trunc(&tmpfrom);
+  sstr_trunc(&tmpto);
+
+  if (str_ends(from, ".lib")) {
+    if (!libname(from, tmpbuf)) return 0;
+    from = tmpbuf;
+  }
+  sstr_cats(&tmpfrom, from);
+  sstr_0(&tmpfrom);
+
+  sstr_cats(&tmpto, dir);
+  sstr_cats(&tmpto, "/");
+  if (str_ends(to, ".lib")) {
+    if (!libname(to, tmpbuf)) return 0;
+    to = tmpbuf;
+  }
+  if (!base_name(to, (char **) &to)) return 0;
+  sstr_cats(&tmpto, to);
+  sstr_0(&tmpto);
+
+  from = tmpfrom.s;
+  to = tmpto.s;
+
+  *pfrom = from;
+  *pto = to;
+  return 1; 
+}
+static int instop_copy(struct install_item *ins,
+                       unsigned int uid, unsigned int gid, unsigned int flag)
 {
   const char *from;
   const char *to;
   const char *dir;
-  const char *target;
+  char *s;
+  int r;
+  int w;
 
-  from = inst->from;
-  to = inst->to;
-  dir = inst->dir;
+  dir = ins->dir;
+  from = ins->from;
+  to = ins->to;
 
-  if (!dir) { syserr_warn1x("error: directory not defined"); return 0; }
-  if (!name_mangle(&from, &to, dir)) return 0;
-  if (to) {
-    target = to;
-    buffer_puts(buffer1, "unlink ");
-    buffer_puts(buffer1, target);
-    buffer_puts(buffer1, "\n");
-    if (buffer_flush(buffer1) == -1) syserr_warn1x("error: write: ");
-    if (flags & INSTALL_DRYRUN) return 1;
-    if (unlink(target) == -1) {
-      syserr_warn3sys("error: unlink: ", target, " ");
-      ++deinstall_failed;
-      return 0;
-    }
-  } else {
-    target = dir;
-    buffer_puts(buffer1, "rmdir ");
-    buffer_puts(buffer1, target);
-    buffer_puts(buffer1, "\n");
-    if (buffer_flush(buffer1) == -1) syserr_warn1x("error: write: ");
-    if (flags & INSTALL_DRYRUN) return 1;
-    if (rmdir(target) == -1) {
-      syserr_warn3sys("error: rmdir: ", target, " ");
-      ++deinstall_failed;
-      return 0;
+  print_op("install", from, to, ins->owner, ins->group, ins->perm);
+  if (flag & INSTALL_DRYRUN) return 1;
+
+  /* copy */
+  sstr_trunc(&tmpfn);
+  sstr_cats(&tmpfn, to);
+  sstr_cats(&tmpfn, ".tmp");
+  sstr_0(&tmpfn);
+
+  obuf.fd = open_trunc(tmpfn.s);
+  if (obuf.fd == -1) {
+    syserr_warn3sys("error: open: ", tmpfn.s, " - "); goto ERROR;
+  }
+  ibuf.fd = open_ro(from);
+  if (ibuf.fd == -1) {
+    syserr_warn3sys("error: open: ", from, " - "); goto ERROR;
+  } 
+
+  for (;;) {
+    r = buffer_feed(&ibuf);
+    if (r == 0) break;
+    if (r == -1) { syserr_warn1sys("error: read: "); goto ERROR; }
+    s = buffer_peek(&ibuf);
+    w = buffer_put(&obuf, s, r);
+    if (w == -1) { syserr_warn1sys("error: write: "); goto ERROR; }
+    buffer_seek(&ibuf, r);
+  }
+  if (fsync(obuf.fd) == -1) {
+    syserr_warn3sys("error: fsync: ", tmpfn.s, " - "); goto ERROR;
+  }
+  if (!ogp(obuf.fd, uid, gid, ins->perm)) goto ERROR;
+  if (rename(tmpfn.s, to) == -1) {
+    syserr_warn3sys("error: rename: ", to, " - "); goto ERROR;
+  }
+  if (close(ibuf.fd) == -1) syserr_warn1sys("error: close: ");
+  if (close(obuf.fd) == -1) syserr_warn1sys("error: close: ");
+  ibuf.fd = -1;
+  obuf.fd = -1;
+
+  return 1;
+
+  ERROR:
+  if (ibuf.fd != -1)
+    if (close(ibuf.fd) == -1) syserr_warn1sys("error: close: ");
+  ibuf.fd = -1;
+  if (obuf.fd != -1) {
+    if (unlink(tmpfn.s) == -1)
+      if (errno != error_noent)
+        syserr_warn3sys("error: unlink: ", tmpfn.s, " - ");
+    if (close(obuf.fd) == -1) syserr_warn1sys("error: close: ");
+  }
+  obuf.fd = -1;
+  return 0;
+}
+static int ntrans_link(const char **pfrom, const char **pto, const char *dir)
+{
+  if (!*pfrom) { syserr_warn1x("error: from file not defined"); return 0; }
+  if (!*pto) { syserr_warn1x("error: to file not defined"); return 0; }
+  return 1;
+}
+static int instop_link(struct install_item *ins,
+                       unsigned int uid, unsigned int gid, unsigned int flag)
+{
+  const char *from;
+  const char *to;
+  unsigned int perm;
+  int fd;
+  int r;
+
+  from = ins->from;
+  to = ins->to;
+  perm = ins->perm;
+
+  print_op("symlink", from, to, ins->owner, ins->group, perm);
+  if (flag & INSTALL_DRYRUN) return 1;
+
+  if (unlink(to) == -1) {
+    if (errno != error_noent) {
+      syserr_warn3sys("error: symlink: ", to, " - "); return 0;
     }
   }
+  if (symlink(from, to) == -1) {
+    syserr_warn3sys("error: symlink: ", to, " - "); return 0;
+  }
+  fd = open_nofollow(to);
+  if (fd == -1) {
+    syserr_warn3sys("error: open: ", to, " - "); return 0;
+  }
+  r = ogp(fd, uid, gid, perm);
+  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
+  return r;
+}
+static int ntrans_liblink(const char **pfrom, const char **pto, const char *dir)
+{
+  const char *from;
+  const char *to;
+  int pos;
+
+  from = *pfrom;
+  to = *pto;
+  
+  if (!dir) { syserr_warn1x("error: directory not defined"); return 0; }
+  if (!from) { syserr_warn1x("error: from file not defined"); return 0; }
+  if (!to) to = from;
+ 
+  sstr_trunc(&tmpfrom);
+  sstr_trunc(&tmpto);
+  sstr_cats(&tmpfrom, dir);
+  sstr_cats(&tmpfrom, "/");
+  sstr_cats(&tmpto, dir);
+  sstr_cats(&tmpto, "/");
+
+  if (str_ends(from, ".lib")) {
+    if (!libname(from, tmpbuf)) return 0;
+    from = tmpbuf;
+  }
+  if (!base_name(from, (char **) &from)) return 0;
+  sstr_cats(&tmpfrom, from);
+
+  pos = str_chr(from, '.') + 1;
+  sstr_cats(&tmpto, "lib");
+  sstr_catb(&tmpto, from, pos + scan_notcharset(from + pos, "."));
+
+  sstr_0(&tmpfrom);
+  sstr_0(&tmpto);
+  from = tmpfrom.s;
+  to = tmpto.s;
+
+  *pfrom = from;
+  *pto = to;
   return 1;
+}
+static int instop_liblink(struct install_item *ins,
+                          unsigned int uid, unsigned int gid, unsigned int flag)
+{
+  const char *from;
+  const char *to;
+  const char *dir;
+  int fd;
+  int r;
+  unsigned int perm;
+
+  from = ins->from;
+  to = ins->to;
+  dir = ins->dir;
+  perm = ins->perm;
+
+  print_op("lib-symlink", from, to, ins->owner, ins->group, perm);
+  if (flag & INSTALL_DRYRUN) return 1;
+
+  if (unlink(to) == -1) {
+    if (errno != error_noent) {
+      syserr_warn3sys("error: symlink: ", to, " - "); return 0;
+    }
+  }
+  if (symlink(from, to) == -1) {
+    syserr_warn3sys("error: symlink: ", to, " - "); return 0;
+  }
+  fd = open_nofollow(to);
+  if (fd == -1) {
+    syserr_warn3sys("error: open: ", to, " - "); return 0;
+  }
+  r = ogp(fd, uid, gid, perm);
+  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
+  return r;
+}
+static int ntrans_mkdir(const char **pfrom, const char **pto, const char *dir)
+{
+  if (!dir) { syserr_warn1x("error: directory not defined"); return 0; }
+  return 1;
+}
+static int instop_mkdir(struct install_item *ins,
+                        unsigned int uid, unsigned int gid, unsigned int flag)
+{
+  unsigned int perm;
+  int fd;
+  int r;
+  const char *dir;
+
+  dir = ins->dir;
+  print_op("mkdir", dir, 0, ins->owner, ins->group, ins->perm);
+  if (flag & INSTALL_DRYRUN) return 1;
+
+  if (rmkdir(dir, ins->perm) == -1) {
+    syserr_warn3sys("error: mkdir: ", dir, " - ");
+    return 0;
+  }
+  fd = open_ro(dir);
+  if (fd == -1) {
+    syserr_warn3sys("error: open: ", dir, " - ");
+    return 0;
+  }
+  r = ogp(fd, uid, gid, perm);
+  if (close(fd) == -1) syserr_warn3sys("error: close: ", dir, " - ");
+  return r;
+}
+
+struct instop {
+  int (*oper)(struct install_item *, unsigned int, unsigned int, unsigned int);
+  int (*trans)(const char **, const char **, const char *);
+};
+
+static const struct instop install_opers[] = {
+  { instop_copy, ntrans_copy },
+  { instop_link, ntrans_link },
+  { instop_mkdir, ntrans_mkdir },
+  { instop_liblink, ntrans_liblink },
+};
+static const unsigned int num_inst_opers = sizeof(install_opers) /
+                                           sizeof(struct instop);
+
+static int instchk_file(struct install_item *ins,
+                        unsigned int uid, unsigned int gid, unsigned int flag)
+{
+  int fd;
+  unsigned int perm;
+  const char *to;
+
+  to = ins->to;
+  perm = ins->perm;
+
+  print_op("check", 0, to, ins->owner, ins->group, ins->perm);
+  if (flag & INSTALL_DRYRUN) return 1; 
+
+  fd = open_nofollow(to);
+  if (fd == -1) {
+    syserr_warn3sys("error: open: ", to, " - "); ++install_failed; return 0;
+  }
+  if (!chkf(fd, to, uid, gid, perm, S_IFREG, "regular file")) {
+    if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
+    return 0;
+  }
+  return 1;
+}
+static int instchk_link(struct install_item *ins,
+                        unsigned int uid, unsigned int gid, unsigned int flag)
+{
+  int fd;
+  unsigned int perm;
+  const char *to;
+
+  to = ins->to;
+  perm = ins->perm;
+
+  print_op("check", 0, to, ins->owner, ins->group, ins->perm);
+  if (flag & INSTALL_DRYRUN) return 1; 
+
+  fd = open_nofollow(to);
+  if (fd == -1) {
+    syserr_warn3sys("error: open: ", to, " - "); ++install_failed; return 0;
+  }
+  if (!chkf(fd, to, uid, gid, perm, S_IFLNK, "symbolic link")) {
+    if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
+    return 0;
+  }
+  return 1;
+}
+static int instchk_dir(struct install_item *ins,
+                       unsigned int uid, unsigned int gid, unsigned int flag)
+{
+  int fd;
+  unsigned int perm;
+  const char *dir;
+
+  dir = ins->dir;
+  perm = ins->perm;
+
+  print_op("check", 0, dir, ins->owner, ins->group, ins->perm);
+  if (flag & INSTALL_DRYRUN) return 1; 
+
+  fd = open_nofollow(dir);
+  if (fd == -1) {
+    syserr_warn3sys("error: open: ", dir, " - "); ++install_failed; return 0;
+  }
+  if (!chkf(fd, dir, uid, gid, perm, S_IFDIR, "directory")) {
+    if (close(fd) == -1) syserr_warn3sys("error: close: ", dir, " - ");
+    return 0;
+  }
+  return 1;
+}
+static int instchk_liblink(struct install_item *ins,
+                           unsigned int uid, unsigned int gid, unsigned int flag)
+{
+  int fd;
+  unsigned int perm;
+  const char *to;
+
+  to = ins->to;
+  perm = ins->perm;
+
+  print_op("check", 0, to, ins->owner, ins->group, ins->perm);
+  if (flag & INSTALL_DRYRUN) return 1; 
+
+  fd = open_nofollow(to);
+  if (fd == -1) {
+    syserr_warn3sys("error: open: ", to, " - "); ++install_failed; return 0;
+  }
+  if (!chkf(fd, to, uid, gid, perm, S_IFLNK, "symbolic link")) {
+    if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
+    return 0;
+  }
+  return 1;
+}
+
+static const struct instop instchk_opers[] = {
+  { instchk_file, ntrans_copy },
+  { instchk_link, ntrans_link },
+  { instchk_dir, ntrans_mkdir },
+  { instchk_liblink, ntrans_liblink },
+};
+static const unsigned int num_instchk_opers = sizeof(instchk_opers) /
+                                              sizeof(struct instop);
+
+int install(struct install_item *i, unsigned int flag)
+{
+  unsigned int uid;
+  unsigned int gid;
+
+  if (i->op >= num_inst_opers) {
+    syserr_warn1x("error: unknown operator");
+    return 0;
+  }
+  if (!i->owner) { syserr_warn1x("error: owner not defined"); return 0; }
+  if (!i->group) { syserr_warn1x("error: group not defined"); return 0; }
+  if (!conv_uidgid(i->owner, &uid, i->group, &gid)) return 0;
+  if (!install_opers[i->op].trans(&i->from, &i->to, i->dir)) return 0;
+  return install_opers[i->op].oper(i, uid, gid, flag);
+}
+int install_check(struct install_item *i)
+{
+  unsigned int uid;
+  unsigned int gid;
+
+  if (i->op >= num_instchk_opers) {
+    syserr_warn1x("error: unknown operator");
+    return 0;
+  }
+  if (!i->owner) { syserr_warn1x("error: owner not defined"); return 0; }
+  if (!i->group) { syserr_warn1x("error: group not defined"); return 0; }
+  if (!conv_uidgid(i->owner, &uid, i->group, &gid)) return 0;
+  if (!instchk_opers[i->op].trans(&i->from, &i->to, i->dir)) return 0;
+  return instchk_opers[i->op].oper(i, uid, gid, 0);
+}
+
+static int deinst_file(struct install_item *ins,
+                       unsigned int uid, unsigned int gid, unsigned int flag)
+{
+  int fd;
+  unsigned int perm;
+  const char *to;
+
+  to = ins->to;
+  perm = ins->perm;
+
+  print_op("unlink", 0, to, 0, 0, 0);
+  if (flag & INSTALL_DRYRUN) return 1; 
+
+  fd = open_nofollow(to);
+  if (fd == -1) {
+    syserr_warn3sys("error: open: ", to, " - "); ++deinstall_failed; return 0;
+  }
+  if (!chkf(fd, to, uid, gid, perm, S_IFREG, "regular file")) goto ERROR;
+  if (unlink(to) == -1) {
+    syserr_warn3sys("error: unlink: ", to, " - "); goto ERROR;
+  }
+  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
+  return 1;
+  ERROR:
+  ++deinstall_failed;
+  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
+  return 0;
+}
+static int deinst_link(struct install_item *ins,
+                       unsigned int uid, unsigned int gid, unsigned int flag)
+{
+  int fd;
+  unsigned int perm;
+  const char *to;
+
+  to = ins->to;
+  perm = ins->perm;
+
+  print_op("unlink", 0, to, 0, 0, 0);
+  if (flag & INSTALL_DRYRUN) return 1; 
+
+  fd = open_nofollow(to);
+  if (fd == -1) {
+    syserr_warn3sys("error: open: ", to, " - "); ++deinstall_failed; return 0;
+  }
+  if (!chkf(fd, to, uid, gid, perm, S_IFLNK, "symbolic link")) goto ERROR;
+  if (unlink(to) == -1) {
+    syserr_warn3sys("error: unlink: ", to, " - "); goto ERROR;
+  }
+  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - "); 
+  return 1;
+  ERROR:  
+  ++deinstall_failed;
+  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - "); 
+  return 0;
+}
+static int deinst_dir(struct install_item *ins,
+                      unsigned int uid, unsigned int gid, unsigned int flag)
+{
+  int fd;
+  unsigned int perm;
+  const char *dir;
+
+  dir = ins->dir;
+  perm = ins->perm;
+
+  print_op("rmdir", 0, dir, 0, 0, 0);
+  if (flag & INSTALL_DRYRUN) return 1; 
+
+  fd = open_nofollow(dir);
+  if (fd == -1) {
+    syserr_warn3sys("error: open: ", dir, " - "); ++deinstall_failed; return 0;
+  }
+  if (!chkf(fd, dir, uid, gid, perm, S_IFDIR, "directory")) goto ERROR;
+  if (rmdir(dir) == -1) {
+    syserr_warn3sys("error: rmdir: ", dir, " - "); goto ERROR;
+  }
+  if (close(fd) == -1) syserr_warn3sys("error: close: ", dir, " - ");
+  return 1;
+  ERROR:
+  ++deinstall_failed;
+  if (close(fd) == -1) syserr_warn3sys("error: close: ", dir, " - ");
+  return 0;
+}
+static int deinst_liblink(struct install_item *ins,
+                          unsigned int uid, unsigned int gid, unsigned int flag)
+{
+  int fd;
+  unsigned int perm;
+  const char *to;
+
+  to = ins->to;
+  perm = ins->perm;
+
+  print_op("unlink", 0, to, 0, 0, 0);
+  if (flag & INSTALL_DRYRUN) return 1; 
+
+  fd = open_nofollow(to);
+  if (fd == -1) {
+    syserr_warn3sys("error: open: ", to, " - "); ++deinstall_failed; return 0;
+  }
+  if (!chkf(fd, to, uid, gid, perm, S_IFLNK, "symbolic link")) goto ERROR;
+  if (unlink(to) == -1) {
+    syserr_warn3sys("error: unlink: ", to, " - "); goto ERROR;
+  }
+  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
+  return 1;
+  ERROR:
+  ++deinstall_failed;
+  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
+  return 0;
+}
+
+static const struct instop deinst_opers[] = {
+  { deinst_file, ntrans_copy },
+  { deinst_link, ntrans_link },
+  { deinst_dir, ntrans_mkdir },
+  { deinst_liblink, ntrans_liblink },
+};
+static const unsigned int num_deinst_opers = sizeof(deinst_opers) /
+                                             sizeof(struct instop);
+
+int deinstall(struct install_item *i, unsigned int flag)
+{
+  unsigned int uid;
+  unsigned int gid;
+
+  if (i->op >= num_deinst_opers) {
+    syserr_warn1x("error: unknown operator");
+    return 0;
+  }
+  if (!i->owner) { syserr_warn1x("error: owner not defined"); return 0; }
+  if (!i->group) { syserr_warn1x("error: group not defined"); return 0; }
+  if (!conv_uidgid(i->owner, &uid, i->group, &gid)) return 0;
+  if (!deinst_opers[i->op].trans(&i->from, &i->to, i->dir)) return 0;
+  return deinst_opers[i->op].oper(i, uid, gid, 0);
 }
