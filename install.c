@@ -21,11 +21,6 @@
  * files just for the installer.
  */
 
-int open_nofollow(const char *f)
-{
-  return open(f, O_RDONLY | O_NONBLOCK | O_NOFOLLOW);
-}
-
 #define sstr_INIT(s) { (s), (0), (sizeof s) }
 struct sstr {
   char *s;
@@ -311,16 +306,6 @@ void print_op(const char *op, const char *from, const char *to,
   if (buffer_putsflush(buffer1, "\n") == -1)
     syserr_warn1sys("error: write: ");
 }
-static int ogp(int fd, unsigned int uid, unsigned int gid, unsigned int perm)
-{
-  if (fchown(fd, uid, gid) == -1) {
-    syserr_warn1sys("error: fchown: "); return 0;
-  }
-  if (fchmod(fd, perm) == -1) {
-    syserr_warn1sys("error: fchmod: "); return 0;
-  }
-  return 1;
-}
 static int chkf(int fd, const char *f, unsigned int uid, unsigned int gid,
                 unsigned int perm, int type, const char *typestr)
 {
@@ -328,8 +313,20 @@ static int chkf(int fd, const char *f, unsigned int uid, unsigned int gid,
   char cnum2[FMT_ULONG];
   struct stat sb;
 
-  if (fstat(fd, &sb) == -1) {
-    syserr_warn3sys("error: open: ", f, " - "); return 0;
+  if (fd == -1) {
+    if (type == S_IFLNK) {
+      if (lstat(f, &sb) == -1) {
+        syserr_warn3sys("error: lstat: ", f, " - "); return 0;
+      }
+    } else {
+      if (stat(f, &sb) == -1) {
+        syserr_warn3sys("error: stat: ", f, " - "); return 0;
+      }
+    }
+  } else {
+    if (fstat(fd, &sb) == -1) {
+      syserr_warn3sys("error: fstat: ", f, " - "); return 0;
+    }
   }
   if ((sb.st_mode & S_IFMT) != type) {
     syserr_warn4x("error: ", f, " - not a ", typestr);
@@ -337,8 +334,8 @@ static int chkf(int fd, const char *f, unsigned int uid, unsigned int gid,
     return 0;
   }
   if ((sb.st_mode & 0777) != (int) perm) {
-    cnum1[fmt_uint(cnum1, perm)] = 0;
-    cnum2[fmt_uint(cnum2, sb.st_mode)] = 0;
+    cnum1[fmt_uinto(cnum1, perm)] = 0;
+    cnum2[fmt_uinto(cnum2, sb.st_mode & 0777)] = 0;
     syserr_warn4x("error: wrong mode - wanted ", cnum1, " got ", cnum2);
     ++install_failed;
     return 0;
@@ -409,10 +406,12 @@ static int instop_copy(struct install_item *ins,
   char *s;
   int r;
   int w;
+  unsigned int perm;
 
   dir = ins->dir;
   from = ins->from;
   to = ins->to;
+  perm = ins->perm;
 
   print_op("install", from, to, ins->owner, ins->group, ins->perm);
   if (flag & INSTALL_DRYRUN) return 1;
@@ -441,10 +440,18 @@ static int instop_copy(struct install_item *ins,
     if (w == -1) { syserr_warn1sys("error: write: "); goto ERROR; }
     buffer_seek(&ibuf, r);
   }
+  if (buffer_flush(&obuf) == -1) {
+    syserr_warn3sys("error: write: ", tmpfn.s, " - "); goto ERROR;
+  }
   if (fsync(obuf.fd) == -1) {
     syserr_warn3sys("error: fsync: ", tmpfn.s, " - "); goto ERROR;
   }
-  if (!ogp(obuf.fd, uid, gid, ins->perm)) goto ERROR;
+  if (fchown(obuf.fd, uid, gid) == -1) {
+    syserr_warn1sys("error: fchown: "); goto ERROR;
+  }
+  if (fchmod(obuf.fd, perm) == -1) {
+    syserr_warn1sys("error: fchmod: "); goto ERROR;
+  }
   if (rename(tmpfn.s, to) == -1) {
     syserr_warn3sys("error: rename: ", to, " - "); goto ERROR;
   }
@@ -479,32 +486,44 @@ static int instop_link(struct install_item *ins,
 {
   const char *from;
   const char *to;
+  const char *dir;
   unsigned int perm;
-  int fd;
-  int r;
+  int pwdfd;
 
   from = ins->from;
   to = ins->to;
+  dir = ins->dir;
   perm = ins->perm;
 
   print_op("symlink", from, to, ins->owner, ins->group, perm);
   if (flag & INSTALL_DRYRUN) return 1;
 
+  pwdfd = open_ro(".");
+  if (pwdfd == -1) { syserr_warn1sys("error: open: "); return 0; }
+  if (chdir(dir) == -1) { syserr_warn1sys("error: chdir: "); return 0; }
   if (unlink(to) == -1) {
     if (errno != error_noent) {
-      syserr_warn3sys("error: symlink: ", to, " - "); return 0;
+      syserr_warn3sys("error: symlink: ", to, " - "); goto ERROR;
     }
   }
   if (symlink(from, to) == -1) {
-    syserr_warn3sys("error: symlink: ", to, " - "); return 0;
+    syserr_warn3sys("error: symlink: ", to, " - "); goto ERROR;
   }
-  fd = open_nofollow(to);
-  if (fd == -1) {
-    syserr_warn3sys("error: open: ", to, " - "); return 0;
+  if (lchown(to, uid, gid) == -1) {
+    syserr_warn1sys("error: fchown: "); goto ERROR;
   }
-  r = ogp(fd, uid, gid, perm);
-  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
-  return r;
+  if (lchmod(to, perm) == -1) {
+    syserr_warn1sys("error: fchmod: "); goto ERROR;
+  }
+  if (fchdir(pwdfd) == -1) 
+    syserr_die1sys(112, "fatal: could not restore current directory: ");
+  if (close(pwdfd) == -1) syserr_warn1sys("error: close: ");
+  return 1;
+  ERROR:
+  if (fchdir(pwdfd) == -1)
+    syserr_die1sys(112, "fatal: could not restore current directory: ");
+  if (close(pwdfd) == -1) syserr_warn1sys("error: close: ");
+  return 0;
 }
 static int ntrans_liblink(const char **pfrom, const char **pto, const char *dir)
 {
@@ -521,11 +540,6 @@ static int ntrans_liblink(const char **pfrom, const char **pto, const char *dir)
  
   sstr_trunc(&tmpfrom);
   sstr_trunc(&tmpto);
-  sstr_cats(&tmpfrom, dir);
-  sstr_cats(&tmpfrom, "/");
-  sstr_cats(&tmpto, dir);
-  sstr_cats(&tmpto, "/");
-
   if (str_ends(from, ".lib")) {
     if (!libname(from, tmpbuf)) return 0;
     from = tmpbuf;
@@ -549,36 +563,7 @@ static int ntrans_liblink(const char **pfrom, const char **pto, const char *dir)
 static int instop_liblink(struct install_item *ins,
                           unsigned int uid, unsigned int gid, unsigned int flag)
 {
-  const char *from;
-  const char *to;
-  const char *dir;
-  int fd;
-  int r;
-  unsigned int perm;
-
-  from = ins->from;
-  to = ins->to;
-  dir = ins->dir;
-  perm = ins->perm;
-
-  print_op("lib-symlink", from, to, ins->owner, ins->group, perm);
-  if (flag & INSTALL_DRYRUN) return 1;
-
-  if (unlink(to) == -1) {
-    if (errno != error_noent) {
-      syserr_warn3sys("error: symlink: ", to, " - "); return 0;
-    }
-  }
-  if (symlink(from, to) == -1) {
-    syserr_warn3sys("error: symlink: ", to, " - "); return 0;
-  }
-  fd = open_nofollow(to);
-  if (fd == -1) {
-    syserr_warn3sys("error: open: ", to, " - "); return 0;
-  }
-  r = ogp(fd, uid, gid, perm);
-  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
-  return r;
+  return instop_link(ins, uid, gid, flag);
 }
 static int ntrans_mkdir(const char **pfrom, const char **pto, const char *dir)
 {
@@ -590,25 +575,31 @@ static int instop_mkdir(struct install_item *ins,
 {
   unsigned int perm;
   int fd;
-  int r;
   const char *dir;
 
+  perm = ins->perm;
   dir = ins->dir;
-  print_op("mkdir", dir, 0, ins->owner, ins->group, ins->perm);
+  print_op("mkdir", dir, 0, ins->owner, ins->group, perm);
   if (flag & INSTALL_DRYRUN) return 1;
 
   if (rmkdir(dir, ins->perm) == -1) {
-    syserr_warn3sys("error: mkdir: ", dir, " - ");
-    return 0;
+    syserr_warn3sys("error: mkdir: ", dir, " - "); return 0;
   }
   fd = open_ro(dir);
   if (fd == -1) {
-    syserr_warn3sys("error: open: ", dir, " - ");
-    return 0;
+    syserr_warn3sys("error: open: ", dir, " - "); return 0;
   }
-  r = ogp(fd, uid, gid, perm);
+  if (fchown(fd, uid, gid) == -1) {
+    syserr_warn3sys("error: fchown: ", dir, " - "); goto ERROR;
+  }
+  if (fchmod(fd, perm) == -1) {
+    syserr_warn3sys("error: fchmod: ", dir, " - "); goto ERROR;
+  }
   if (close(fd) == -1) syserr_warn3sys("error: close: ", dir, " - ");
-  return r;
+  return 1;
+  ERROR:
+  if (close(fd) == -1) syserr_warn3sys("error: close: ", dir, " - ");
+  return 0;
 }
 
 struct instop {
@@ -629,93 +620,67 @@ static int instchk_file(struct install_item *ins,
                         unsigned int uid, unsigned int gid, unsigned int flag)
 {
   int fd;
+  int r;
   unsigned int perm;
   const char *to;
 
   to = ins->to;
   perm = ins->perm;
 
-  print_op("check", 0, to, ins->owner, ins->group, ins->perm);
+  print_op("check", 0, to, ins->owner, ins->group, perm);
   if (flag & INSTALL_DRYRUN) return 1; 
 
-  fd = open_nofollow(to);
-  if (fd == -1) {
-    syserr_warn3sys("error: open: ", to, " - "); ++install_failed; return 0;
-  }
-  if (!chkf(fd, to, uid, gid, perm, S_IFREG, "regular file")) {
-    if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
-    return 0;
-  }
-  return 1;
+  fd = open_ro(to);
+  if (fd == -1) { syserr_warn3sys("error: open: ", to, " - "); return 0; }
+  r = chkf(fd, to, uid, gid, perm, S_IFREG, "regular file");
+  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
+  return r;
 }
 static int instchk_link(struct install_item *ins,
                         unsigned int uid, unsigned int gid, unsigned int flag)
 {
-  int fd;
   unsigned int perm;
   const char *to;
+  const char *dir;
+  int r;
+  int pwdfd;
 
+  dir = ins->dir;
   to = ins->to;
   perm = ins->perm;
 
-  print_op("check", 0, to, ins->owner, ins->group, ins->perm);
+  print_op("check-link", 0, to, ins->owner, ins->group, perm);
   if (flag & INSTALL_DRYRUN) return 1; 
-
-  fd = open_nofollow(to);
-  if (fd == -1) {
-    syserr_warn3sys("error: open: ", to, " - "); ++install_failed; return 0;
+  pwdfd = open_ro(".");
+  if (pwdfd == -1) { syserr_warn1sys("error: open: "); return 0; }
+  if (chdir(dir) == -1) {
+    syserr_warn3sys("error: chdir: ", dir, " - "); return 0;
   }
-  if (!chkf(fd, to, uid, gid, perm, S_IFLNK, "symbolic link")) {
-    if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
-    return 0;
-  }
-  return 1;
+  r = chkf(-1, to, uid, gid, perm, S_IFLNK, "symbolic link");
+  if (!fchdir(pwdfd) == -1)
+    syserr_die1sys(112, "fatal: could not restore current directory: ");
+  if (close(pwdfd) == -1)
+    syserr_warn1sys("error: close: ");
+  return r;
 }
 static int instchk_dir(struct install_item *ins,
                        unsigned int uid, unsigned int gid, unsigned int flag)
 {
-  int fd;
   unsigned int perm;
   const char *dir;
 
   dir = ins->dir;
   perm = ins->perm;
 
-  print_op("check", 0, dir, ins->owner, ins->group, ins->perm);
+  print_op("check-dir", 0, dir, ins->owner, ins->group, ins->perm);
   if (flag & INSTALL_DRYRUN) return 1; 
 
-  fd = open_nofollow(dir);
-  if (fd == -1) {
-    syserr_warn3sys("error: open: ", dir, " - "); ++install_failed; return 0;
-  }
-  if (!chkf(fd, dir, uid, gid, perm, S_IFDIR, "directory")) {
-    if (close(fd) == -1) syserr_warn3sys("error: close: ", dir, " - ");
-    return 0;
-  }
   return 1;
 }
 static int instchk_liblink(struct install_item *ins,
                            unsigned int uid, unsigned int gid, unsigned int flag)
 {
-  int fd;
-  unsigned int perm;
-  const char *to;
-
-  to = ins->to;
-  perm = ins->perm;
-
-  print_op("check", 0, to, ins->owner, ins->group, ins->perm);
-  if (flag & INSTALL_DRYRUN) return 1; 
-
-  fd = open_nofollow(to);
-  if (fd == -1) {
-    syserr_warn3sys("error: open: ", to, " - "); ++install_failed; return 0;
-  }
-  if (!chkf(fd, to, uid, gid, perm, S_IFLNK, "symbolic link")) {
-    if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
-    return 0;
-  }
-  return 1;
+  return instchk_link(ins, uid, gid, flag);
 }
 
 static const struct instop instchk_opers[] = {
@@ -761,114 +726,60 @@ int install_check(struct install_item *i)
 static int deinst_file(struct install_item *ins,
                        unsigned int uid, unsigned int gid, unsigned int flag)
 {
-  int fd;
-  unsigned int perm;
-  const char *to;
-
-  to = ins->to;
-  perm = ins->perm;
-
-  print_op("unlink", 0, to, 0, 0, 0);
+  print_op("unlink", 0, ins->to, 0, 0, 0);
   if (flag & INSTALL_DRYRUN) return 1; 
 
-  fd = open_nofollow(to);
-  if (fd == -1) {
-    syserr_warn3sys("error: open: ", to, " - "); ++deinstall_failed; return 0;
+  if (unlink(ins->to) == -1) {
+    syserr_warn3sys("error: unlink: ", ins->to, " - ");
+    ++deinstall_failed;
+    return 0;
   }
-  if (!chkf(fd, to, uid, gid, perm, S_IFREG, "regular file")) goto ERROR;
-  if (unlink(to) == -1) {
-    syserr_warn3sys("error: unlink: ", to, " - "); goto ERROR;
-  }
-  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
   return 1;
-  ERROR:
-  ++deinstall_failed;
-  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
-  return 0;
 }
 static int deinst_link(struct install_item *ins,
                        unsigned int uid, unsigned int gid, unsigned int flag)
 {
-  int fd;
-  unsigned int perm;
-  const char *to;
+  int pwdfd;
 
-  to = ins->to;
-  perm = ins->perm;
-
-  print_op("unlink", 0, to, 0, 0, 0);
+  print_op("unlink", 0, ins->to, 0, 0, 0);
   if (flag & INSTALL_DRYRUN) return 1; 
 
-  fd = open_nofollow(to);
-  if (fd == -1) {
-    syserr_warn3sys("error: open: ", to, " - "); ++deinstall_failed; return 0;
+  pwdfd = open_ro(".");
+  if (pwdfd == -1) { syserr_warn1sys("error: open: "); return 0; }
+  if (chdir(ins->dir) == -1) {
+    syserr_warn3sys("error: chdir: ", ins->dir, " - "); goto ERROR;
   }
-  if (!chkf(fd, to, uid, gid, perm, S_IFLNK, "symbolic link")) goto ERROR;
-  if (unlink(to) == -1) {
-    syserr_warn3sys("error: unlink: ", to, " - "); goto ERROR;
+  if (unlink(ins->to) == -1) {
+    syserr_warn3sys("error: unlink: ", ins->to, " - "); goto ERROR;
   }
-  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - "); 
+  if (fchdir(pwdfd) == -1)
+    syserr_die1sys(112, "fatal: could not restore current directory: ");
+  if (close(pwdfd) == -1) syserr_warn1sys("error: close: ");
   return 1;
-  ERROR:  
+  ERROR:
   ++deinstall_failed;
-  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - "); 
+  if (fchdir(pwdfd) == -1)
+    syserr_die1sys(112, "fatal: could not restore current directory: ");
+  if (close(pwdfd) == -1) syserr_warn1sys("error: close: ");
   return 0;
 }
 static int deinst_dir(struct install_item *ins,
                       unsigned int uid, unsigned int gid, unsigned int flag)
 {
-  int fd;
-  unsigned int perm;
-  const char *dir;
-
-  dir = ins->dir;
-  perm = ins->perm;
-
-  print_op("rmdir", 0, dir, 0, 0, 0);
+  print_op("rmdir", 0, ins->dir, 0, 0, 0);
   if (flag & INSTALL_DRYRUN) return 1; 
 
-  fd = open_nofollow(dir);
-  if (fd == -1) {
-    syserr_warn3sys("error: open: ", dir, " - "); ++deinstall_failed; return 0;
+  if (rmdir(ins->dir) == -1) {
+    syserr_warn3sys("error: rmdir: ", ins->dir, " - ");
+    ++deinstall_failed;
+    return 0;
   }
-  if (!chkf(fd, dir, uid, gid, perm, S_IFDIR, "directory")) goto ERROR;
-  if (rmdir(dir) == -1) {
-    syserr_warn3sys("error: rmdir: ", dir, " - "); goto ERROR;
-  }
-  if (close(fd) == -1) syserr_warn3sys("error: close: ", dir, " - ");
   return 1;
-  ERROR:
-  ++deinstall_failed;
-  if (close(fd) == -1) syserr_warn3sys("error: close: ", dir, " - ");
-  return 0;
 }
 static int deinst_liblink(struct install_item *ins,
                           unsigned int uid, unsigned int gid, unsigned int flag)
 {
-  int fd;
-  unsigned int perm;
-  const char *to;
-
-  to = ins->to;
-  perm = ins->perm;
-
-  print_op("unlink", 0, to, 0, 0, 0);
-  if (flag & INSTALL_DRYRUN) return 1; 
-
-  fd = open_nofollow(to);
-  if (fd == -1) {
-    syserr_warn3sys("error: open: ", to, " - "); ++deinstall_failed; return 0;
-  }
-  if (!chkf(fd, to, uid, gid, perm, S_IFLNK, "symbolic link")) goto ERROR;
-  if (unlink(to) == -1) {
-    syserr_warn3sys("error: unlink: ", to, " - "); goto ERROR;
-  }
-  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
-  return 1;
-  ERROR:
-  ++deinstall_failed;
-  if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
-  return 0;
+  return deinst_link(ins, uid, gid, flag);
 }
 
 static const struct instop deinst_opers[] = {
