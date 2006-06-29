@@ -337,12 +337,14 @@ static int chkf(int fd, const char *f, int uid, int gid,
     ++install_failed;
     return 0;
   }
-  if ((sb.st_mode & 0777) != (int) perm) {
-    cnum1[fmt_uinto(cnum1, perm)] = 0;
-    cnum2[fmt_uinto(cnum2, sb.st_mode & 0777)] = 0;
-    syserr_warn4x("error: wrong mode - wanted ", cnum1, " got ", cnum2);
-    ++install_failed;
-    return 0;
+  if (perm) {
+    if ((sb.st_mode & 0777) != (int) perm) {
+      cnum1[fmt_uinto(cnum1, perm)] = 0;
+      cnum2[fmt_uinto(cnum2, sb.st_mode & 0777)] = 0;
+      syserr_warn4x("error: wrong mode - wanted ", cnum1, " got ", cnum2);
+      ++install_failed;
+      return 0;
+    }
   }
   if (uid != -1) {
     if (sb.st_uid != (uid_t) uid) {
@@ -456,8 +458,10 @@ static int instop_copy(struct install_item *ins, int uid, int gid,
   if (fchown(obuf.fd, uid, gid) == -1) {
     syserr_warn1sys("error: fchown: "); goto ERROR;
   }
-  if (fchmod(obuf.fd, perm) == -1) {
-    syserr_warn1sys("error: fchmod: "); goto ERROR;
+  if (perm) {
+    if (fchmod(obuf.fd, perm) == -1) {
+      syserr_warn1sys("error: fchmod: "); goto ERROR;
+    }
   }
   if (rename(tmpfn.s, to) == -1) {
     syserr_warn3sys("error: rename: ", to, " - "); goto ERROR;
@@ -518,9 +522,6 @@ static int instop_link(struct install_item *ins, int uid, int gid,
   }
   if (lchown(to, uid, gid) == -1) {
     syserr_warn1sys("error: fchown: "); goto ERROR;
-  }
-  if (lchmod(to, perm) == -1) {
-    syserr_warn1sys("error: fchmod: "); goto ERROR;
   }
   if (fchdir(pwdfd) == -1) 
     syserr_die1sys(112, "fatal: could not restore current directory: ");
@@ -599,8 +600,10 @@ static int instop_mkdir(struct install_item *ins, int uid, int gid,
   if (fchown(fd, uid, gid) == -1) {
     syserr_warn3sys("error: fchown: ", dir, " - "); goto ERROR;
   }
-  if (fchmod(fd, perm) == -1) {
-    syserr_warn3sys("error: fchmod: ", dir, " - "); goto ERROR;
+  if (perm) { 
+    if (fchmod(fd, perm) == -1) {
+      syserr_warn3sys("error: fchmod: ", dir, " - "); goto ERROR;
+    }
   }
   if (close(fd) == -1) syserr_warn3sys("error: close: ", dir, " - ");
   return 1;
