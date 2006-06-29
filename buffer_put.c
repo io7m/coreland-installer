@@ -3,13 +3,13 @@
 #include "error.h"
 #include "str.h"
 
-static int write_all(int (*op)(int, char *, unsigned long),
+static long write_all(long (*op)(int, char *, unsigned long),
                      int fd, const char *s, unsigned long len)
 {
-  int w;
-  int (*cop)(int, const char *, unsigned long);
+  long w;
+  long (*cop)(int, const char *, unsigned long);
 
-  cop = (int (*)(int, const char *, unsigned long)) op;
+  cop = (long (*)(int, const char *, unsigned long)) op;
 
   while (len) {
     w = cop(fd, s, len);
@@ -23,9 +23,9 @@ static int write_all(int (*op)(int, char *, unsigned long),
   return 0;
 }
 
-int buffer_flush(buffer *b)
+long buffer_flush(buffer *b)
 {
-  int pos;
+  unsigned long pos;
 
   pos = b->pos;
   if (!pos) return 0;

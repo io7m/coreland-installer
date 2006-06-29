@@ -2,10 +2,10 @@
 #include "buffer.h"
 #include "error.h"
 
-static int single_read(int (*op)(int, char *, unsigned long),
-                       int fd, char *buf, unsigned long len)
+static long single_read(long (*op)(int, char *, unsigned long),
+                        int fd, char *buf, unsigned long len)
 {
-  int r;
+  long r;
 
   for (;;) {
     r = op(fd, buf, len);
@@ -15,7 +15,7 @@ static int single_read(int (*op)(int, char *, unsigned long),
   }
 }
 
-static int get_this(buffer *b, char *s, unsigned long len)
+static long get_this(buffer *b, char *s, unsigned long len)
 {
   if (len > b->pos) len = b->pos;
   b->pos -= len;
@@ -24,9 +24,9 @@ static int get_this(buffer *b, char *s, unsigned long len)
   return len; 
 }
 
-int buffer_feed(buffer *b)
+long buffer_feed(buffer *b)
 {
-  int r;
+  long r;
  
   if (b->pos) return b->pos;
   r = single_read(b->op, b->fd, b->buf, b->size);
@@ -37,9 +37,9 @@ int buffer_feed(buffer *b)
   return r;
 }
 
-int buffer_get(buffer *b, char *s, unsigned long len)
+long buffer_get(buffer *b, char *s, unsigned long len)
 {
-  int r;
+  long r;
  
   if (b->pos > 0) return get_this(b, s, len);
   if (b->size <= len) return single_read(b->op, b->fd, s, len);
@@ -48,7 +48,7 @@ int buffer_get(buffer *b, char *s, unsigned long len)
   return get_this(b, s, len);
 }
 
-char* buffer_peek(buffer *b)
+char *buffer_peek(buffer *b)
 {
   return b->buf + b->size;
 }

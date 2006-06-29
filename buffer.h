@@ -9,19 +9,21 @@ typedef struct {
   unsigned long pos;
   unsigned long size;
   int fd;
-  int (*op)(int, char *, unsigned long);
+  long (*op)(int, char *, unsigned long);
 } buffer;
 
-#define buffer_INIT(op,fd,buf,len) { (buf), 0, (len), (fd), (op) }
+typedef long (*buffer_op)(int, char *, unsigned long);
 
-void buffer_init(buffer *, int (*)(), int, char *, unsigned long);
+#define buffer_INIT(op,fd,buf,len) { (buf), 0, (len), (fd), (buffer_op)(op) }
 
-int buffer_get(buffer *, char *, unsigned long);
-int buffer_feed(buffer *);
+void buffer_init(buffer *, long (*)(int, char *, unsigned long), int, char *,
+                 unsigned long);
+long buffer_get(buffer *, char *, unsigned long);
+long buffer_feed(buffer *);
 char *buffer_peek(buffer *);
-void  buffer_seek(buffer *, unsigned long);
+void buffer_seek(buffer *, unsigned long);
 
-int buffer_flush(buffer *);
+long buffer_flush(buffer *);
 int buffer_put(buffer *, const char *, unsigned long);
 int buffer_puts(buffer *, const char *);
 int buffer_putflush(buffer *, const char *, unsigned long);
