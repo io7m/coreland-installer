@@ -666,6 +666,8 @@ static int instchk_link(struct install_item *ins,
 static int instchk_dir(struct install_item *ins,
                        unsigned int uid, unsigned int gid, unsigned int flag)
 {
+  int r;
+  int fd;
   unsigned int perm;
   const char *dir;
 
@@ -674,8 +676,11 @@ static int instchk_dir(struct install_item *ins,
 
   print_op("check-dir", 0, dir, ins->owner, ins->group, ins->perm);
   if (flag & INSTALL_DRYRUN) return 1; 
-
-  return 1;
+  fd = open_ro(dir);
+  if (fd == -1) { syserr_warn3sys("error: open: ", dir, " - "); return 0; }
+  r = chkf(fd, dir, uid, gid, perm, S_IFDIR, "directory");
+  if (close(fd) == -1) syserr_warn3sys("error: close: ", dir, " - ");
+  return r;
 }
 static int instchk_liblink(struct install_item *ins,
                            unsigned int uid, unsigned int gid, unsigned int flag)
