@@ -109,7 +109,6 @@ unsigned int scan_notcharset(const char *s, const char *chars)
     }
     ++len;
   }
-
   return len;
 }
 
@@ -129,33 +128,38 @@ static buffer obuf = buffer_INIT(write, -1, bbuf_o, sizeof(bbuf_o));
 unsigned int install_failed;
 unsigned int deinstall_failed;
 
-static int conv_uidgid(const char *sid, unsigned int *uid,
-                       const char *sgd, unsigned int *gid)
+static int conv_uidgid(const char *sid, int *uid,
+                       const char *sgd, int *gid)
 {
   struct group *grp;
   struct passwd *pwd;
 
-  errno = 0;
-  pwd = getpwnam(sid);
-  if (!pwd) {
-    if (errno) {
-      syserr_warn1sys("error: getpwnam: "); return 0;
-    } else {
-      syserr_warn3x("error: no such user '", sid, "'"); return 0;
+  if (sid) {
+    errno = 0;
+    pwd = getpwnam(sid);
+    if (!pwd) {
+      if (errno) {
+        syserr_warn1sys("error: getpwnam: "); return 0;
+      } else {
+        syserr_warn3x("error: no such user '", sid, "'"); return 0;
+      }
     }
-  }
-  *uid = pwd->pw_uid;
+    *uid = pwd->pw_uid;
+  } else *uid = -1;
 
-  errno = 0;
-  grp = getgrnam(sgd);
-  if (!pwd) {
-    if (errno) {
-      syserr_warn1sys("error: getgrnam: "); return 0;
-    } else {
-      syserr_warn3x("error: no such group '", sgd, "'"); return 0;
+  if (sgd) {
+    errno = 0;
+    grp = getgrnam(sgd);
+    if (!pwd) {
+      if (errno) {
+        syserr_warn1sys("error: getgrnam: "); return 0;
+      } else {
+        syserr_warn3x("error: no such group '", sgd, "'"); return 0;
+      }
     }
-  }
-  *gid = grp->gr_gid;
+    *gid = grp->gr_gid;
+  } else *gid = -1;
+
   return 1;
 }
 static int libname(const char *fn, char *buf)
@@ -306,7 +310,7 @@ void print_op(const char *op, const char *from, const char *to,
   if (buffer_putsflush(buffer1, "\n") == -1)
     syserr_warn1sys("error: write: ");
 }
-static int chkf(int fd, const char *f, unsigned int uid, unsigned int gid,
+static int chkf(int fd, const char *f, int uid, int gid,
                 unsigned int perm, int type, const char *typestr)
 {
   char cnum1[FMT_ULONG];
@@ -340,21 +344,24 @@ static int chkf(int fd, const char *f, unsigned int uid, unsigned int gid,
     ++install_failed;
     return 0;
   }
-  if (sb.st_uid != uid) {
-    cnum1[fmt_uint(cnum1, uid)] = 0;
-    cnum2[fmt_uint(cnum2, sb.st_uid)] = 0;
-    syserr_warn4x("error: wrong uid - wanted ", cnum1, " got ", cnum2);
-    ++install_failed;
-    return 0;
+  if (uid != -1) {
+    if (sb.st_uid != (uid_t) uid) {
+      cnum1[fmt_uint(cnum1, uid)] = 0;
+      cnum2[fmt_uint(cnum2, sb.st_uid)] = 0;
+      syserr_warn4x("error: wrong uid - wanted ", cnum1, " got ", cnum2);
+      ++install_failed;
+      return 0;
+    }
   }
-  if (sb.st_gid != gid) {
-    cnum1[fmt_uint(cnum1, gid)] = 0;
-    cnum2[fmt_uint(cnum2, sb.st_gid)] = 0;
-    syserr_warn4x("error: wrong gid - wanted ", cnum1, " got ", cnum2);
-    ++install_failed;
-    return 0;
+  if (gid != -1) {
+    if (sb.st_gid != (uid_t) gid) {
+      cnum1[fmt_uint(cnum1, gid)] = 0;
+      cnum2[fmt_uint(cnum2, sb.st_gid)] = 0;
+      syserr_warn4x("error: wrong gid - wanted ", cnum1, " got ", cnum2);
+      ++install_failed;
+      return 0;
+    }
   }
-
   return 1;
 }
 
@@ -397,8 +404,8 @@ static int ntrans_copy(const char **pfrom, const char **pto, const char *dir)
   *pto = to;
   return 1; 
 }
-static int instop_copy(struct install_item *ins,
-                       unsigned int uid, unsigned int gid, unsigned int flag)
+static int instop_copy(struct install_item *ins, int uid, int gid,
+                       unsigned int flag)
 {
   const char *from;
   const char *to;
@@ -481,8 +488,8 @@ static int ntrans_link(const char **pfrom, const char **pto, const char *dir)
   if (!*pto) { syserr_warn1x("error: to file not defined"); return 0; }
   return 1;
 }
-static int instop_link(struct install_item *ins,
-                       unsigned int uid, unsigned int gid, unsigned int flag)
+static int instop_link(struct install_item *ins, int uid, int gid,
+                       unsigned int flag)
 {
   const char *from;
   const char *to;
@@ -560,8 +567,8 @@ static int ntrans_liblink(const char **pfrom, const char **pto, const char *dir)
   *pto = to;
   return 1;
 }
-static int instop_liblink(struct install_item *ins,
-                          unsigned int uid, unsigned int gid, unsigned int flag)
+static int instop_liblink(struct install_item *ins, int uid, int gid,
+                          unsigned int flag)
 {
   return instop_link(ins, uid, gid, flag);
 }
@@ -570,8 +577,8 @@ static int ntrans_mkdir(const char **pfrom, const char **pto, const char *dir)
   if (!dir) { syserr_warn1x("error: directory not defined"); return 0; }
   return 1;
 }
-static int instop_mkdir(struct install_item *ins,
-                        unsigned int uid, unsigned int gid, unsigned int flag)
+static int instop_mkdir(struct install_item *ins, int uid, int gid,
+                        unsigned int flag)
 {
   unsigned int perm;
   int fd;
@@ -603,7 +610,7 @@ static int instop_mkdir(struct install_item *ins,
 }
 
 struct instop {
-  int (*oper)(struct install_item *, unsigned int, unsigned int, unsigned int);
+  int (*oper)(struct install_item *, int, int, unsigned int);
   int (*trans)(const char **, const char **, const char *);
 };
 
@@ -616,8 +623,8 @@ static const struct instop install_opers[] = {
 static const unsigned int num_inst_opers = sizeof(install_opers) /
                                            sizeof(struct instop);
 
-static int instchk_file(struct install_item *ins,
-                        unsigned int uid, unsigned int gid, unsigned int flag)
+static int instchk_file(struct install_item *ins, int uid, int gid,
+                        unsigned int flag)
 {
   int fd;
   int r;
@@ -636,8 +643,8 @@ static int instchk_file(struct install_item *ins,
   if (close(fd) == -1) syserr_warn3sys("error: close: ", to, " - ");
   return r;
 }
-static int instchk_link(struct install_item *ins,
-                        unsigned int uid, unsigned int gid, unsigned int flag)
+static int instchk_link(struct install_item *ins, int uid, int gid,
+                        unsigned int flag)
 {
   unsigned int perm;
   const char *to;
@@ -663,8 +670,8 @@ static int instchk_link(struct install_item *ins,
     syserr_warn1sys("error: close: ");
   return r;
 }
-static int instchk_dir(struct install_item *ins,
-                       unsigned int uid, unsigned int gid, unsigned int flag)
+static int instchk_dir(struct install_item *ins, int uid, int gid,
+                       unsigned int flag)
 {
   int r;
   int fd;
@@ -682,8 +689,8 @@ static int instchk_dir(struct install_item *ins,
   if (close(fd) == -1) syserr_warn3sys("error: close: ", dir, " - ");
   return r;
 }
-static int instchk_liblink(struct install_item *ins,
-                           unsigned int uid, unsigned int gid, unsigned int flag)
+static int instchk_liblink(struct install_item *ins, int uid, int gid,
+                           unsigned int flag)
 {
   return instchk_link(ins, uid, gid, flag);
 }
@@ -699,37 +706,33 @@ static const unsigned int num_instchk_opers = sizeof(instchk_opers) /
 
 int install(struct install_item *i, unsigned int flag)
 {
-  unsigned int uid;
-  unsigned int gid;
+  int uid;
+  int gid;
 
   if (i->op >= num_inst_opers) {
     syserr_warn1x("error: unknown operator");
     return 0;
   }
-  if (!i->owner) { syserr_warn1x("error: owner not defined"); return 0; }
-  if (!i->group) { syserr_warn1x("error: group not defined"); return 0; }
   if (!conv_uidgid(i->owner, &uid, i->group, &gid)) return 0;
   if (!install_opers[i->op].trans(&i->from, &i->to, i->dir)) return 0;
   return install_opers[i->op].oper(i, uid, gid, flag);
 }
 int install_check(struct install_item *i)
 {
-  unsigned int uid;
-  unsigned int gid;
+  int uid;
+  int gid;
 
   if (i->op >= num_instchk_opers) {
     syserr_warn1x("error: unknown operator");
     return 0;
   }
-  if (!i->owner) { syserr_warn1x("error: owner not defined"); return 0; }
-  if (!i->group) { syserr_warn1x("error: group not defined"); return 0; }
   if (!conv_uidgid(i->owner, &uid, i->group, &gid)) return 0;
   if (!instchk_opers[i->op].trans(&i->from, &i->to, i->dir)) return 0;
   return instchk_opers[i->op].oper(i, uid, gid, 0);
 }
 
-static int deinst_file(struct install_item *ins,
-                       unsigned int uid, unsigned int gid, unsigned int flag)
+static int deinst_file(struct install_item *ins, int uid, int gid,
+                       unsigned int flag)
 {
   print_op("unlink", 0, ins->to, 0, 0, 0);
   if (flag & INSTALL_DRYRUN) return 1; 
@@ -741,8 +744,8 @@ static int deinst_file(struct install_item *ins,
   }
   return 1;
 }
-static int deinst_link(struct install_item *ins,
-                       unsigned int uid, unsigned int gid, unsigned int flag)
+static int deinst_link(struct install_item *ins, int uid, int gid,
+                       unsigned int flag)
 {
   int pwdfd;
 
@@ -768,8 +771,8 @@ static int deinst_link(struct install_item *ins,
   if (close(pwdfd) == -1) syserr_warn1sys("error: close: ");
   return 0;
 }
-static int deinst_dir(struct install_item *ins,
-                      unsigned int uid, unsigned int gid, unsigned int flag)
+static int deinst_dir(struct install_item *ins, int uid, int gid,
+                      unsigned int flag)
 {
   print_op("rmdir", 0, ins->dir, 0, 0, 0);
   if (flag & INSTALL_DRYRUN) return 1; 
@@ -781,8 +784,8 @@ static int deinst_dir(struct install_item *ins,
   }
   return 1;
 }
-static int deinst_liblink(struct install_item *ins,
-                          unsigned int uid, unsigned int gid, unsigned int flag)
+static int deinst_liblink(struct install_item *ins, int uid, int gid,
+                          unsigned int flag)
 {
   return deinst_link(ins, uid, gid, flag);
 }
@@ -798,15 +801,13 @@ static const unsigned int num_deinst_opers = sizeof(deinst_opers) /
 
 int deinstall(struct install_item *i, unsigned int flag)
 {
-  unsigned int uid;
-  unsigned int gid;
+  int uid;
+  int gid;
 
   if (i->op >= num_deinst_opers) {
     syserr_warn1x("error: unknown operator");
     return 0;
   }
-  if (!i->owner) { syserr_warn1x("error: owner not defined"); return 0; }
-  if (!i->group) { syserr_warn1x("error: group not defined"); return 0; }
   if (!conv_uidgid(i->owner, &uid, i->group, &gid)) return 0;
   if (!deinst_opers[i->op].trans(&i->from, &i->to, i->dir)) return 0;
   return deinst_opers[i->op].oper(i, uid, gid, 0);
