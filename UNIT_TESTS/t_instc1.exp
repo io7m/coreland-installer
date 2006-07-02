@@ -1,20 +1,22 @@
-check /usr/lib 755 root:wheel
+check-dir /usr/lib 755 root:wheel
 check /usr/lib/file.so.0.2 444 root:wheel
 error: open: /usr/lib/file.so.0.2 - file does not exist
 check /usr/lib/xyz.a 444 root:wheel
 error: open: /usr/lib/xyz.a - file does not exist
-check /usr/lib/libfile.so 444 root:wheel
-error: open: /usr/lib/libfile.so - file does not exist
-check /usr/lib/libxyz.a 444 root:wheel
-error: open: /usr/lib/libxyz.a - file does not exist
-check /testlib 755 root:wheel
-error: open: /testlib - file does not exist
+check-link libfile.so 444 
+error: lstat: libfile.so - file does not exist
+check-link libxyz.a 444 
+error: lstat: libxyz.a - file does not exist
+check-link testlib 755 
+error: lstat: testlib - file does not exist
+check-link imagdir 755 
+error: chdir: /usr/nonexistant/dir - file does not exist
 check /usr/lib/nonexistant 444 root:wheel
 error: open: /usr/lib/nonexistant - file does not exist
 error: directory not defined
 error: from file not defined
-error: owner not defined
-error: owner not defined
-error: group not defined
+error: from file not defined
+error: from file not defined
+error: from file not defined
 error: no such user '1234XNOBODYx123'
-6 of 13 failed
+7 of 14 failed
