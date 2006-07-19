@@ -24,12 +24,12 @@
 #define sstr_INIT(s) { (s), (0), (sizeof s) }
 struct sstr {
   char *s;
-  unsigned int len;
-  unsigned int a;
+  unsigned long len;
+  unsigned long a;
 };
-unsigned int sstr_catb(struct sstr *ss, const char *s, unsigned int len)
+unsigned long sstr_catb(struct sstr *ss, const char *s, unsigned long len)
 {
-  register unsigned int n;
+  register unsigned long n;
   register char* ssp;
   n = len; ssp = ss->s;
   
@@ -44,7 +44,7 @@ unsigned int sstr_catb(struct sstr *ss, const char *s, unsigned int len)
   }
   return ss->len = ssp - ss->s;
 }
-unsigned int sstr_cats(struct sstr *ss, const char *s)
+unsigned long sstr_cats(struct sstr *ss, const char *s)
 {
   register const char* t;
   for (t = s;;) {
@@ -54,12 +54,12 @@ unsigned int sstr_cats(struct sstr *ss, const char *s)
     if (!*t) return sstr_catb(ss, s, t - s); ++t;
   }
 }
-unsigned int sstr_0(struct sstr *ss)
+unsigned long sstr_0(struct sstr *ss)
 {
   if (ss->len == ss->a) ss->len--;
   ss->s[ss->len] = 0; return ss->len;
 }
-unsigned int sstr_chop(struct sstr *ss, unsigned int len)
+unsigned long sstr_chop(struct sstr *ss, unsigned long len)
 {
   char *str;
   if (len >= ss->a) return ss->a;
@@ -72,9 +72,9 @@ void sstr_trunc(struct sstr *ss)
 {
   ss->len = 0;
 }
-unsigned int scan_charset(const char *s, const char *chars)
+unsigned long scan_charset(const char *s, const char *chars)
 {
-  unsigned int len;
+  unsigned long len;
   const char *cmp;
   char ch;
 
@@ -91,9 +91,9 @@ unsigned int scan_charset(const char *s, const char *chars)
   }
   return len;
 }
-unsigned int scan_notcharset(const char *s, const char *chars)
+unsigned long scan_notcharset(const char *s, const char *chars)
 {
-  unsigned int len;
+  unsigned long len;
   const char *cmp;
   char ch;
 

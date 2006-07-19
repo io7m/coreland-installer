@@ -3,8 +3,11 @@
 
 unsigned long str_len(const char *);
 
-int str_chr(const char *, int);
-int str_rchr(const char *, int);
+long str_chr(const char *, int);
+long str_rchr(const char *, int);
+
+int str_char(const char *, int, unsigned long *);
+int str_rchar(const char *, int, unsigned long *);
 
 int str_diff(const char *, const char *);
 int str_ndiff(const char *, const char *, unsigned long);

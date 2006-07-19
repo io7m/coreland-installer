@@ -1,7 +1,5 @@
 #include "bin.h"
 
-/* copy n bytes from ss to ds  */
-
 void bin_copyr(register char *to, register const char *from,
                register unsigned long n)
 {

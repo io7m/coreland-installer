@@ -1,10 +1,6 @@
 #include "str.h"
 
-/*
- returns index of first occuring c or -1 if none
- */
-
-int str_chr(register const char *s, register int c)
+long str_chr(register const char *s, register int c)
 {
   register const char* t;
   register char cc;

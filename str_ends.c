@@ -1,7 +1,5 @@
 #include "str.h"
 
-/* 1 if s finishes with ends, 0 if it doesn't */
-
 int str_ends(const char *s, const char *end)
 {
   register unsigned long slen;

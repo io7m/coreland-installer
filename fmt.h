@@ -29,6 +29,6 @@ unsigned int fmt_float(char *, float *);
 unsigned int fmt_double(char *, double *);
 
 unsigned long fmt_str(char *, const char *);
-unsigned long fmt_nstr(char *, const char *, unsigned int);
+unsigned long fmt_nstr(char *, const char *, unsigned long);
 
 #endif
