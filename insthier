@@ -1,0 +1,2 @@
+copy:file.c::/usr/local/bin:root:wheel:0444
+copy:../../trunk/UNIT_TESTS/files/file.lib::/usr/local/lib:::0444
