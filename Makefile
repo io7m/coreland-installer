@@ -5,8 +5,10 @@ SHELL=/bin/sh
 default: all
 all: phase_tools phase_compile phase_library phase_link 
 
+tests: phase_test 
+
 clean: phase_tools_clean phase_compile_clean phase_library_clean \
-	phase_link_clean 
+	phase_link_clean phase_test_clean 
 
 
 #--TOOLS----------------------------------------------------------------------
@@ -31,11 +33,22 @@ inst-gid.o:\
 inst-uid.o:\
 	compile inst-uid.c 
 	./compile inst-uid inst-uid.c 
+install.o:\
+	compile install.c install.h 
+	./compile install install.c 
+installer.o:\
+	compile installer.c install.h 
+	./compile installer installer.c 
+insthier.o:\
+	compile insthier.c install.h 
+	./compile insthier insthier.c 
 
 phase_compile:\
-	inst-check.o inst-copy.o inst-dir.o inst-gid.o inst-uid.o 
+	inst-check.o inst-copy.o inst-dir.o inst-gid.o inst-uid.o install.o \
+	installer.o insthier.o 
 phase_compile_clean:
-	rm -f inst-check.o inst-copy.o inst-dir.o inst-gid.o inst-uid.o 
+	rm -f inst-check.o inst-copy.o inst-dir.o inst-gid.o inst-uid.o \
+	install.o installer.o insthier.o 
 
 #--LIBRARY--------------------------------------------------------------------
 
@@ -60,11 +73,21 @@ inst-gid:\
 inst-uid:\
 	link inst-uid.ld inst-uid.o 
 	./link inst-uid inst-uid.o 
+installer:\
+	link installer.ld installer.o insthier.o install.o 
+	./link installer installer.o insthier.o install.o 
 
 phase_link:\
-	inst-check inst-copy inst-dir inst-gid inst-uid 
+	inst-check inst-copy inst-dir inst-gid inst-uid installer 
 phase_link_clean:
-	rm -f inst-check inst-copy inst-dir inst-gid inst-uid 
+	rm -f inst-check inst-copy inst-dir inst-gid inst-uid installer 
+
+#--TEST-----------------------------------------------------------------------
+
+phase_test:
+	(cd UNIT_TESTS && make && make tests)
+phase_test_clean:
+	(cd UNIT_TESTS && make clean)
 
 #--TOOLS----------------------------------------------------------------------
 
