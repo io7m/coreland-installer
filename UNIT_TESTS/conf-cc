@@ -1,0 +1,3 @@
+cc -W -Wall -g
+
+This will be used to compile C source files.

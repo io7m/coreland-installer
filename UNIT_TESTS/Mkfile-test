@@ -1,0 +1,6 @@
+phase_test: success
+
+success:
+	@echo 'The software passed all tests.'
+
+phase_test_clean:
