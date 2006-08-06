@@ -48,9 +48,9 @@ void say()
 }
 int check_type(int mode)
 {
-  int got;
+  unsigned int got;
+  unsigned int i;
   int want;
-  int i;
   char *actual;
 
   for (i = 0; i < (sizeof(type_str) / sizeof(char *)); ++i) {

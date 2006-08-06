@@ -3,7 +3,7 @@
 
 const char progname[] = "instchk";
 
-int main(int argc, char *argv[])
+int main()
 {
   unsigned long i;
   if (!check_tools()) return 112;

@@ -7,6 +7,13 @@ struct install_item insthier[] = {
   {INST_COPY, "inst-copy.c", 0, ctxt_repos, 0, 0, 0444},
   {INST_COPY, "inst-dir.c", 0, ctxt_repos, 0, 0, 0444},
   {INST_COPY, "install.c", 0, ctxt_repos, 0, 0, 0444},
+  {INST_COPY, "install_error.c", 0, ctxt_repos, 0, 0, 0444},
   {INST_COPY, "installer.c", 0, ctxt_repos, 0, 0, 0444},
+  {INST_COPY, "install.h", 0, ctxt_repos, 0, 0, 0444},
+  {INST_COPY, "inst-check.ld", 0, ctxt_repos, 0, 0, 0444},
+  {INST_COPY, "inst-copy.ld", 0, ctxt_repos, 0, 0, 0444},
+  {INST_COPY, "inst-dir.ld", 0, ctxt_repos, 0, 0, 0444},
+  {INST_COPY, "install.ld", 0, ctxt_repos, 0, 0, 0444},
+  {INST_COPY, "installer.ld", 0, ctxt_repos, 0, 0, 0444},
 };
 unsigned long insthier_len = sizeof(insthier) / sizeof(struct install_item);
