@@ -10,6 +10,7 @@
 
 #define CHECK "check"
 #define str_same(s,t) (strcmp((s),(t)) == 0)
+#define str_nsame(s,t,n) (strncmp((s),(t),(n)) == 0)
 
 char *file;
 char *type;
@@ -47,24 +48,27 @@ void say()
 }
 int check_type(int mode)
 {
-  unsigned int i;
-  int want;
   int got;
+  int want;
+  int i;
+  char *actual;
 
-  got = 0;
   for (i = 0; i < (sizeof(type_str) / sizeof(char *)); ++i) {
-    if (str_same(type_str[i], type)) {
+    if (str_same(type, type_str[i])) {
       want = types[i];
       got = 1;
       break;
     }
   }
-  if (!got) {
-    printf("failed: illegal type\n");
-    return 0;
-  }
+
+  if (!got) { printf("failed: illegal type\n"); return 0; }
+
   if (mode != want) {
-    printf("failed: type %s not %s\n", type_str[i], type);
+    for (i = 0; i < (sizeof(types) / sizeof(int)); ++i) {
+      actual = type_str[i];
+      if (mode == types[i]) break;
+    }
+    printf("failed: type %s not %s\n", actual, type);
     return 0;
   }
   return 1;
@@ -74,27 +78,32 @@ int check()
   struct stat sb;
   int fd;
 
-  fd = open(file, O_RDONLY);
-  if (fd == -1) die();
-  if (fstat(fd, &sb) == -1) die();
+  if (!str_nsame(type, "symlink", strlen("symlink"))) {
+    fd = open(file, O_RDONLY);
+    if (fd == -1) die();
+    if (fstat(fd, &sb) == -1) die();
+  } else if (lstat(file, &sb) == -1) die();
 
-  if ((sb.st_mode & 07777) != (int) perm) {
-    printf("failed: mode %o not %o\n", (sb.st_mode & 07777), perm);
-    return 1;
-  }
-  if (uid >= 0) {
-    if (sb.st_uid != (unsigned) uid) {
-      printf("failed: uid %d not %d\n", sb.st_uid, uid);
-      return 1;
-    }
-  }
-  if (gid >= 0) {
-    if (sb.st_uid != (unsigned) uid) {
-      printf("failed: gid %d not %d\n", sb.st_gid, gid);
-      return 1;
-    }
-  }
   if (!check_type(sb.st_mode & S_IFMT)) return 1;
+
+  if ((sb.st_mode & S_IFMT) != S_IFLNK) {
+    if ((sb.st_mode & 07777) != (int) perm) {
+      printf("failed: mode %o not %o\n", (sb.st_mode & 07777), perm);
+      return 1;
+    }
+    if (uid >= 0) {
+      if (sb.st_uid != (unsigned) uid) {
+        printf("failed: uid %d not %d\n", sb.st_uid, uid);
+        return 1;
+      }
+    }
+    if (gid >= 0) {
+      if (sb.st_uid != (unsigned) uid) {
+        printf("failed: gid %d not %d\n", sb.st_gid, gid);
+        return 1;
+      }
+    }
+  }
   return 0;
 }
 

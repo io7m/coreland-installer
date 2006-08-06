@@ -9,10 +9,7 @@ int main(int argc, char *argv[])
 
   if (!check_tools()) return 112;
 
-  if (argc > 1)
-    flag = INSTALL_DRYRUN;
-  else
-    flag = 0;
+  flag = (argc > 1) ? INSTALL_DRYRUN : 0;
 
   for (i = insthier_len - 1;; --i) {
     deinstall(&insthier[i], flag);

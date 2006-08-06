@@ -29,7 +29,8 @@ char *ext_tools[] = {
 
 #define MAX_PATHLEN 1024
 #define MAX_MSGLEN 8192
-#define str_same(a,b) (strcmp(a,b) == 0)
+
+#define str_same(a,b) (strcmp((a),(b)) == 0)
 
 extern const char progname[];
 extern char **environ;
@@ -263,7 +264,7 @@ int uidgidperm_to_text(int uid, int gid, int perm)
   return 1;
 }
 
-/* operator callbacks */
+/* install operator callbacks */
 int inst_copy(struct install_item *ins, unsigned int fl)
 {
   int pid;
@@ -285,7 +286,7 @@ int inst_copy(struct install_item *ins, unsigned int fl)
   if (waitpid(pid, &stat, 0) == -1) return fails_sys("task");
 
   task_echo(msg_buf, MAX_MSGLEN);
-  return 1;
+  return (wait_exitcode(stat) == 0);
 }
 int inst_link(struct install_item *ins, unsigned int fl)
 {
@@ -306,7 +307,7 @@ int inst_link(struct install_item *ins, unsigned int fl)
   if (waitpid(pid, &stat, 0) == -1) return fails_sys("task");
 
   task_echo(msg_buf, MAX_MSGLEN);
-  return 1; 
+  return (wait_exitcode(stat) == 0);
 }
 int inst_mkdir(struct install_item *ins, unsigned int fl)
 {
@@ -328,13 +329,14 @@ int inst_mkdir(struct install_item *ins, unsigned int fl)
   if (waitpid(pid, &stat, 0) == -1) return fails_sys("task");
 
   task_echo(msg_buf, MAX_MSGLEN);
-  return 1;
+  return (wait_exitcode(stat) == 0);
 }
 int inst_liblink(struct install_item *ins, unsigned int fl)
 {
   return inst_link(ins, fl);
 }
 
+/* name translation callbacks */
 int ntran_copy(struct install_item *ins)
 {
   if (!ins->src) return fails("src file undefined");
@@ -404,6 +406,24 @@ int ntran_liblink(struct install_item *ins)
   if (task_pipes() == -1) return 0;
   return 1;
 }
+int ntran_chk_link(struct install_item *ins)
+{
+  if (!ntran_link(ins)) return 0;
+  if (snprintf(dst_name, MAX_PATHLEN, "%s/%s", ins->dir, ins->dst) < 0)
+    return fails_sys("sprintf");
+  ins->dst = dst_name;
+  return 1;
+}
+int ntran_chk_liblink(struct install_item *ins)
+{
+  if (!ntran_liblink(ins)) return 0;
+  if (snprintf(dst_name, MAX_PATHLEN, "%s/%s", ins->dir, ins->dst) < 0)
+    return fails_sys("sprintf");
+  ins->dst = dst_name;
+  return 1;
+}
+
+/* instchk operator callbacks */
 int instchk_copy(struct install_item *ins, unsigned int fl)
 {
   int pid;
@@ -423,7 +443,7 @@ int instchk_copy(struct install_item *ins, unsigned int fl)
   task_echo(msg_buf, MAX_MSGLEN);
 
   if (wait_exitcode(stat)) ++install_failed;
-  return 1;
+  return (wait_exitcode(stat) == 0);
 }
 int instchk_link(struct install_item *ins, unsigned int fl)
 {
@@ -431,7 +451,7 @@ int instchk_link(struct install_item *ins, unsigned int fl)
   int stat;
 
   task_args[0] = EXT_INST_CHECK;
-  task_args[1] = ins->dir;
+  task_args[1] = ins->dst;
   task_args[2] = uidbuf;
   task_args[3] = gidbuf;
   task_args[4] = permbuf;
@@ -444,7 +464,7 @@ int instchk_link(struct install_item *ins, unsigned int fl)
   task_echo(msg_buf, MAX_MSGLEN);
 
   if (wait_exitcode(stat)) ++install_failed;
-  return 1;
+  return (wait_exitcode(stat) == 0);
 }
 int instchk_mkdir(struct install_item *ins, unsigned int fl)
 {
@@ -465,12 +485,14 @@ int instchk_mkdir(struct install_item *ins, unsigned int fl)
   task_echo(msg_buf, MAX_MSGLEN);
 
   if (wait_exitcode(stat)) ++install_failed;
-  return 1;
+  return (wait_exitcode(stat) == 0);
 }
 int instchk_liblink(struct install_item *ins, unsigned int fl)
 {
   return instchk_link(ins, fl);
 }
+
+/* deinstall operator callbacks */
 int deinst_copy(struct install_item *ins, unsigned int fl)
 {
   printf("unlink %s\n", ins->dst);
@@ -498,7 +520,7 @@ int deinst_liblink(struct install_item *ins, unsigned int fl)
   return deinst_link(ins, fl);
 }
 
-/* operator tables */
+/* operator callback tables */
 struct instop {
   int (*oper)(struct install_item *, unsigned int);
   int (*trans)(struct install_item *);
@@ -511,9 +533,9 @@ struct instop install_opers[] = {
 };
 struct instop instchk_opers[] = {
   { instchk_copy, ntran_copy },
-  { instchk_link, ntran_link },
+  { instchk_link, ntran_chk_link },
   { instchk_mkdir, ntran_mkdir },
-  { instchk_liblink, ntran_liblink },
+  { instchk_liblink, ntran_chk_liblink },
 };
 struct instop deinst_opers[] = {
   { deinst_copy, ntran_copy },
@@ -538,44 +560,59 @@ int check_tools()
   return r;
 }
 
-void install(struct install_item *ins, unsigned int fl)
+int install(struct install_item *ins, unsigned int fl)
 {
-  if (task_pipes() == -1) return;
+  int r;
+
+  r = 1;
+  if (task_pipes() == -1) return 0;
   if (!lookup(ins, &uid, &gid)) { fail(); goto CLEANUP; }
   if (!uidgidperm_to_text(uid, gid, ins->perm)) goto CLEANUP;
 
-  if (!install_opers[ins->op].trans(ins)) goto CLEANUP;
-  install_opers[ins->op].oper(ins, fl);
+  r = install_opers[ins->op].trans(ins);
+  if (!r) goto CLEANUP;
+  r = install_opers[ins->op].oper(ins, fl);
 
   CLEANUP:
   fflush(0);
   task_close();
+  return r;
 }
 
-void install_check(struct install_item *ins)
+int install_check(struct install_item *ins)
 {
-  if (task_pipes() == -1) return;
+  int r;
+
+  r = 1;
+  if (task_pipes() == -1) return 0;
   if (!lookup(ins, &uid, &gid)) { fail(); goto CLEANUP; }
   if (!uidgidperm_to_text(uid, gid, ins->perm)) goto CLEANUP;
 
-  if (!instchk_opers[ins->op].trans(ins)) goto CLEANUP;
-  instchk_opers[ins->op].oper(ins, 0);
+  r = instchk_opers[ins->op].trans(ins);
+  if (!r) goto CLEANUP;
+  r = instchk_opers[ins->op].oper(ins, 0);
 
   CLEANUP:
   fflush(0);
   task_close();
+  return r;
 }
 
-void deinstall(struct install_item *ins, unsigned int fl)
+int deinstall(struct install_item *ins, unsigned int fl)
 {
-  if (task_pipes() == -1) return;
+  int r;
+
+  r = 1;
+  if (task_pipes() == -1) return 0;
   if (!lookup(ins, &uid, &gid)) { fail(); goto CLEANUP; }
   if (!uidgidperm_to_text(uid, gid, ins->perm)) goto CLEANUP;
 
-  if (!deinst_opers[ins->op].trans(ins)) goto CLEANUP;
-  deinst_opers[ins->op].oper(ins, fl);
+  r = deinst_opers[ins->op].trans(ins);
+  if (!r) goto CLEANUP;
+  r = deinst_opers[ins->op].oper(ins, fl);
 
   CLEANUP:
   fflush(0);
   task_close();
+  return r;
 }
