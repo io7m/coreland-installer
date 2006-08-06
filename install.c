@@ -382,7 +382,10 @@ int ntran_liblink(struct install_item *ins)
   if (!ins->dst) return fails("dst name undefined");
 
   if (str_ends(ins->src, ".lib")) {
-    if (!libname(ins->src, src_name)) return 0;
+    if (!libname(ins->src, src_tmp)) return 0;
+    ins->src = src_tmp;
+    if (!base_name(ins->src, &ins->src)) return fails("invalid path");
+    mem_copy(src_name, ins->src, MAX_PATHLEN);
     ins->src = src_name;
   }
 
@@ -400,8 +403,8 @@ int ntran_liblink(struct install_item *ins)
   if (!base_name(ins->dst, &ins->dst)) return fails("invalid path");
   if (snprintf(dst_tmp, MAX_PATHLEN, "%s.%s", ins->dst, tmp_buf) < 0)
     return fails_sys("snprintf");
-
   ins->dst = dst_tmp;
+
   if (task_close() == -1) return 0;
   if (task_pipes() == -1) return 0;
   return 1;
