@@ -6,6 +6,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "install.h"
+
 #define MKDIR "mkdir"
 #define MAX_PATHLEN 1024
 
@@ -16,7 +18,7 @@ unsigned int perm;
 
 void die()
 {
-  printf(MKDIR": %s\n", strerror(errno));
+  printf("failed: %s\n", install_error(errno));
   fflush(0);
   _exit(112);
 }

@@ -1,4 +1,17 @@
-phase_test: success
+phase_test: inst-check inst-copy inst-dir inst-link success
+
+inst-check: ../inst-check
+	rm -f inst-check
+	ln -s ../inst-check inst-check
+inst-copy: ../inst-copy
+	rm -f inst-copy
+	ln -s ../inst-copy inst-copy
+inst-dir: ../inst-dir
+	rm -f inst-dir
+	ln -s ../inst-dir inst-dir
+inst-link: ../inst-link
+	rm -f inst-link
+	ln -s ../inst-link inst-link
 
 success:
 	@echo 'The software passed all tests.'

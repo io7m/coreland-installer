@@ -6,6 +6,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "install.h"
+
 #define CHECK "check"
 #define str_same(s,t) (strcmp((s),(t)) == 0)
 
@@ -34,7 +36,7 @@ char *type_str[] = {
 
 void die()
 {
-  printf(CHECK": %s\n", strerror(errno));
+  printf("failed: %s\n", install_error(errno));
   fflush(0);
   _exit(112);
 }
@@ -58,11 +60,11 @@ int check_type(int mode)
     }
   }
   if (!got) {
-    printf(CHECK": illegal type\n");
+    printf("failed: illegal type\n");
     return 0;
   }
   if (mode != want) {
-    printf(CHECK": type %s not %s\n", type_str[i], type);
+    printf("failed: type %s not %s\n", type_str[i], type);
     return 0;
   }
   return 1;
@@ -77,18 +79,18 @@ int check()
   if (fstat(fd, &sb) == -1) die();
 
   if ((sb.st_mode & 07777) != (int) perm) {
-    printf(CHECK": mode %o not %o\n", (sb.st_mode & 07777), perm);
+    printf("failed: mode %o not %o\n", (sb.st_mode & 07777), perm);
     return 1;
   }
   if (uid >= 0) {
     if (sb.st_uid != (unsigned) uid) {
-      printf(CHECK": uid %d not %d\n", sb.st_uid, uid);
+      printf("failed: uid %d not %d\n", sb.st_uid, uid);
       return 1;
     }
   }
   if (gid >= 0) {
     if (sb.st_uid != (unsigned) uid) {
-      printf(CHECK": gid %d not %d\n", sb.st_gid, gid);
+      printf("failed: gid %d not %d\n", sb.st_gid, gid);
       return 1;
     }
   }

@@ -5,6 +5,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "install.h"
+
 #define LINK "link"
 
 char *dir;
@@ -19,9 +21,9 @@ void say()
 void complain(const char *s)
 {
   if (s)
-    printf(LINK": %s: %s\n", s, strerror(errno));
+    printf("failed: %s: %s\n", s, install_error(errno));
   else
-    printf(LINK": %s\n", strerror(errno));
+    printf("failed: %s\n", install_error(errno));
 }
 int create_link()
 {

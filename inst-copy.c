@@ -5,6 +5,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "install.h"
+
 #define COPY "copy"
 #define COPYBUF_SIZE 8192
 
@@ -19,9 +21,9 @@ unsigned int perm;
 void complain(const char *s)
 {
   if (s)
-    printf(COPY": %s: %s\n", s, strerror(errno));
+    printf("error: %s: %s\n", s, install_error(errno));
   else
-    printf(COPY": %s\n", strerror(errno));
+    printf("error: %s\n", install_error(errno));
 }
 void say()
 {

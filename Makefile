@@ -26,20 +26,23 @@ deinstaller.o:\
 	compile deinstaller.c install.h 
 	./compile deinstaller deinstaller.c 
 inst-check.o:\
-	compile inst-check.c 
+	compile inst-check.c install.h 
 	./compile inst-check inst-check.c 
 inst-copy.o:\
-	compile inst-copy.c 
+	compile inst-copy.c install.h 
 	./compile inst-copy inst-copy.c 
 inst-dir.o:\
-	compile inst-dir.c 
+	compile inst-dir.c install.h 
 	./compile inst-dir inst-dir.c 
 inst-link.o:\
-	compile inst-link.c 
+	compile inst-link.c install.h 
 	./compile inst-link inst-link.c 
 install.o:\
 	compile install.c install.h 
 	./compile install install.c 
+install_error.o:\
+	compile install_error.c install.h 
+	./compile install_error install_error.c 
 installer.o:\
 	compile installer.c install.h 
 	./compile installer installer.c 
@@ -50,17 +53,17 @@ insthier.o:\
 	compile insthier.c ctxt.h install.h 
 	./compile insthier insthier.c 
 ctxt/ctxt_repos.o:\
-	compile ctxt/ctxt_repos.c ctxt/../ctxt.h 
+	compile ctxt/ctxt_repos.c 
 	./compile ctxt/ctxt_repos ctxt/ctxt_repos.c 
 
 phase_compile:\
 	auto-text.o deinstaller.o inst-check.o inst-copy.o inst-dir.o \
-	inst-link.o install.o installer.o instchk.o insthier.o \
-	ctxt/ctxt_repos.o 
+	inst-link.o install.o install_error.o installer.o instchk.o \
+	insthier.o ctxt/ctxt_repos.o 
 phase_compile_clean:
 	rm -f auto-text.o deinstaller.o inst-check.o inst-copy.o inst-dir.o \
-	inst-link.o install.o installer.o instchk.o insthier.o \
-	ctxt/ctxt_repos.o 
+	inst-link.o install.o install_error.o installer.o instchk.o \
+	insthier.o ctxt/ctxt_repos.o 
 
 #--LIBRARY--------------------------------------------------------------------
 
@@ -79,26 +82,32 @@ auto-text:\
 	link auto-text.ld auto-text.o 
 	./link auto-text auto-text.o 
 deinstaller:\
-	link deinstaller.ld deinstaller.o insthier.o install.o ctxt.a 
-	./link deinstaller deinstaller.o insthier.o install.o ctxt.a 
+	link deinstaller.ld deinstaller.o insthier.o install.o \
+	install_error.o ctxt.a 
+	./link deinstaller deinstaller.o insthier.o install.o \
+	install_error.o ctxt.a 
 inst-check:\
-	link inst-check.ld inst-check.o 
-	./link inst-check inst-check.o 
+	link inst-check.ld inst-check.o install_error.o 
+	./link inst-check inst-check.o install_error.o 
 inst-copy:\
-	link inst-copy.ld inst-copy.o 
-	./link inst-copy inst-copy.o 
+	link inst-copy.ld inst-copy.o install_error.o 
+	./link inst-copy inst-copy.o install_error.o 
 inst-dir:\
-	link inst-dir.ld inst-dir.o 
-	./link inst-dir inst-dir.o 
+	link inst-dir.ld inst-dir.o install_error.o 
+	./link inst-dir inst-dir.o install_error.o 
 inst-link:\
-	link inst-link.ld inst-link.o 
-	./link inst-link inst-link.o 
+	link inst-link.ld inst-link.o install_error.o 
+	./link inst-link inst-link.o install_error.o 
 installer:\
-	link installer.ld installer.o insthier.o install.o ctxt.a 
-	./link installer installer.o insthier.o install.o ctxt.a 
+	link installer.ld installer.o insthier.o install.o install_error.o \
+	ctxt.a 
+	./link installer installer.o insthier.o install.o install_error.o \
+	ctxt.a 
 instchk:\
-	link instchk.ld instchk.o insthier.o install.o ctxt.a 
-	./link instchk instchk.o insthier.o install.o ctxt.a 
+	link instchk.ld instchk.o insthier.o install.o install_error.o \
+	ctxt.a 
+	./link instchk instchk.o insthier.o install.o install_error.o \
+	ctxt.a 
 
 phase_link:\
 	auto-text deinstaller inst-check inst-copy inst-dir inst-link \

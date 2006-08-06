@@ -57,21 +57,21 @@ unsigned long install_failed;
 /* error functions */
 int fails_sys(const char *s)
 {
-  printf("%s: %s - %s\n", progname, s, strerror(errno));
+  printf("failed: %s: %s\n", s, install_error(errno));
   return 0;
 }
 int fails(const char *s)
 {
-  printf("%s: %s\n", progname, s);
+  printf("failed: %s\n", s);
   return 0;
 }
 void fail()
 {
-  printf("%s: %s\n", progname, strerror(errno));
+  printf("failed: %s\n", install_error(errno));
 }
 void fail_noread()
 {
-  printf("%s: no bytes read\n", progname);
+  printf("failed: no bytes read\n");
 }
 
 /* portability functions */
@@ -347,9 +347,10 @@ int ntran_copy(struct install_item *ins)
   }
   if (str_ends(ins->dst, ".lib")) {
     if (!libname(ins->dst, dst_name)) return 0;
-    if (!base_name(ins->dst, &ins->dst)) return fails("invalid path");
     ins->dst = dst_name;
   }
+
+  if (!base_name(ins->dst, &ins->dst)) return fails("invalid path");
   if (snprintf(dst_tmp, MAX_PATHLEN, "%s/%s", ins->dir, ins->dst) < 0)
     return fails_sys("snprintf");
 
