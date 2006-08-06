@@ -496,6 +496,7 @@ int instchk_liblink(struct install_item *ins, unsigned int fl)
 int deinst_copy(struct install_item *ins, unsigned int fl)
 {
   printf("unlink %s\n", ins->dst);
+  if (fl & INSTALL_DRYRUN) return 1;
   if (unlink(ins->dst) == -1) return fails_sys("unlink");
   return 1;
 }
@@ -506,12 +507,14 @@ int deinst_link(struct install_item *ins, unsigned int fl)
     return fails_sys("snprintf");
   ins->dst = tmp_buf;
 
+  if (fl & INSTALL_DRYRUN) return 1;
   if (unlink(ins->dst) == -1) return fails_sys("unlink");
   return 1;
 }
 int deinst_mkdir(struct install_item *ins, unsigned int fl)
 {
   printf("rmdir %s\n", ins->dir);
+  if (fl & INSTALL_DRYRUN) return 1;
   if (rmdir(ins->dir) == -1) return fails_sys("rmdir");
   return 1;
 }

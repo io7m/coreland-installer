@@ -8,6 +8,10 @@ all: phase_tools_local phase_tools phase_compile_local phase_compile \
 
 tests: phase_test 
 
+install: phase_install 
+
+install-check: phase_install_check 
+
 clean: phase_local_clean phase_tools_clean phase_compile_clean \
 	phase_library_clean phase_link_clean phase_test_clean 
 
@@ -53,7 +57,7 @@ insthier.o:\
 	compile insthier.c ctxt.h install.h 
 	./compile insthier insthier.c 
 ctxt/ctxt_repos.o:\
-	compile ctxt/ctxt_repos.c 
+	compile ctxt/ctxt_repos.c ctxt/../ctxt.h 
 	./compile ctxt/ctxt_repos ctxt/ctxt_repos.c 
 
 phase_compile:\
@@ -122,6 +126,25 @@ phase_test:
 	(cd UNIT_TESTS && make && make tests)
 phase_test_clean:
 	(cd UNIT_TESTS && make clean)
+
+#--INSTALL--------------------------------------------------------------------
+
+phase_install: installer
+	./installer
+
+install-dryrun: installer
+	./installer dryrun
+
+deinstall: deinstaller
+	./deinstaller
+
+deinstall-dryrun: deinstaller
+	./deinstaller dryrun
+
+#--INSTALL-CHECK--------------------------------------------------------------
+
+phase_install_check: instchk
+	./instchk
 
 #--LOCAL----------------------------------------------------------------------
 
