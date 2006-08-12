@@ -1,5 +1,5 @@
 installer.o
 insthier.o
-install.o
+install_core.o
 install_error.o
 ctxt.a

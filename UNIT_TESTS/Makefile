@@ -74,42 +74,44 @@ phase_library_clean:
 #--LINK-----------------------------------------------------------------------
 
 t_deinst1:\
-	link t_deinst1.ld t_deinst1.o t_inst1h.o ../install.o \
+	link t_deinst1.ld t_deinst1.o t_inst1h.o ../install_core.o \
 	../install_error.o 
-	./link t_deinst1 t_deinst1.o t_inst1h.o ../install.o \
+	./link t_deinst1 t_deinst1.o t_inst1h.o ../install_core.o \
 	../install_error.o 
 t_deinst12:\
-	link t_deinst12.ld t_deinst12.o t_inst1h.o ../install.o \
+	link t_deinst12.ld t_deinst12.o t_inst1h.o ../install_core.o \
 	../install_error.o 
-	./link t_deinst12 t_deinst12.o t_inst1h.o ../install.o \
+	./link t_deinst12 t_deinst12.o t_inst1h.o ../install_core.o \
 	../install_error.o 
 t_deinst2:\
-	link t_deinst2.ld t_deinst2.o t_inst2h.o ../install.o \
+	link t_deinst2.ld t_deinst2.o t_inst2h.o ../install_core.o \
 	../install_error.o 
-	./link t_deinst2 t_deinst2.o t_inst2h.o ../install.o \
+	./link t_deinst2 t_deinst2.o t_inst2h.o ../install_core.o \
 	../install_error.o 
 t_inst1:\
-	link t_inst1.ld t_inst1.o t_inst1h.o ../install.o \
+	link t_inst1.ld t_inst1.o t_inst1h.o ../install_core.o \
 	../install_error.o 
-	./link t_inst1 t_inst1.o t_inst1h.o ../install.o ../install_error.o 
+	./link t_inst1 t_inst1.o t_inst1h.o ../install_core.o \
+	../install_error.o 
 t_inst2:\
-	link t_inst2.ld t_inst2.o t_inst2h.o ../install.o \
+	link t_inst2.ld t_inst2.o t_inst2h.o ../install_core.o \
 	../install_error.o 
-	./link t_inst2 t_inst2.o t_inst2h.o ../install.o ../install_error.o 
+	./link t_inst2 t_inst2.o t_inst2h.o ../install_core.o \
+	../install_error.o 
 t_instchk1:\
-	link t_instchk1.ld t_instchk1.o t_inst1h.o ../install.o \
+	link t_instchk1.ld t_instchk1.o t_inst1h.o ../install_core.o \
 	../install_error.o 
-	./link t_instchk1 t_instchk1.o t_inst1h.o ../install.o \
+	./link t_instchk1 t_instchk1.o t_inst1h.o ../install_core.o \
 	../install_error.o 
 t_instchk2:\
-	link t_instchk2.ld t_instchk2.o t_inst2h.o ../install.o \
+	link t_instchk2.ld t_instchk2.o t_inst2h.o ../install_core.o \
 	../install_error.o 
-	./link t_instchk2 t_instchk2.o t_inst2h.o ../install.o \
+	./link t_instchk2 t_instchk2.o t_inst2h.o ../install_core.o \
 	../install_error.o 
 t_instchkpre:\
-	link t_instchkpre.ld t_instchkpre.o t_inst1h.o ../install.o \
+	link t_instchkpre.ld t_instchkpre.o t_inst1h.o ../install_core.o \
 	../install_error.o 
-	./link t_instchkpre t_instchkpre.o t_inst1h.o ../install.o \
+	./link t_instchkpre t_instchkpre.o t_inst1h.o ../install_core.o \
 	../install_error.o 
 
 phase_link:\

@@ -41,9 +41,9 @@ inst-dir.o:\
 inst-link.o:\
 	compile inst-link.c install.h 
 	./compile inst-link inst-link.c 
-install.o:\
-	compile install.c install.h 
-	./compile install install.c 
+install_core.o:\
+	compile install_core.c install.h 
+	./compile install_core install_core.c 
 install_error.o:\
 	compile install_error.c install.h 
 	./compile install_error install_error.c 
@@ -57,16 +57,16 @@ insthier.o:\
 	compile insthier.c ctxt.h install.h 
 	./compile insthier insthier.c 
 ctxt/ctxt_repos.o:\
-	compile ctxt/ctxt_repos.c ctxt/../ctxt.h 
+	compile ctxt/ctxt_repos.c 
 	./compile ctxt/ctxt_repos ctxt/ctxt_repos.c 
 
 phase_compile:\
 	auto-text.o deinstaller.o inst-check.o inst-copy.o inst-dir.o \
-	inst-link.o install.o install_error.o installer.o instchk.o \
+	inst-link.o install_core.o install_error.o installer.o instchk.o \
 	insthier.o ctxt/ctxt_repos.o 
 phase_compile_clean:
 	rm -f auto-text.o deinstaller.o inst-check.o inst-copy.o inst-dir.o \
-	inst-link.o install.o install_error.o installer.o instchk.o \
+	inst-link.o install_core.o install_error.o installer.o instchk.o \
 	insthier.o ctxt/ctxt_repos.o 
 
 #--LIBRARY--------------------------------------------------------------------
@@ -86,9 +86,9 @@ auto-text:\
 	link auto-text.ld auto-text.o 
 	./link auto-text auto-text.o 
 deinstaller:\
-	link deinstaller.ld deinstaller.o insthier.o install.o \
+	link deinstaller.ld deinstaller.o insthier.o install_core.o \
 	install_error.o ctxt.a 
-	./link deinstaller deinstaller.o insthier.o install.o \
+	./link deinstaller deinstaller.o insthier.o install_core.o \
 	install_error.o ctxt.a 
 inst-check:\
 	link inst-check.ld inst-check.o install_error.o 
@@ -103,14 +103,14 @@ inst-link:\
 	link inst-link.ld inst-link.o install_error.o 
 	./link inst-link inst-link.o install_error.o 
 installer:\
-	link installer.ld installer.o insthier.o install.o install_error.o \
-	ctxt.a 
-	./link installer installer.o insthier.o install.o install_error.o \
-	ctxt.a 
+	link installer.ld installer.o insthier.o install_core.o \
+	install_error.o ctxt.a 
+	./link installer installer.o insthier.o install_core.o \
+	install_error.o ctxt.a 
 instchk:\
-	link instchk.ld instchk.o insthier.o install.o install_error.o \
+	link instchk.ld instchk.o insthier.o install_core.o install_error.o \
 	ctxt.a 
-	./link instchk instchk.o insthier.o install.o install_error.o \
+	./link instchk instchk.o insthier.o install_core.o install_error.o \
 	ctxt.a 
 
 phase_link:\
