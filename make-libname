@@ -1,5 +1,7 @@
 #!/bin/sh
 
+sys="`uname -s | tr '/:[A-Z]' '..[a-z]'`"
+
 echo 'main="$1"; shift;'
 echo 'vmj="`cat ${main}.vmj 2>&-`"'
 echo 'vmn="`cat ${main}.vmn 2>&-`"'
