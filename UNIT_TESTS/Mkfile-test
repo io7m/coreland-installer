@@ -1,19 +1,19 @@
-phase_test: t_deinst1.out t_inst1.out t_instc1.out success
+phase_test: inst-check inst-copy inst-dir inst-link success
 
-t_deinst1.out: t_deinst1.sh cmp.sh
-	./t_deinst1.sh
-	./cmp.sh t_deinst1
-
-t_inst1.out: t_inst1.sh cmp.sh
-	./t_inst1.sh
-	./cmp.sh t_inst1
-
-t_instc1.out: t_instc1.sh cmp.sh
-	./t_instc1.sh
-	./cmp.sh t_instc1
+inst-check: ../inst-check
+	rm -f inst-check
+	ln -s ../inst-check inst-check
+inst-copy: ../inst-copy
+	rm -f inst-copy
+	ln -s ../inst-copy inst-copy
+inst-dir: ../inst-dir
+	rm -f inst-dir
+	ln -s ../inst-dir inst-dir
+inst-link: ../inst-link
+	rm -f inst-link
+	ln -s ../inst-link inst-link
 
 success:
 	@echo 'The software passed all tests.'
 
 phase_test_clean:
-	rm -f t_deinst1.out t_inst1.out t_instc1.out

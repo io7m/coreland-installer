@@ -3,30 +3,30 @@
 
 #define INSTALL_DRYRUN 0x0001
 
-#define MAX_PATHLEN 1024
-
-#define IOP_COPY 0
-#define IOP_LINK 1
-#define IOP_MKDIR 2
-#define IOP_LIBLINK 3
+#define INST_COPY 0
+#define INST_SYMLINK 1
+#define INST_MKDIR 2
+#define INST_LIBLINK 3
 
 struct install_item {
-  unsigned int op;
-  const char *from;
-  const char *to;
-  const char *dir;
-  unsigned int perm;
-  const char *owner;
-  const char *group; 
+  int op;
+  char *src;
+  char *dst;
+  char *dir;
+  char *owner;
+  char *group;
+  int perm;
 };
 
 int install(struct install_item *, unsigned int);
 int install_check(struct install_item *);
 int deinstall(struct install_item *, unsigned int);
 
-extern unsigned int install_failed;
-extern unsigned int deinstall_failed;
+const char *install_error(int);
+int check_tools(void);
+
 extern struct install_item insthier[];
-extern unsigned int insthier_size;
+extern unsigned long insthier_len;
+extern unsigned long install_failed;
 
 #endif

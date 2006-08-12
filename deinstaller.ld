@@ -1,11 +1,5 @@
 deinstaller.o
-install.o
 insthier.o
-open.a
-syserr.a
-get_opt.a
-fmt.a
-buffer.a
-str.a
-bin.a
-error.a
+install.o
+install_error.o
+ctxt.a

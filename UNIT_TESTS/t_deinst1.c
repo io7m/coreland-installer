@@ -1,14 +1,17 @@
-#include "../buffer.h"
 #include "../install.h"
-#include "../syserr.h"
+
+const char progname[] = "t_inst1";
 
 int main()
 {
-  unsigned int ind;
+  unsigned long i;
 
-  for (ind = 0; ind < insthier_size; ++ind)
-    deinstall(&insthier[ind], INSTALL_DRYRUN);    
+  if (!check_tools()) return 112;
 
-  if (buffer_flush(buffer1) == -1) syserr_die1sys(112, "fatal: write: ");
+  for (i = insthier_len - 1;; --i) {
+    deinstall(&insthier[i], 0);
+    if (i == 0) break;
+  }
+
   return 0;
 }

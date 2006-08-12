@@ -1,30 +1,18 @@
-#include <sys/stat.h>
-#include "buffer.h"
-#include "get_opt.h"
 #include "install.h"
-#include "syserr.h"
 
-const char progname[] = "install";
+const char progname[] = "installer";
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
-  int ch;
-  unsigned int flags;
-  unsigned int ind;
-  unsigned int mode;
+  unsigned long i;
+  unsigned int flag;
 
-  mode = umask(022);
-  flags = 0;
-  while ((ch = get_opt(argc, argv, "n")) != opteof)
-    switch (ch) {
-      case 'n': flags |= INSTALL_DRYRUN; break;
-      default: return 111; break;
-    }
+  argv = 0;
+  if (!check_tools()) return 112;
 
-  for (ind = 0; ind < insthier_size; ++ind)
-    install(&insthier[ind], flags);    
+  flag = (argc > 1) ? INSTALL_DRYRUN : 0;
+  for (i = 0; i < insthier_len; ++i)
+    install(&insthier[i], flag);
 
-  umask(mode);
-  if (buffer_flush(buffer1) == -1) syserr_die1sys(112, "fatal: write: ");
   return 0;
 }

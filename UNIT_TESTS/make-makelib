@@ -14,4 +14,3 @@ case "$sys" in
   *) echo 'ranlib "$main.a"'
     ;;
 esac
-

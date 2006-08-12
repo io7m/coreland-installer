@@ -1,0 +1,2 @@
+phase_install_check: instchk
+	./instchk

@@ -1,40 +1,20 @@
-#include <sys/stat.h>
-#include "buffer.h"
-#include "get_opt.h"
-#include "fmt.h"
 #include "install.h"
-#include "syserr.h"
 
-const char progname[] = "deinstall";
+const char progname[] = "deinstaller";
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
-  char cnum[FMT_ULONG];
-  unsigned int flags;
-  unsigned int ind;
-  int ch;
+  unsigned long i;
+  unsigned int flag;
 
-  flags = 0;
-  while ((ch = get_opt(argc, argv, "n")) != opteof)
-    switch (ch) {
-      case 'n': flags |= INSTALL_DRYRUN; break;
-      default: return 111; break;
-    }
+  argv = 0;
+  if (!check_tools()) return 112;
 
-  for (ind = insthier_size - 1;; --ind) {
-    deinstall(&insthier[ind], flags);    
-    if (!ind) break;
+  flag = (argc > 1) ? INSTALL_DRYRUN : 0;
+  for (i = insthier_len - 1;; --i) {
+    deinstall(&insthier[i], flag);
+    if (i == 0) break;
   }
 
-  if (deinstall_failed) {
-    cnum[fmt_uint(cnum, deinstall_failed)] = 0;
-    buffer_puts(buffer1, cnum);
-    buffer_puts(buffer1, " of ");
-    cnum[fmt_uint(cnum, insthier_size)] = 0;
-    buffer_puts(buffer1, cnum);
-    buffer_puts(buffer1, " files failed to deinstall\n");
-  }
-
-  if (buffer_flush(buffer1) == -1) syserr_die1sys(112, "fatal: write: ");
   return 0;
 }

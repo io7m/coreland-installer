@@ -1,20 +1,12 @@
 #include "../install.h"
 
-struct install_item insthier[] = {
-  {IOP_MKDIR,0,0,"/usr/lib",0755,"root","wheel"},
-  {IOP_COPY,"files/file.lib",0,"/usr/lib",0444,"root","wheel"},
-  {IOP_COPY,"files/xyz.a",0,"/usr/lib",0444,"root","wheel"},
-  {IOP_LIBLINK,"files/file.lib","libfile.lib","/usr/lib",0444,0,0},
-  {IOP_LIBLINK,"files/xyz.a","libxyz.a","/usr/lib",0444,0,0},
-  {IOP_LINK,"/usr/lib","testlib","/",0755,0,0},
-  {IOP_LINK,"/imaginary/dir","imagdir","/usr/nonexistant/dir",0755,0,0},
-  {IOP_COPY,"nonexistant",0,"/usr/lib", 0444,"root", "wheel"},
-  {IOP_COPY,"nonexistant",0,0,0444,"root","wheel"},
-  {IOP_COPY,0,"to","/usr/lib",0444,"root","wheel"},
-  {IOP_COPY,0,0,0,0,0,0},
-  {IOP_COPY,0,"to","/usr/lib",0444,0,0},
-  {IOP_COPY,0,"to","/usr/lib",0444,"root",0},
-  {IOP_COPY,"file","file2","dir",0444,"1234XNOBODYx123","1234XNOBODYx123"},
-};
+#define TODIR "installto/t1"
 
-unsigned int insthier_size = sizeof(insthier) / sizeof(struct install_item);
+struct install_item insthier[] = {
+  {INST_MKDIR, 0, 0, TODIR, 0, 0, 0755},
+  {INST_COPY, "files/t1/file.c", 0, TODIR, 0, 0, 0600},
+  {INST_COPY, "files/t1/nonexistant", 0, TODIR, 0, 0, 0600},
+  {INST_COPY, "files/t1/file.c", "renamed.c", TODIR, 0, 0, 0600},
+  {INST_SYMLINK, "file.c", "symlink", TODIR, 0, 0, 0600},
+};
+unsigned long insthier_len = sizeof(insthier) / sizeof(struct install_item);

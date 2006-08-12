@@ -1,14 +1,20 @@
-#include "../buffer.h"
+#include <sys/stat.h>
 #include "../install.h"
-#include "../syserr.h"
+
+const char progname[] = "t_inst1";
 
 int main()
 {
-  unsigned int ind;
+  unsigned long i;
+  unsigned int um;
 
-  for (ind = 0; ind < insthier_size; ++ind)
-    install(&insthier[ind], INSTALL_DRYRUN);    
+  um = umask(022);
 
-  if (buffer_flush(buffer1) == -1) syserr_die1sys(112, "fatal: write: ");
+  if (!check_tools()) return 112;
+
+  for (i = 0; i < insthier_len; ++i)
+    install(&insthier[i], 0);
+
+  umask(um);
   return 0;
 }

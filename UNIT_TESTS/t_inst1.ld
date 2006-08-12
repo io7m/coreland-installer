@@ -1,11 +1,4 @@
 t_inst1.o
-../install.o
 t_inst1h.o
-../open.a
-../syserr.a
-../get_opt.a
-../fmt.a
-../buffer.a
-../str.a
-../bin.a
-../error.a
+../install.o
+../install_error.o
