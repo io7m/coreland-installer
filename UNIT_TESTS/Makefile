@@ -21,6 +21,9 @@ phase_tools_clean:  mkftools_clean
 t_deinst1.o:\
 	compile t_deinst1.c ../install.h 
 	./compile t_deinst1 t_deinst1.c 
+t_deinst12.o:\
+	compile t_deinst12.c ../install.h 
+	./compile t_deinst12 t_deinst12.c 
 t_deinst2.o:\
 	compile t_deinst2.c ../install.h 
 	./compile t_deinst2 t_deinst2.c 
@@ -42,16 +45,20 @@ t_instchk1.o:\
 t_instchk2.o:\
 	compile t_instchk2.c ../install.h 
 	./compile t_instchk2 t_instchk2.c 
+t_instchkpre.o:\
+	compile t_instchkpre.c ../install.h 
+	./compile t_instchkpre t_instchkpre.c 
 files/t2/t2.o:\
 	compile files/t2/t2.c 
 	./compile files/t2/t2 files/t2/t2.c 
 
 phase_compile:\
-	t_deinst1.o t_deinst2.o t_inst1.o t_inst1h.o t_inst2.o t_inst2h.o \
-	t_instchk1.o t_instchk2.o files/t2/t2.o 
+	t_deinst1.o t_deinst12.o t_deinst2.o t_inst1.o t_inst1h.o t_inst2.o \
+	t_inst2h.o t_instchk1.o t_instchk2.o t_instchkpre.o files/t2/t2.o 
 phase_compile_clean:
-	rm -f t_deinst1.o t_deinst2.o t_inst1.o t_inst1h.o t_inst2.o \
-	t_inst2h.o t_instchk1.o t_instchk2.o files/t2/t2.o 
+	rm -f t_deinst1.o t_deinst12.o t_deinst2.o t_inst1.o t_inst1h.o \
+	t_inst2.o t_inst2h.o t_instchk1.o t_instchk2.o t_instchkpre.o \
+	files/t2/t2.o 
 
 #--LIBRARY--------------------------------------------------------------------
 
@@ -70,6 +77,11 @@ t_deinst1:\
 	link t_deinst1.ld t_deinst1.o t_inst1h.o ../install.o \
 	../install_error.o 
 	./link t_deinst1 t_deinst1.o t_inst1h.o ../install.o \
+	../install_error.o 
+t_deinst12:\
+	link t_deinst12.ld t_deinst12.o t_inst1h.o ../install.o \
+	../install_error.o 
+	./link t_deinst12 t_deinst12.o t_inst1h.o ../install.o \
 	../install_error.o 
 t_deinst2:\
 	link t_deinst2.ld t_deinst2.o t_inst2h.o ../install.o \
@@ -94,15 +106,22 @@ t_instchk2:\
 	../install_error.o 
 	./link t_instchk2 t_instchk2.o t_inst2h.o ../install.o \
 	../install_error.o 
+t_instchkpre:\
+	link t_instchkpre.ld t_instchkpre.o t_inst1h.o ../install.o \
+	../install_error.o 
+	./link t_instchkpre t_instchkpre.o t_inst1h.o ../install.o \
+	../install_error.o 
 
 phase_link:\
-	t_deinst1 t_deinst2 t_inst1 t_inst2 t_instchk1 t_instchk2 
+	t_deinst1 t_deinst12 t_deinst2 t_inst1 t_inst2 t_instchk1 \
+	t_instchk2 t_instchkpre 
 phase_link_clean:
-	rm -f t_deinst1 t_deinst2 t_inst1 t_inst2 t_instchk1 t_instchk2 
+	rm -f t_deinst1 t_deinst12 t_deinst2 t_inst1 t_inst2 t_instchk1 \
+	t_instchk2 t_instchkpre 
 
 #--TEST-----------------------------------------------------------------------
 
-phase_test: inst-check inst-copy inst-dir inst-link success
+phase_test: inst-check inst-copy inst-dir inst-link
 
 inst-check: ../inst-check
 	rm -f inst-check
@@ -119,9 +138,6 @@ inst-link: ../inst-link
 
 tests: run-tests.sh
 	./run-tests.sh
-
-success:
-	@echo 'The software passed all tests.'
 
 phase_test_clean:
 	rm -f t_inst1.out

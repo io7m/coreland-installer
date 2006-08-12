@@ -7,9 +7,7 @@ failed()
 }
 
 echo "-- running basic tests"
-rm -f t_inst1.out
-./t_inst1.sh > t_inst1.out
-cmp t_inst1.out t_inst1.exp
+./t_inst1.sh
 if [ $? -ne 0 ]
 then
   failed

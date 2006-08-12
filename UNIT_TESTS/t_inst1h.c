@@ -10,3 +10,11 @@ struct install_item insthier[] = {
   {INST_SYMLINK, "file.c", "symlink", TODIR, 0, 0, 0600},
 };
 unsigned long insthier_len = sizeof(insthier) / sizeof(struct install_item);
+
+int return_codes[5] = {
+  1,
+  1,
+  0,
+  1,
+  1,
+};

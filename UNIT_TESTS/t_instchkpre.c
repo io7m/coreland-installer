@@ -2,9 +2,7 @@
 #include <stdio.h>
 #include "../install.h"
 
-const char progname[] = "t_instchk1";
-
-extern int return_codes[5];
+const char progname[] = "t_instchkpre";
 
 int main()
 {
@@ -18,9 +16,8 @@ int main()
 
   for (i = 0; i < insthier_len; ++i) {
     ret = install_check(&insthier[i]);
-    if (ret != return_codes[i]) {
-      printf("install_check[%lu] returned %d expected %d\n", i, ret,
-              return_codes[i]);
+    if (ret != 0) {
+      printf("install_check[%lu] returned %d expected %d\n", i, ret, 0);
       umask(um);
       return 1;
     }
