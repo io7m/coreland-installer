@@ -1,4 +1,4 @@
-phase_test: inst-check inst-copy inst-dir inst-link success
+phase_test: inst-check inst-copy inst-dir inst-link
 
 inst-check: ../inst-check
 	rm -f inst-check
@@ -13,7 +13,8 @@ inst-link: ../inst-link
 	rm -f inst-link
 	ln -s ../inst-link inst-link
 
-success:
-	@echo 'The software passed all tests.'
+tests: run-tests.sh
+	./run-tests.sh
 
 phase_test_clean:
+	rm -f t_inst1.out

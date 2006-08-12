@@ -117,10 +117,14 @@ inst-link: ../inst-link
 	rm -f inst-link
 	ln -s ../inst-link inst-link
 
+tests: run-tests.sh
+	./run-tests.sh
+
 success:
 	@echo 'The software passed all tests.'
 
 phase_test_clean:
+	rm -f t_inst1.out
 
 #--TOOLS----------------------------------------------------------------------
 
