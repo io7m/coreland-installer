@@ -24,7 +24,7 @@ char *ext_tools[] = {
   "./inst-check",
   "./inst-dir",
   "./inst-link",
-  "./sosuffix",
+  "./mk-sosuffix",
 };
 
 #define MAX_PATHLEN 1024

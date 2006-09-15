@@ -1,4 +1,7 @@
-phase_test: inst-check inst-copy inst-dir inst-link
+tests: inst-check inst-copy inst-dir inst-link run-tests.sh
+	./run-tests.sh
+tests_clean:
+	rm -f t_inst1.out
 
 inst-check: ../inst-check
 	rm -f inst-check
@@ -12,9 +15,3 @@ inst-dir: ../inst-dir
 inst-link: ../inst-link
 	rm -f inst-link
 	ln -s ../inst-link inst-link
-
-tests: run-tests.sh
-	./run-tests.sh
-
-phase_test_clean:
-	rm -f t_inst1.out

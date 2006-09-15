@@ -1,0 +1,5 @@
+install: installer
+	./installer
+
+install-dryrun: installer
+	./installer dryrun

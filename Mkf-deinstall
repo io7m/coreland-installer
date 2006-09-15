@@ -1,9 +1,3 @@
-phase_install: installer
-	./installer
-
-install-dryrun: installer
-	./installer dryrun
-
 deinstall: deinstaller
 	./deinstaller
 
