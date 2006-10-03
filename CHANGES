@@ -1,3 +1,5 @@
 20060812 version: installer 1.0 fork model rewrite
 20060812 code: install.c moved to install_core.c to stop default make
                rules breaking builds.
+20061003 code: fixed unit tests
+20061003 version: installer 1.1

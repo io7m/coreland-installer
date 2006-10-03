@@ -11,6 +11,9 @@ cc:\
 conf-cctype:\
 	conf-systype conf-cc mk-cctype 
 	./mk-cctype > conf-cctype
+conf-sosuffix:\
+	mk-sosuffix 
+	./mk-sosuffix > conf-sosuffix
 conf-systype:\
 	mk-systype 
 	./mk-systype > conf-systype
@@ -87,17 +90,15 @@ mk-ctxt.o:\
 mk-ctxt:\
 	ld mk-ctxt.o mk-ctxt.ld
 	./ld mk-ctxt mk-ctxt.o
-mk-dlib:\
-	conf-ldtype conf-ld conf-sosuffix 
 mk-slib:\
 	conf-systype 
 mk-sosuffix:\
 	conf-systype 
 clean: tests_clean local_clean 
-	rm -f conf-cctype conf-systype ctxt.a ctxt/repos.c ctxt/repos.o \
-	deinstaller deinstaller.o inst-check inst-check.o inst-copy \
-	inst-copy.o inst-dir inst-dir.o inst-link inst-link.o install_core.o \
-	install_error.o installer installer.o instchk instchk.o insthier.o 
+	rm -f ctxt.a ctxt/repos.c ctxt/repos.o deinstaller deinstaller.o \
+	inst-check inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o \
+	inst-link inst-link.o install_core.o install_error.o installer \
+	installer.o instchk instchk.o insthier.o 
 
 deinstall: deinstaller
 	./deinstaller
