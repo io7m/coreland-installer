@@ -1,0 +1,58 @@
+#!/bin/sh
+
+if [ $# -lt 1 ]
+then
+  echo "usage: basename" 1>&2
+  exit 1
+fi
+
+SYS_TYPE=`head -n 1 conf-systype`
+if [ $? -ne 0 ]
+then
+  echo "fatal: could not read conf-systype" 1>&2
+  exit 1
+fi
+SO_SUFFIX=`head -n 1 conf-sosuffix`
+if [ $? -ne 0 ]
+then
+  echo "fatal: could not read conf-sosuffix" 1>&2
+  exit 1
+fi
+
+main="$1"
+shift
+
+vmj=`head -n 1 ${main}.vmj 2>/dev/null`
+vmn=`head -n 1 ${main}.vmn 2>/dev/null`
+
+if [ "x${vmj}" != "x" ]
+then
+  if [ "x${vmn}" != "x" ]
+  then
+    case "${SYS_TYPE}" in
+      cygwin*)
+        exec echo ${main}.${SO_SUFFIX}
+        ;;
+      darwin)
+        exec echo ${main}.${vmj}.${vmn}.${SO_SUFFIX}
+        ;;
+      *)
+        exec echo ${main}.${SO_SUFFIX}.${vmj}.${vmn}
+        ;;
+    esac
+  else
+    case "${SYS_TYPE}" in
+      cygwin*)
+        exec echo ${main}.${SO_SUFFIX}
+        ;;
+      darwin)
+        exec echo ${main}.${vmj}.${SO_SUFFIX}
+        ;;
+      *)
+        exec echo ${main}.${SO_SUFFIX}.${vmj}
+        ;;
+    esac
+  fi
+else
+  exec echo ${main}.${SO_SUFFIX}
+fi

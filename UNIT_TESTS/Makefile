@@ -6,31 +6,59 @@ all:\
 	files/t2/t2.vlb t_deinst1 t_deinst12 t_deinst2 t_inst1 t_inst2 \
 	t_instchk1 t_instchk2 t_instchkpre 
 
-cc:\
-	conf-cc conf-cctype 
-conf-cctype:\
-	conf-systype conf-cc mk-cctype 
-	./mk-cctype > conf-cctype
+cc: ../cc conf-cctype conf-cc
+	rm -f cc
+	ln -s ../cc cc
+
+cc-pic:\
+	cc conf-picflag 
+conf-cc: ../conf-cc
+	rm -f conf-cc
+	ln -s ../conf-cc conf-cc
+
+conf-cctype: ../conf-cctype
+	rm -f conf-cctype
+	ln -s ../conf-cctype conf-cctype
+
+conf-ld: ../conf-ld
+	rm -f conf-ld
+	ln -s ../conf-ld conf-ld
+
 conf-ldtype:\
 	conf-systype conf-ld conf-cctype mk-ldtype 
 	./mk-ldtype > conf-ldtype
-conf-systype:\
-	mk-systype 
-	./mk-systype > conf-systype
+conf-picflag:\
+	mk-picflag 
+	./mk-picflag > conf-picflag
+conf-sosuffix:\
+	mk-sosuffix 
+	./mk-sosuffix > conf-sosuffix
+conf-systype: ../conf-systype
+	rm -f conf-systype
+	ln -s ../conf-systype conf-systype
+
 files/t2/t2.o:\
 	cc-pic files/t2/t2.c 
 	./cc-pic files/t2/t2.c
 files/t2/t2.vlb:\
 	mk-dlib files/t2/t2.dld files/t2/t2.o 
 	./mk-dlib files/t2/t2 files/t2/t2.o 
-ld:\
-	conf-ld 
+ld: ../ld conf-ld
+	rm -f ld
+	ln -s ../ld ld
+
 mk-dlib:\
-	conf-ldtype conf-ld conf-sosuffix 
+	conf-ldtype conf-ld conf-sosuffix mk-libname 
 mk-ldtype:\
 	conf-cctype conf-systype 
-mk-sosuffix:\
-	conf-systype 
+mk-libname:\
+	conf-systype conf-sosuffix 
+mk-picflag:\
+	conf-cctype conf-systype 
+mk-sosuffix: ../mk-sosuffix
+	rm -f mk-sosuffix
+	ln -s ../mk-sosuffix mk-sosuffix
+
 t_deinst1:\
 	ld t_deinst1.ld t_deinst1.o t_inst1h.o ../install_core.o \
 	../install_error.o 
@@ -102,11 +130,12 @@ t_instchkpre.o:\
 	cc t_instchkpre.c ../install.h 
 	./cc t_instchkpre.c
 clean: tests_clean 
-	rm -f cc conf-cc conf-cctype conf-ld conf-systype files/t2/t2.o \
-	`cat files/t2/t2.vlb` files/t2/t2.vlb ld mk-sosuffix t_deinst1 \
-	t_deinst1.o t_deinst12 t_deinst12.o t_deinst2 t_deinst2.o t_inst1 \
-	t_inst1.o t_inst1h.o t_inst2 t_inst2.o t_inst2h.o t_instchk1 \
-	t_instchk1.o t_instchk2 t_instchk2.o t_instchkpre t_instchkpre.o 
+	rm -f cc conf-cc conf-cctype conf-ld conf-ldtype conf-picflag \
+	conf-systype files/t2/t2.o `cat files/t2/t2.vlb` files/t2/t2.vlb ld \
+	mk-sosuffix t_deinst1 t_deinst1.o t_deinst12 t_deinst12.o t_deinst2 \
+	t_deinst2.o t_inst1 t_inst1.o t_inst1h.o t_inst2 t_inst2.o \
+	t_inst2h.o t_instchk1 t_instchk1.o t_instchk2 t_instchk2.o \
+	t_instchkpre t_instchkpre.o 
 
 tests: inst-check inst-copy inst-dir inst-link run-tests.sh
 	./run-tests.sh

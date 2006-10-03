@@ -1,0 +1,3 @@
+cc: ../cc conf-cctype conf-cc
+	rm -f cc
+	ln -s ../cc cc

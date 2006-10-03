@@ -1,0 +1,3 @@
+conf-systype: ../conf-systype
+	rm -f conf-systype
+	ln -s ../conf-systype conf-systype

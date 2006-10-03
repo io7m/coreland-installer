@@ -1,0 +1,3 @@
+mk-sosuffix: ../mk-sosuffix
+	rm -f mk-sosuffix
+	ln -s ../mk-sosuffix mk-sosuffix
