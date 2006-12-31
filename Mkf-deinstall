@@ -1,5 +1,4 @@
-deinstall: deinstaller
+deinstall: deinstaller inst-check inst-copy inst-dir inst-link
 	./deinstaller
-
-deinstall-dryrun: deinstaller
+deinstall-dryrun: deinstaller inst-check inst-copy inst-dir inst-link
 	./deinstaller dryrun
