@@ -86,7 +86,7 @@ int check()
 
   if (!check_type(sb.st_mode & S_IFMT)) return 1;
 
-  if ((sb.st_mode & S_IFMT) != S_IFLNK) {
+  if (!S_ISLNK(sb.st_mode)) {
     if ((sb.st_mode & 07777) != (int) perm) {
       printf("failed: mode %o not %o\n", (sb.st_mode & 07777), perm);
       return 1;
