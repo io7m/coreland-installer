@@ -30,10 +30,10 @@ then
   if [ "x${vmn}" != "x" ]
   then
     case "${SYS_TYPE}" in
-      cygwin*)
+      MS_WINDOWS)
         exec echo ${main}.${SO_SUFFIX}
         ;;
-      darwin)
+      DARWIN)
         exec echo ${main}.${vmj}.${vmn}.${SO_SUFFIX}
         ;;
       *)
@@ -42,10 +42,10 @@ then
     esac
   else
     case "${SYS_TYPE}" in
-      cygwin*)
+      MS_WINDOWS)
         exec echo ${main}.${SO_SUFFIX}
         ;;
-      darwin)
+      DARWIN)
         exec echo ${main}.${vmj}.${SO_SUFFIX}
         ;;
       *)

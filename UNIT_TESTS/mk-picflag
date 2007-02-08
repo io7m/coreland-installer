@@ -15,25 +15,25 @@ fi
 
 
 case "${CC_TYPE}" in
-  gcc)
+  GCC)
     case "${SYS_TYPE}" in
-      cygwin*)
+      MS_WINDOWS)
         ;;
       *)
         echo '-fPIC'
         ;;
     esac
     ;;
-  hp-c)
+  HP_C)
     echo '+Z'
     ;;
-  compaq-c)
+  COMPAQ_C)
     echo '-shared'
     ;;
-  intel-c)
+  INTEL)
     echo '-fpic'
     ;;
-  sun-c)
+  SUN_C)
     # obsolete on SPARC? manual says -xcode=pic32 but this fails on x86
     echo '-KPIC'
     ;;
