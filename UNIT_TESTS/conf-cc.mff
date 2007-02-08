@@ -1,3 +1,0 @@
-conf-cc: ../conf-cc
-	rm -f conf-cc
-	ln -s ../conf-cc conf-cc

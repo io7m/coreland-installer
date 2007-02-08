@@ -1,3 +1,0 @@
-conf-cctype: ../conf-cctype
-	rm -f conf-cctype
-	ln -s ../conf-cctype conf-cctype
