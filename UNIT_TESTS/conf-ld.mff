@@ -1,3 +1,0 @@
-conf-ld: ../conf-ld
-	rm -f conf-ld
-	ln -s ../conf-ld conf-ld
