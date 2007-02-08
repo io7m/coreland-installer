@@ -6,8 +6,9 @@ all: local \
 	ctxt.a deinstaller inst-check inst-copy inst-dir inst-link \
 	installer instchk 
 
-cc:\
-	conf-cc conf-cctype 
+cc-compile: conf-cc conf-cctype 
+cc-link: conf-ld 
+cc-slib: conf-systype 
 conf-cctype:\
 	conf-systype conf-cc mk-cctype 
 	./mk-cctype > conf-cctype
@@ -18,99 +19,94 @@ conf-systype:\
 	mk-systype 
 	./mk-systype > conf-systype
 ctxt.a:\
-	mk-slib ctxt.sld ctxt/repos.o 
-	./mk-slib ctxt ctxt/repos.o 
+	cc-slib ctxt.sld ctxt/repos.o 
+	./cc-slib ctxt ctxt/repos.o 
 ctxt/repos.o:\
-	cc ctxt/repos.c 
-	./cc ctxt/repos.c
+	cc-compile ctxt/repos.c 
+	./cc-compile ctxt/repos.c
 deinstaller:\
-	ld deinstaller.ld deinstaller.o insthier.o install_core.o \
+	cc-link deinstaller.ld deinstaller.o insthier.o install_core.o \
 	install_error.o ctxt.a 
-	./ld deinstaller deinstaller.o insthier.o install_core.o \
+	./cc-link deinstaller deinstaller.o insthier.o install_core.o \
 	install_error.o ctxt.a 
 deinstaller.o:\
-	cc deinstaller.c install.h 
-	./cc deinstaller.c
+	cc-compile deinstaller.c install.h 
+	./cc-compile deinstaller.c
 inst-check:\
-	ld inst-check.ld inst-check.o install_error.o 
-	./ld inst-check inst-check.o install_error.o 
+	cc-link inst-check.ld inst-check.o install_error.o 
+	./cc-link inst-check inst-check.o install_error.o 
 inst-check.o:\
-	cc inst-check.c install.h 
-	./cc inst-check.c
+	cc-compile inst-check.c install.h 
+	./cc-compile inst-check.c
 inst-copy:\
-	ld inst-copy.ld inst-copy.o install_error.o 
-	./ld inst-copy inst-copy.o install_error.o 
+	cc-link inst-copy.ld inst-copy.o install_error.o 
+	./cc-link inst-copy inst-copy.o install_error.o 
 inst-copy.o:\
-	cc inst-copy.c install.h 
-	./cc inst-copy.c
+	cc-compile inst-copy.c install.h 
+	./cc-compile inst-copy.c
 inst-dir:\
-	ld inst-dir.ld inst-dir.o install_error.o 
-	./ld inst-dir inst-dir.o install_error.o 
+	cc-link inst-dir.ld inst-dir.o install_error.o 
+	./cc-link inst-dir inst-dir.o install_error.o 
 inst-dir.o:\
-	cc inst-dir.c install.h 
-	./cc inst-dir.c
+	cc-compile inst-dir.c install.h 
+	./cc-compile inst-dir.c
 inst-link:\
-	ld inst-link.ld inst-link.o install_error.o 
-	./ld inst-link inst-link.o install_error.o 
+	cc-link inst-link.ld inst-link.o install_error.o 
+	./cc-link inst-link inst-link.o install_error.o 
 inst-link.o:\
-	cc inst-link.c install.h 
-	./cc inst-link.c
+	cc-compile inst-link.c install.h 
+	./cc-compile inst-link.c
 install_core.o:\
-	cc install_core.c install.h 
-	./cc install_core.c
+	cc-compile install_core.c install.h 
+	./cc-compile install_core.c
 install_error.o:\
-	cc install_error.c install.h 
-	./cc install_error.c
+	cc-compile install_error.c install.h 
+	./cc-compile install_error.c
 installer:\
-	ld installer.ld installer.o insthier.o install_core.o \
+	cc-link installer.ld installer.o insthier.o install_core.o \
 	install_error.o ctxt.a 
-	./ld installer installer.o insthier.o install_core.o \
+	./cc-link installer installer.o insthier.o install_core.o \
 	install_error.o ctxt.a 
 installer.o:\
-	cc installer.c install.h 
-	./cc installer.c
+	cc-compile installer.c install.h 
+	./cc-compile installer.c
 instchk:\
-	ld instchk.ld instchk.o insthier.o install_core.o install_error.o \
-	ctxt.a 
-	./ld instchk instchk.o insthier.o install_core.o install_error.o \
-	ctxt.a 
+	cc-link instchk.ld instchk.o insthier.o install_core.o \
+	install_error.o ctxt.a 
+	./cc-link instchk instchk.o insthier.o install_core.o \
+	install_error.o ctxt.a 
 instchk.o:\
-	cc instchk.c install.h 
-	./cc instchk.c
+	cc-compile instchk.c install.h 
+	./cc-compile instchk.c
 insthier.o:\
-	cc insthier.c ctxt.h install.h 
-	./cc insthier.c
-ld:\
-	conf-ld 
-mk-cctype:\
-	conf-cc conf-systype 
+	cc-compile insthier.c ctxt.h install.h 
+	./cc-compile insthier.c
+mk-cctype: conf-cc conf-systype 
 mk-ctxt.o:\
-	cc mk-ctxt.c
-	./cc mk-ctxt.c
+	cc-compile mk-ctxt.c
+	./cc-compile mk-ctxt.c
 mk-ctxt:\
-	ld mk-ctxt.o mk-ctxt.ld
-	./ld mk-ctxt mk-ctxt.o
-mk-slib:\
-	conf-systype 
-mk-sosuffix:\
-	conf-systype 
+	cc-link mk-ctxt.o mk-ctxt.ld
+	./cc-link mk-ctxt mk-ctxt.o
+mk-sosuffix: conf-systype 
+mk-systype: conf-cc 
 clean: tests_clean local_clean 
 	rm -f ctxt.a ctxt/repos.c ctxt/repos.o deinstaller deinstaller.o \
 	inst-check inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o \
 	inst-link inst-link.o install_core.o install_error.o installer \
 	installer.o instchk instchk.o insthier.o 
 
-deinstall: deinstaller
+deinstall: deinstaller inst-check inst-copy inst-dir inst-link
 	./deinstaller
-
-deinstall-dryrun: deinstaller
+deinstall-dryrun: deinstaller inst-check inst-copy inst-dir inst-link
 	./deinstaller dryrun
-install: installer
+install: installer inst-check inst-copy inst-dir inst-link postinstall
 	./installer
+	./postinstall
 
-install-dryrun: installer
+install-dryrun: installer inst-check inst-copy inst-dir inst-link
 	./installer dryrun
-install-check: instchk
+install-check: instchk inst-check
 	./instchk
 tests:
 	(cd UNIT_TESTS && make && make tests)

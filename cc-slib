@@ -42,12 +42,12 @@ rm -f "${main}".a
 ${AR} "${main}".a ${1+"$@"}
 
 case "${SYS_TYPE}" in
-  sunos) ;;
-  unix_sv) ;;
-  irix64) ;;
-  irix) ;;
-  dgux) ;;
-  sco) ;;
+  SUNOS) ;;
+  SCO_OPENSERVER) ;;
+  UNIXWARE) ;;
+  IRIX) ;;
+  DG_UX) ;;
+  UNIXWARE) ;;
   *)
     ${RANLIB} "$main.a"
     ;;
