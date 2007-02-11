@@ -29,9 +29,7 @@ int create_link()
 {
   int dirfd;
 
-  dirfd = open(dir, O_RDONLY);
-  if (dirfd == -1) { complain("open"); return 112; }
-  if (fchdir(dirfd) == -1) { complain("fchdir"); return 113; }
+  if (chdir(dir) == -1) { complain("chdir"); return 113; }
   if (symlink(src, dst) == -1) { complain("symlink"); return 114; }
   return 0;
 }
