@@ -343,11 +343,11 @@ int ntran_copy(struct install_item *ins)
   if (!ins->dir) return fails("directory unefined");
   if (!ins->dst) ins->dst = ins->src;
 
-  if (str_ends(ins->src, ".lib")) {
+  if (str_ends(ins->src, ".vlb")) {
     if (!libname(ins->src, src_name)) return 0;
     ins->src = src_name;
   }
-  if (str_ends(ins->dst, ".lib")) {
+  if (str_ends(ins->dst, ".vlb")) {
     if (!libname(ins->dst, dst_name)) return 0;
     ins->dst = dst_name;
   }
@@ -381,7 +381,7 @@ int ntran_liblink(struct install_item *ins)
   if (!ins->dir) return fails("directory unefined");
   if (!ins->dst) return fails("dst name undefined");
 
-  if (str_ends(ins->src, ".lib")) {
+  if (str_ends(ins->src, ".vlb")) {
     if (!libname(ins->src, src_tmp)) return 0;
     ins->src = src_tmp;
     if (!base_name(ins->src, &ins->src)) return fails("invalid path");
