@@ -1,3 +1,5 @@
+/* $Rev$ */
+
 #include "install.h"
 
 const char progname[] = "installer";

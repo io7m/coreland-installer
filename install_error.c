@@ -1,3 +1,5 @@
+/* $Rev$ */
+
 #include <errno.h>
 #include "install.h"
 

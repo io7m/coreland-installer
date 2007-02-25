@@ -1,3 +1,5 @@
+/* $Rev$ */
+
 #include <stdio.h>
 #include "install.h"
 
