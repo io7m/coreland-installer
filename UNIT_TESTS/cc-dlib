@@ -104,27 +104,30 @@ case "${LD_TYPE}" in
         fi
         ;;
       SUNOS)
-        ld -G -z text -o "${libname}" ${1+"$@"} -lc
+        ld -G -z text -o "${libname}" ${1+"$@"} ${LDFLAGS} -lc
         ;;
       MS_WINDOWS)
-        ${LD} -shared -o "${libname}" ${1+"$@"}
+        ${LD} -shared -o "${libname}" ${1+"$@"} ${LDFLAGS}
         ;;
       *)
-        ${LD} -shared -Wl,-soname,"${libname}" -o "${libname}" ${1+"$@"} -lc
+        ${LD} -shared -Wl,-soname,"${libname}" -o "${libname}" ${1+"$@"} ${LDFLAGS} -lc
         ;;
     esac
     ;;
   HP_C)
-    ${LD} -b -o "${libname}" ${1+"$@"}
+    ${LD} -b -o "${libname}" ${1+"$@"} ${LDFLAGS}
     ;;
   COMPAQ_C)
-    ${LD} -no_archive -shared -o "${libname}" ${1+"$@"}
+    ${LD} -no_archive -shared -o "${libname}" ${1+"$@"} ${LDFLAGS}
     ;;
   INTEL)
-    ${LD} -shared -o "${libname}" ${1+"$@"}
+    ${LD} -shared -o "${libname}" ${1+"$@"} ${LDFLAGS}
     ;;
   SUN_C)
-    ${LD} -G -z text -o "${libname}" ${1+"$@"}
+    ${LD} -G -z text -o "${libname}" ${1+"$@"} ${LDFLAGS}
+    ;;
+  MIPSPRO)
+    ${LD} -shared -soname "${libname}" -o "${libname}" ${1+"$@"} ${LDFLAGS}
     ;;
   *)
     echo "fatal: unknown compiler - cannot produce shared objects" 1>&2

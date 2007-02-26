@@ -37,6 +37,9 @@ case "${CC_TYPE}" in
     # obsolete on SPARC? manual says -xcode=pic32 but this fails on x86
     echo '-KPIC'
     ;;
+  MIPSPRO)
+    echo '-KPIC'
+    ;;
   *)
     echo 'fatal: unknown compiler - cannot print PIC flag' 1>&2
     exit 1
