@@ -63,8 +63,8 @@ int copy()
   }
 
   if (fsync(dstfd) == -1) { complain("fsync"); code = 117; goto ERR; }
-  if (fchmod(dstfd, perm) == -1) { complain("chmod"); code = 118; goto ERR; }
-  if (fchown(dstfd, uid, gid) == -1) {
+  if (chmod(tmpdst, perm) == -1) { complain("chmod"); code = 118; goto ERR; }
+  if (chown(tmpdst, uid, gid) == -1) {
     complain("chown"); code = 119; goto ERR;
   }
   if (rename(tmpdst, dst) == -1) { complain("rename"); code = 120; goto ERR; }

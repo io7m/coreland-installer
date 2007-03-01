@@ -117,7 +117,7 @@ local_clean:
 
 ctxt/repos.c: mk-ctxt conf-repos
 	rm -f ctxt/repos.c
-	./mk-ctxt ctxt_repos ../ctxt < conf-repos > ctxt/repos.c
+	./mk-ctxt ctxt_repos < conf-repos > ctxt/repos.c
 regen:
 	cpj-genmk > Makefile.tmp
 	mv Makefile.tmp Makefile
