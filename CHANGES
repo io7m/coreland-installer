@@ -3,3 +3,4 @@
                rules breaking builds.
 20061003 code: fixed unit tests
 20061003 version: installer 1.1
+20070608 code: added generic-conf.c

@@ -2,9 +2,8 @@
 
 default: all
 
-all: local \
-	ctxt.a deinstaller inst-check inst-copy inst-dir inst-link \
-	installer instchk 
+all: local ctxt.a deinstaller inst-check inst-copy inst-dir \
+	inst-link installer instchk 
 
 cc-compile: conf-cc conf-cctype 
 cc-link: conf-ld 
@@ -32,6 +31,9 @@ deinstaller:\
 deinstaller.o:\
 	cc-compile deinstaller.c install.h 
 	./cc-compile deinstaller.c
+generic-conf.o:\
+	cc-compile generic-conf.c ctxt.h 
+	./cc-compile generic-conf.c
 inst-check:\
 	cc-link inst-check.ld inst-check.o install_error.o 
 	./cc-link inst-check inst-check.o install_error.o 
@@ -90,11 +92,14 @@ mk-ctxt:\
 	./cc-link mk-ctxt mk-ctxt.o
 mk-sosuffix: conf-systype 
 mk-systype: conf-cc 
-clean: tests_clean local_clean 
-	rm -f ctxt.a ctxt/repos.c ctxt/repos.o deinstaller deinstaller.o \
-	inst-check inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o \
-	inst-link inst-link.o install_core.o install_error.o installer \
-	installer.o instchk instchk.o insthier.o 
+clean-all: tests_clean local_clean obj_clean 
+clean: obj_clean
+obj_clean: 
+	rm -f conf-cctype conf-systype ctxt.a ctxt/repos.c ctxt/repos.o \
+	deinstaller deinstaller.o generic-conf.o inst-check inst-check.o \
+	inst-copy inst-copy.o inst-dir inst-dir.o inst-link inst-link.o \
+	install_core.o install_error.o installer installer.o instchk \
+	instchk.o insthier.o mk-ctxt mk-ctxt.o 
 
 deinstall: deinstaller inst-check inst-copy inst-dir inst-link
 	./deinstaller
@@ -119,6 +124,5 @@ ctxt/repos.c: mk-ctxt conf-repos
 	rm -f ctxt/repos.c
 	./mk-ctxt ctxt_repos < conf-repos > ctxt/repos.c
 regen:
-	cpj-genmk > Makefile.tmp
-	mv Makefile.tmp Makefile
+	cpj-genmk > Makefile.tmp && mv Makefile.tmp Makefile
 
