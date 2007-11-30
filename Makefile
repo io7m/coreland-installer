@@ -17,7 +17,7 @@ sysdeps_clean:\
 # -- SYSDEPS end
 
 cc-compile:\
-conf-cc conf-cctype conf-systype 
+conf-cc conf-cctype conf-systype conf-cflags 
 
 cc-link:\
 conf-ld conf-ldtype conf-systype 
