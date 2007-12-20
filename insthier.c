@@ -11,6 +11,7 @@ struct install_item insthier[] = {
   {INST_COPY, "inst-copy.c", 0, ctxt_repos, 0, 0, 0444},
   {INST_COPY, "inst-dir.c", 0, ctxt_repos, 0, 0, 0444},
   {INST_COPY, "inst-link.c", 0, ctxt_repos, 0, 0, 0444},
+  {INST_COPY, "install_core.c", 0, ctxt_repos, 0, 0, 0444},
   {INST_COPY, "install_error.c", 0, ctxt_repos, 0, 0, 0444},
   {INST_COPY, "installer.c", 0, ctxt_repos, 0, 0, 0444},
   {INST_COPY, "instchk.c", 0, ctxt_repos, 0, 0, 0444},

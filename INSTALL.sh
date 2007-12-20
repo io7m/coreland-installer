@@ -55,7 +55,6 @@ copy ${repos}/installer.c .
 copy ${repos}/installer.ld .
 copy ${repos}/instchk.c .
 copy ${repos}/instchk.ld .
-copy ${repos}/insthier.c .
 copy ${repos}/postinstall
 copy ${repos}/Mkf-install
 copy ${repos}/Mkf-deinstall
@@ -68,7 +67,9 @@ do
 done
 make_fragment "version" "VERSION"
 
-(cat <<EOF
+if [ ! -f ctxt/ctxt.sld ]
+then
+  (cat <<EOF
 bindir.o
 dlibdir.o
 incdir.o
@@ -76,10 +77,12 @@ repos.o
 slibdir.o
 version.o
 EOF
-) > ctxt/ctxt.sld.tmp || die "could not create ctxt.sld.tmp"
-mv ctxt/ctxt.sld.tmp ctxt/ctxt.sld || die "could not replace ctxt.sld"
+) > ctxt/ctxt.sld || die "could not create ctxt.sld"
+fi
 
-(cat <<EOF
+if [ ! -f ctxt.h ]
+then
+  (cat <<EOF
 #ifndef CTXT_H
 #define CTXT_H
 
@@ -94,6 +97,19 @@ extern char ctxt_group[];
 
 #endif
 EOF
-) > ctxt.h.tmp || die "could not create ctxt.h.tmp"
-mv ctxt.h.tmp ctxt.h || die "could not replace ctxt.h"
+) > ctxt.h || die "could not create ctxt.h"
+fi
 
+if [ ! -f insthier.c ]
+then
+  (cat <<EOF
+#include "ctxt.h"
+#include "install.h"
+
+struct install_item insthier[] = {
+
+};
+unsigned long insthier_len = sizeof(insthier) / sizeof(struct install_item);
+EOF
+) > insthier.c || die "could not create insthier.c"
+fi
