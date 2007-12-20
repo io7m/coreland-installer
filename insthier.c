@@ -19,5 +19,9 @@ struct install_item insthier[] = {
   {INST_COPY, "inst-copy.ld", 0, ctxt_repos, 0, 0, 0444},
   {INST_COPY, "inst-dir.ld", 0, ctxt_repos, 0, 0, 0444},
   {INST_COPY, "inst-link.ld", 0, ctxt_repos, 0, 0, 0444},
+  {INST_COPY, "postinstall", 0, ctxt_repos, 0, 0, 0555},
+  {INST_COPY, "Mkf-deinstall", 0, ctxt_repos, 0, 0, 0444},
+  {INST_COPY, "Mkf-install", 0, ctxt_repos, 0, 0, 0444},
+  {INST_COPY, "Mkf-instchk", 0, ctxt_repos, 0, 0, 0444},
 };
 unsigned long insthier_len = sizeof(insthier) / sizeof(struct install_item);
