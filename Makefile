@@ -6,16 +6,6 @@ all:\
 local ctxt.a deinstaller inst-check inst-copy inst-dir inst-link installer \
 instchk mk-ctxt 
 
-# -- SYSDEPS start
-
-
-
-
-sysdeps_clean:\
-
-
-# -- SYSDEPS end
-
 cc-compile:\
 conf-cc conf-cctype conf-systype conf-cflags 
 
@@ -151,7 +141,7 @@ conf-systype
 mk-systype:\
 conf-cc 
 
-clean-all: sysdeps_clean tests_clean local_clean obj_clean 
+clean-all: tests_clean local_clean obj_clean 
 clean: obj_clean
 obj_clean: 
 	rm -f ctxt.a ctxt/repos.c ctxt/repos.o deinstaller deinstaller.o \
