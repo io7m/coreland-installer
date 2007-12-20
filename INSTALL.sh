@@ -1,6 +1,11 @@
 #!/bin/sh
 # Utility script to add installer to a project
 
+info()
+{
+  echo "info: $1" 1>&2
+}
+
 die()
 {
   echo "fatal: $1" 1>&2
@@ -21,13 +26,19 @@ make_fragment()
 {
   file="$1"
   dep="$2"
+  mff_file="${file}.c.mff"
+  tbc_file="${file}.c.tbc"
 
-  (printf "ctxt/$1.c: mk-ctxt $2\n"
-   printf "\trm -f ctxt/$f.c\n"
-   printf "\t./mk-ctxt ctxt_$f < $2 > ctxt/$f.c\n") > "ctxt/$f.mff.tmp" || die "could not make ctxt/$f.mff"
+  info "create ctxt/$mff_file"
+  (printf "ctxt/${file}.c: mk-ctxt ${dep}\n"
+   printf "\trm -f ctxt/${file}.c\n"
+   printf "\t./mk-ctxt ctxt_${file} < ${dep} > ctxt/${file}.c\n") > "ctxt/${mff_file}.tmp" ||
+    die "could not make ctxt/${mff_file}"
+  mv "ctxt/${mff_file}.tmp" "ctxt/${mff_file}" ||
+    die "could not replace ctxt/${mff_file}"
 
-  mv "ctxt/$f.mff.tmp" "ctxt/$f.mff" || die "could not replace ctxt/$f.mff"
-  touch "ctxt/$f.tbc" || die "could not create ctxt/$f.tbc"
+  info "create ctxt/$tbc_file"
+  touch "ctxt/${tbc_file}" || die "could not create ctxt/${tbc_file}"
 }
 
 if [ $# -ne 1 ]
@@ -65,6 +76,7 @@ for f in bindir dlibdir incdir repos slibdir
 do
   make_fragment "${f}" "conf-${f}"
 done
+
 make_fragment "version" "VERSION"
 
 if [ ! -f ctxt/ctxt.sld ]
