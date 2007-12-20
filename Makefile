@@ -4,7 +4,7 @@ default: all
 
 all:\
 local ctxt.a deinstaller inst-check inst-copy inst-dir inst-link installer \
-instchk mk-ctxt 
+instchk 
 
 cc-compile:\
 conf-cc conf-cctype conf-systype conf-cflags 
@@ -122,8 +122,8 @@ mk-cctype:\
 conf-cc conf-systype 
 
 mk-ctxt:\
-cc-link mk-ctxt.ld mk-ctxt.o 
-	./cc-link mk-ctxt mk-ctxt.o 
+mk-mk-ctxt 
+	./mk-mk-ctxt
 
 mk-ctxt.o:\
 cc-compile mk-ctxt.c 
@@ -144,11 +144,11 @@ conf-cc
 clean-all: tests_clean local_clean obj_clean 
 clean: obj_clean
 obj_clean: 
-	rm -f ctxt.a ctxt/repos.c ctxt/repos.o deinstaller deinstaller.o \
-	generic-conf.o inst-check inst-check.o inst-copy inst-copy.o \
-	inst-dir inst-dir.o inst-link inst-link.o install_core.o \
-	install_error.o installer installer.o instchk instchk.o insthier.o \
-	mk-ctxt mk-ctxt.o 
+	rm -f conf-cctype conf-ldtype conf-systype ctxt.a ctxt/repos.c \
+	ctxt/repos.o deinstaller deinstaller.o generic-conf.o inst-check \
+	inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o inst-link \
+	inst-link.o install_core.o install_error.o installer installer.o \
+	instchk instchk.o insthier.o mk-ctxt mk-ctxt.o 
 
 deinstall: deinstaller inst-check inst-copy inst-dir inst-link
 	./deinstaller

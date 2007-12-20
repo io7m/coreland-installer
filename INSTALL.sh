@@ -24,8 +24,7 @@ make_fragment()
 
   (printf "ctxt/$1.c: mk-ctxt $2\n"
    printf "\trm -f ctxt/$f.c\n"
-   printf "\t./mk-ctxt ctxt_$f < $2 > ctxt/$f.c\n") >
-    "ctxt/$f.mff.tmp" || die "could not make ctxt/$f.mff"
+   printf "\t./mk-ctxt ctxt_$f < $2 > ctxt/$f.c\n") > "ctxt/$f.mff.tmp" || die "could not make ctxt/$f.mff"
 
   mv "ctxt/$f.mff.tmp" "ctxt/$f.mff" || die "could not replace ctxt/$f.mff"
   touch "ctxt/$f.tbc" || die "could not create ctxt/$f.tbc"
