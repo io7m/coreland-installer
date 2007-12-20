@@ -3,8 +3,8 @@
 default: all
 
 all:\
-files/t2/t2.vlb mk-ctxt t_deinst1 t_deinst12 t_deinst2 t_inst1 t_inst2 \
-t_instchk1 t_instchk2 t_instchkpre 
+files/t2/t2.vlb t_deinst1 t_deinst12 t_deinst2 t_inst1 t_inst2 t_instchk1 \
+t_instchk2 t_instchkpre 
 
 cc-compile:\
 conf-cc conf-cctype conf-systype 
@@ -54,12 +54,8 @@ mk-cctype:\
 conf-cc conf-systype 
 
 mk-ctxt:\
-cc-link mk-ctxt.ld mk-ctxt.o 
-	./cc-link mk-ctxt mk-ctxt.o 
-
-mk-ctxt.o:\
-cc-compile mk-ctxt.c 
-	./cc-compile mk-ctxt.c
+mk-mk-ctxt 
+	./mk-mk-ctxt
 
 mk-dlflag:\
 conf-cctype conf-systype 
@@ -168,8 +164,8 @@ cc-compile t_instchkpre.c ../install.h
 clean-all: tests_clean obj_clean 
 clean: obj_clean
 obj_clean: 
-	rm -f conf-cctype conf-ldtype conf-systype files/t2/t2.o `cat \
-	files/t2/t2.vlb` files/t2/t2.vlb mk-ctxt mk-ctxt.o t_deinst1 \
+	rm -f conf-cctype conf-dlflag conf-ldtype conf-systype \
+	files/t2/t2.o `cat files/t2/t2.vlb` files/t2/t2.vlb t_deinst1 \
 	t_deinst1.o t_deinst12 t_deinst12.o t_deinst2 t_deinst2.o t_inst1 \
 	t_inst1.o t_inst1h.o t_inst2 t_inst2.o t_inst2h.o t_instchk1 \
 	t_instchk1.o t_instchk2 t_instchk2.o t_instchkpre t_instchkpre.o 
