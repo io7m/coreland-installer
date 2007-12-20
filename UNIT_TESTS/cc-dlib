@@ -1,4 +1,5 @@
 #!/bin/sh
+# $Id: cc-dlib 2909 2007-12-12 21:21:47Z m0 $
 
 if [ $# -lt 2 ]
 then
@@ -34,12 +35,13 @@ fi
 main="$1"
 shift
 
-# extra library flag files
+# read in optional flag files
 if [ -f "${main}.lff" ]
 then
   for f in `cat "${main}.lff"`
   do
-    FLAGS=`cat $f 2>/dev/null`
+    targ="`dirname $main`/`dirname $f`/`basename $f`"
+    FLAGS="`cat $targ 2>/dev/null`"
     LDFLAGS="${LDFLAGS} ${FLAGS}"
   done
 fi
@@ -94,12 +96,14 @@ case "${LD_TYPE}" in
         release=`uname -r | awk -F. '{print $1}'`
         if [ ${release} -gt 7 ]
         then
-          libtool -dynamic \
-            -current_version "${ver}" \
-            -o "${libname}" ${1+"$@"} ${LDFLAGS} -lSystemStubs -lc
+          ${LD} -dynamiclib \
+                -current_version "${ver}" \
+                -install_name "${libname}" \
+                -o "${libname}" ${1+"$@"} ${LDFLAGS}
         else
           libtool -dynamic \
             -current_version "${ver}" \
+            -install_name "${libname}" \
             -o "${libname}" ${1+"$@"} ${LDFLAGS} -lc
         fi
         ;;
