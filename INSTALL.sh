@@ -60,6 +60,7 @@ copy ${repos}/inst-dir.c .
 copy ${repos}/inst-dir.ld .
 copy ${repos}/inst-link.c .
 copy ${repos}/inst-link.ld .
+copy ${repos}/install.h .
 copy ${repos}/install_core.c .
 copy ${repos}/install_error.c .
 copy ${repos}/installer.c .
