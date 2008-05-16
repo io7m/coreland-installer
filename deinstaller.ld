@@ -2,4 +2,4 @@ deinstaller.o
 insthier.o
 install_core.o
 install_error.o
-ctxt.a
+ctxt/ctxt.a

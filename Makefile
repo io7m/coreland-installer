@@ -3,10 +3,10 @@
 default: all
 
 all:\
-local ctxt.a ctxt/repos.o deinstaller deinstaller.o generic-conf.o inst-check \
-inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o inst-link inst-link.o \
-install_core.o install_error.o installer installer.o instchk instchk.o \
-insthier.o
+local ctxt/ctxt.a ctxt/repos.o deinstaller deinstaller.o generic-conf.o \
+inst-check inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o inst-link \
+inst-link.o install_core.o install_error.o installer installer.o instchk \
+instchk.o insthier.o
 
 # Mkf-deinstall
 deinstall: deinstaller inst-check inst-copy inst-dir inst-link
@@ -65,9 +65,9 @@ conf-systype:\
 mk-systype
 	./mk-systype > conf-systype.tmp && mv conf-systype.tmp conf-systype
 
-ctxt.a:\
-cc-slib ctxt.sld ctxt/repos.o
-	./cc-slib ctxt ctxt/repos.o
+ctxt/ctxt.a:\
+cc-slib ctxt/ctxt.sld ctxt/repos.o
+	./cc-slib ctxt/ctxt ctxt/repos.o
 
 ctxt/repos.o:\
 cc-compile ctxt/repos.c
@@ -75,9 +75,9 @@ cc-compile ctxt/repos.c
 
 deinstaller:\
 cc-link deinstaller.ld deinstaller.o insthier.o install_core.o install_error.o \
-ctxt.a
+ctxt/ctxt.a
 	./cc-link deinstaller deinstaller.o insthier.o install_core.o install_error.o \
-	ctxt.a
+	ctxt/ctxt.a
 
 deinstaller.o:\
 cc-compile deinstaller.c install.h
@@ -129,17 +129,19 @@ cc-compile install_error.c install.h
 
 installer:\
 cc-link installer.ld installer.o insthier.o install_core.o install_error.o \
-ctxt.a
+ctxt/ctxt.a
 	./cc-link installer installer.o insthier.o install_core.o install_error.o \
-	ctxt.a
+	ctxt/ctxt.a
 
 installer.o:\
 cc-compile installer.c install.h
 	./cc-compile installer.c
 
 instchk:\
-cc-link instchk.ld instchk.o insthier.o install_core.o install_error.o ctxt.a
-	./cc-link instchk instchk.o insthier.o install_core.o install_error.o ctxt.a
+cc-link instchk.ld instchk.o insthier.o install_core.o install_error.o \
+ctxt/ctxt.a
+	./cc-link instchk instchk.o insthier.o install_core.o install_error.o \
+	ctxt/ctxt.a
 
 instchk.o:\
 cc-compile instchk.c install.h
@@ -171,10 +173,10 @@ conf-cc
 clean-all: tests_clean local_clean obj_clean ext_clean
 clean: obj_clean
 obj_clean:
-	rm -f ctxt.a ctxt/repos.c ctxt/repos.o deinstaller deinstaller.o generic-conf.o \
-	inst-check inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o inst-link \
-	inst-link.o install_core.o install_error.o installer installer.o instchk \
-	instchk.o insthier.o
+	rm -f ctxt/ctxt.a ctxt/repos.c ctxt/repos.o deinstaller deinstaller.o \
+	generic-conf.o inst-check inst-check.o inst-copy inst-copy.o inst-dir \
+	inst-dir.o inst-link inst-link.o install_core.o install_error.o installer \
+	installer.o instchk instchk.o insthier.o
 ext_clean:
 	rm -f conf-cctype conf-ldtype conf-sosuffix conf-systype mk-ctxt
 
