@@ -3,10 +3,16 @@
 default: all
 
 all:\
-local ctxt/ctxt.a ctxt/repos.o deinstaller deinstaller.o generic-conf.o \
-inst-check inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o inst-link \
-inst-link.o install_core.o install_error.o installer installer.o instchk \
-instchk.o insthier.o
+local UNIT_TESTS/t_deinst1 UNIT_TESTS/t_deinst1.o UNIT_TESTS/t_deinst12 \
+UNIT_TESTS/t_deinst12.o UNIT_TESTS/t_deinst2 UNIT_TESTS/t_deinst2.o \
+UNIT_TESTS/t_inst1 UNIT_TESTS/t_inst1.o UNIT_TESTS/t_inst1h.o \
+UNIT_TESTS/t_inst2 UNIT_TESTS/t_inst2.o UNIT_TESTS/t_inst2h.o \
+UNIT_TESTS/t_instchk1 UNIT_TESTS/t_instchk1.o UNIT_TESTS/t_instchk2 \
+UNIT_TESTS/t_instchk2.o UNIT_TESTS/t_instchkpre UNIT_TESTS/t_instchkpre.o \
+ctxt/ctxt.a ctxt/repos.o deinstaller deinstaller.o generic-conf.o inst-check \
+inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o inst-link inst-link.o \
+install_core.o install_error.o installer installer.o instchk instchk.o \
+insthier.o
 
 # Mkf-deinstall
 deinstall: deinstaller inst-check inst-copy inst-dir inst-link
@@ -36,9 +42,97 @@ ctxt/repos.c: mk-ctxt conf-repos
 
 # Mkf-test
 tests:
-	(cd UNIT_TESTS && make && make tests)
+	(cd UNIT_TESTS && make tests)
 tests_clean:
 	(cd UNIT_TESTS && make clean)
+
+UNIT_TESTS/t_deinst1:\
+cc-link UNIT_TESTS/t_deinst1.ld UNIT_TESTS/t_deinst1.o UNIT_TESTS/t_inst1h.o \
+install_core.o install_error.o
+	./cc-link UNIT_TESTS/t_deinst1 UNIT_TESTS/t_deinst1.o UNIT_TESTS/t_inst1h.o \
+	install_core.o install_error.o
+
+UNIT_TESTS/t_deinst1.o:\
+cc-compile UNIT_TESTS/t_deinst1.c install.h
+	./cc-compile UNIT_TESTS/t_deinst1.c
+
+UNIT_TESTS/t_deinst12:\
+cc-link UNIT_TESTS/t_deinst12.ld UNIT_TESTS/t_deinst12.o UNIT_TESTS/t_inst1h.o \
+install_core.o install_error.o
+	./cc-link UNIT_TESTS/t_deinst12 UNIT_TESTS/t_deinst12.o UNIT_TESTS/t_inst1h.o \
+	install_core.o install_error.o
+
+UNIT_TESTS/t_deinst12.o:\
+cc-compile UNIT_TESTS/t_deinst12.c install.h
+	./cc-compile UNIT_TESTS/t_deinst12.c
+
+UNIT_TESTS/t_deinst2:\
+cc-link UNIT_TESTS/t_deinst2.ld UNIT_TESTS/t_deinst2.o UNIT_TESTS/t_inst2h.o \
+install_core.o install_error.o
+	./cc-link UNIT_TESTS/t_deinst2 UNIT_TESTS/t_deinst2.o UNIT_TESTS/t_inst2h.o \
+	install_core.o install_error.o
+
+UNIT_TESTS/t_deinst2.o:\
+cc-compile UNIT_TESTS/t_deinst2.c install.h
+	./cc-compile UNIT_TESTS/t_deinst2.c
+
+UNIT_TESTS/t_inst1:\
+cc-link UNIT_TESTS/t_inst1.ld UNIT_TESTS/t_inst1.o UNIT_TESTS/t_inst1h.o \
+install_core.o install_error.o
+	./cc-link UNIT_TESTS/t_inst1 UNIT_TESTS/t_inst1.o UNIT_TESTS/t_inst1h.o \
+	install_core.o install_error.o
+
+UNIT_TESTS/t_inst1.o:\
+cc-compile UNIT_TESTS/t_inst1.c install.h
+	./cc-compile UNIT_TESTS/t_inst1.c
+
+UNIT_TESTS/t_inst1h.o:\
+cc-compile UNIT_TESTS/t_inst1h.c install.h
+	./cc-compile UNIT_TESTS/t_inst1h.c
+
+UNIT_TESTS/t_inst2:\
+cc-link UNIT_TESTS/t_inst2.ld UNIT_TESTS/t_inst2.o UNIT_TESTS/t_inst2h.o \
+install_core.o install_error.o
+	./cc-link UNIT_TESTS/t_inst2 UNIT_TESTS/t_inst2.o UNIT_TESTS/t_inst2h.o \
+	install_core.o install_error.o
+
+UNIT_TESTS/t_inst2.o:\
+cc-compile UNIT_TESTS/t_inst2.c install.h
+	./cc-compile UNIT_TESTS/t_inst2.c
+
+UNIT_TESTS/t_inst2h.o:\
+cc-compile UNIT_TESTS/t_inst2h.c install.h
+	./cc-compile UNIT_TESTS/t_inst2h.c
+
+UNIT_TESTS/t_instchk1:\
+cc-link UNIT_TESTS/t_instchk1.ld UNIT_TESTS/t_instchk1.o UNIT_TESTS/t_inst1h.o \
+install_core.o install_error.o
+	./cc-link UNIT_TESTS/t_instchk1 UNIT_TESTS/t_instchk1.o UNIT_TESTS/t_inst1h.o \
+	install_core.o install_error.o
+
+UNIT_TESTS/t_instchk1.o:\
+cc-compile UNIT_TESTS/t_instchk1.c install.h
+	./cc-compile UNIT_TESTS/t_instchk1.c
+
+UNIT_TESTS/t_instchk2:\
+cc-link UNIT_TESTS/t_instchk2.ld UNIT_TESTS/t_instchk2.o UNIT_TESTS/t_inst2h.o \
+install_core.o install_error.o
+	./cc-link UNIT_TESTS/t_instchk2 UNIT_TESTS/t_instchk2.o UNIT_TESTS/t_inst2h.o \
+	install_core.o install_error.o
+
+UNIT_TESTS/t_instchk2.o:\
+cc-compile UNIT_TESTS/t_instchk2.c install.h
+	./cc-compile UNIT_TESTS/t_instchk2.c
+
+UNIT_TESTS/t_instchkpre:\
+cc-link UNIT_TESTS/t_instchkpre.ld UNIT_TESTS/t_instchkpre.o \
+UNIT_TESTS/t_inst1h.o install_core.o install_error.o
+	./cc-link UNIT_TESTS/t_instchkpre UNIT_TESTS/t_instchkpre.o \
+	UNIT_TESTS/t_inst1h.o install_core.o install_error.o
+
+UNIT_TESTS/t_instchkpre.o:\
+cc-compile UNIT_TESTS/t_instchkpre.c install.h
+	./cc-compile UNIT_TESTS/t_instchkpre.c
 
 cc-compile:\
 conf-cc conf-cctype conf-systype conf-cflags
@@ -173,10 +267,16 @@ conf-cc
 clean-all: tests_clean local_clean obj_clean ext_clean
 clean: obj_clean
 obj_clean:
-	rm -f ctxt/ctxt.a ctxt/repos.c ctxt/repos.o deinstaller deinstaller.o \
-	generic-conf.o inst-check inst-check.o inst-copy inst-copy.o inst-dir \
-	inst-dir.o inst-link inst-link.o install_core.o install_error.o installer \
-	installer.o instchk instchk.o insthier.o
+	rm -f UNIT_TESTS/t_deinst1 UNIT_TESTS/t_deinst1.o UNIT_TESTS/t_deinst12 \
+	UNIT_TESTS/t_deinst12.o UNIT_TESTS/t_deinst2 UNIT_TESTS/t_deinst2.o \
+	UNIT_TESTS/t_inst1 UNIT_TESTS/t_inst1.o UNIT_TESTS/t_inst1h.o \
+	UNIT_TESTS/t_inst2 UNIT_TESTS/t_inst2.o UNIT_TESTS/t_inst2h.o \
+	UNIT_TESTS/t_instchk1 UNIT_TESTS/t_instchk1.o UNIT_TESTS/t_instchk2 \
+	UNIT_TESTS/t_instchk2.o UNIT_TESTS/t_instchkpre UNIT_TESTS/t_instchkpre.o \
+	ctxt/ctxt.a ctxt/repos.c ctxt/repos.o deinstaller deinstaller.o generic-conf.o \
+	inst-check inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o inst-link \
+	inst-link.o install_core.o install_error.o installer installer.o instchk \
+	instchk.o insthier.o
 ext_clean:
 	rm -f conf-cctype conf-ldtype conf-sosuffix conf-systype mk-ctxt
 

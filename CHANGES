@@ -5,3 +5,4 @@
 20061003 version: installer 1.1
 20070608 code: added generic-conf.c
 20080115 code: updated inst-check.c
+20080911 code: unit tests update.
