@@ -21,14 +21,17 @@
  */
 
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+int iwin32_file_set_ownership (const char *file, int uid, int gid);
 int iwin32_install_init (void);
+int iwin32_uidgid_current (int *uid, int *gid);
+int iwin32_uidgid_lookup (const char *owner, const char *group, int *uid, int *gid);
 #endif
 
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+int iposix_file_set_ownership (const char *file, int uid, int gid);
 int iposix_install_init (void);
 int iposix_uidgid_lookup (const char *, const char *, int *uid, int *gid);
 void iposix_uidgid_current (int *, int *);
-int iposix_file_set_ownership (const char *file, int uid, int gid);
 #endif
 
 #endif
