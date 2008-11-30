@@ -15,11 +15,11 @@ int main()
   um = umask(022);
   tret = 0;
 
-  if (!check_tools()) return 112;
+  if (!install_init ()) return 112;
 
   printf("deinstalling...\n");
   for (i = insthier_len - 1;; --i) {
-    r = deinstall(&insthier[i], 0);
+    r = deinstall (&insthier[i], 0);
     if (r == 0) tret = 1;
     if (i == 0) break;
   }

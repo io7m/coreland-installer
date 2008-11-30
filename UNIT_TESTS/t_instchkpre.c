@@ -10,19 +10,19 @@ int main()
   unsigned int um;
   int ret;
 
-  um = umask(022);
+  um = umask (022);
 
-  if (!check_tools()) return 112;
+  if (!install_init ()) return 112;
 
   for (i = 0; i < insthier_len; ++i) {
-    ret = install_check(&insthier[i]);
+    ret = install_check (&insthier[i]);
     if (ret != 0) {
       printf("install_check[%lu] returned %d expected %d\n", i, ret, 0);
-      umask(um);
+      umask (um);
       return 1;
     }
   }
 
-  umask(um);
+  umask (um);
   return 0;
 }

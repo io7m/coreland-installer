@@ -1,5 +1,3 @@
-/* $Rev$ */
-
 #include <sys/stat.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -33,7 +31,9 @@ int create_link()
   if (symlink(src, dst) == -1) { complain("symlink"); return 114; }
   return 0;
 }
-int main(int argc, char *argv[])
+
+int
+main (int argc, char *argv[])
 {
   --argc;
   ++argv;

@@ -1,2 +1,2 @@
-inst-link.o
-install_error.o
+i-link.o
+i-error.o

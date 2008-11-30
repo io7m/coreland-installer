@@ -14,17 +14,17 @@ int main()
 
   um = umask(022);
 
-  if (!check_tools()) return 112;
+  if (!install_init ()) return 112;
 
   for (i = 0; i < insthier_len; ++i) {
-    ret = install(&insthier[i], 0);
+    ret = install (&insthier[i], 0);
     if (return_codes[i] != ret) {
-      printf("install[%lu] returned %d expected %d\n", i, ret, return_codes[i]);
-      umask(um);
+      printf ("install[%lu] returned %d expected %d\n", i, ret, return_codes[i]);
+      umask (um);
       return 1;
     }
   }
 
-  umask(um);
+  umask (um);
   return 0;
 }

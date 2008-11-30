@@ -1,5 +1,6 @@
 instchk.o
 insthier.o
-install_core.o
-install_error.o
+i-core.o
+i-core_posix.o
+i-error.o
 ctxt/ctxt.a

@@ -1,4 +1,5 @@
 t_instchk1.o
 t_inst1h.o
-../install_core.o
-../install_error.o
+../i-core.o
+../i-core_posix.o
+../i-error.o

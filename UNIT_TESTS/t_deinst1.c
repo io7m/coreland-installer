@@ -10,10 +10,10 @@ int main()
   unsigned long i;
   int ret;
 
-  if (!check_tools()) return 112;
+  if (!install_init ()) return 112;
 
   for (i = insthier_len - 1;; --i) {
-    ret = deinstall(&insthier[i], 0);
+    ret = deinstall (&insthier[i], 0);
     if (return_codes[i] != ret) {
       printf("deinstall[%lu] returned %d expected %d\n", i, ret,
               return_codes[i]);
