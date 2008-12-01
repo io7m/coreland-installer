@@ -11,6 +11,9 @@
 #define INSTALL_MAX_PATHLEN 1024
 #define INSTALL_MAX_MSGLEN  8192
 
+#define INSTALL_NULL_USER_NAME ":"
+#define INSTALL_NULL_GROUP_NAME ":"
+
 struct install_item {
   int op;
   char *src;
@@ -33,5 +36,9 @@ extern unsigned long insthier_len;
 extern unsigned long install_failed;
 
 #include "install_os.h"
+
+int install_file_set_ownership (const char *, user_id_t, group_id_t);
+int install_uidgid_current (user_id_t *, group_id_t *);
+int install_uidgid_lookup (const char *, user_id_t *, const char *, group_id_t *);
 
 #endif

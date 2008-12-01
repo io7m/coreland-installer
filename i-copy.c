@@ -17,10 +17,12 @@
 
 char copybuf[COPYBUF_SIZE];
 char tmpdst[INSTALL_MAX_PATHLEN];
+char *user_name;
+char *group_name;
 char *src;
 char *dst;
-int uid;
-int gid;
+user_id_t uid = INSTALL_NULL_UID;
+group_id_t gid = INSTALL_NULL_GID;
 unsigned int perm;
 
 void
@@ -32,23 +34,20 @@ complain (const char *s)
     printf ("error: %s\n", install_error (errno));
 }
 
+int
+lookup (void)
+{
+  if (!install_uidgid_lookup (user_name, &uid, group_name, &gid)) {
+    complain ("uidgid_lookup");
+    return 0;
+  }
+  return 1;
+}
+
 void
 say (void)
 {
-  int t_uid = -1;
-  int t_gid = -1;
-
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  iposix_uidgid_current (&t_uid, &t_gid);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  iwin32_uidgid_current (&t_uid, &t_gid);
-#endif
-
-  if (uid != -1) t_uid = uid;
-  if (gid != -1) t_gid = gid;
-
-  printf("copy %s %s %d:%d %o\n", src, dst, t_uid, t_gid, perm);
+  printf("copy %s %s %s %s %o\n", src, dst, user_name, group_name, perm);
   fflush(0);
 }
 
@@ -92,19 +91,9 @@ copy (void)
 
   /* posix */
   if (chmod (tmpdst, perm) == -1) { complain ("chmod"); code = 118; goto ERR; }
-
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  if (iposix_file_set_ownership (tmpdst, uid, gid) == -1) {
+  if (install_file_set_ownership (tmpdst, uid, gid) == -1) {
     complain ("set_ownership"); code = 119; goto ERR;
   }
-#endif
-
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  if (iwin32_file_set_ownership (tmpdst, uid, gid) == -1) {
-    complain ("set_ownership"); code = 119; goto ERR;
-  }
-#endif
-
   if (rename (tmpdst, dst) == -1) { complain ("rename"); code = 120; goto ERR; }
 
   if (fclose (fd_dst) == -1) complain ("close");
@@ -125,11 +114,12 @@ main (int argc, char *argv[])
 
   src = argv[0];
   dst = argv[1];
-  if (!sscanf (argv[2], "%d", &uid)) return 111;
-  if (!sscanf (argv[3], "%d", &gid)) return 111;
+  user_name = argv[2];
+  group_name = argv[3];
   if (!sscanf (argv[4], "%o", &perm)) return 111;
 
   say ();
+  if (!lookup ()) return 112;
 
   if (argc < 6) return copy ();
   return 0;

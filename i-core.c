@@ -66,16 +66,26 @@ fail_noread (void)
 /* credential functions */
 
 int
-uidgid_lookup (struct install_item *ins, int *uid, int *gid)
+install_file_set_ownership (const char *file, user_id_t uid, group_id_t gid)
 {
-  if (!ins->owner) *uid = -1;
-  if (!ins->group) *gid = -1;
-
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_uidgid_lookup (ins->owner, ins->group, uid, gid);
+  return iposix_file_set_ownership (file, uid, gid);
+#endif
+
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_file_set_ownership (file, uid, gid);
+#endif
+}
+
+int
+install_uidgid_lookup (const char *user_name, user_id_t *uid,
+  const char *group_name, group_id_t *gid)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_uidgid_lookup (user_name, uid, group_name, gid);
 #endif
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_uidgid_lookup (ins->owner, ins->group, uid, gid);
+  return iwin32_uidgid_lookup (user_name, uid, group_name, gid);
 #endif
 }
 
@@ -219,21 +229,22 @@ run_command (const char *cmd)
 /* install operator callbacks */
 
 int
-inst_copy (struct install_item *ins, unsigned int flags, int uid, int gid)
+inst_copy (struct install_item *ins, unsigned int flags)
 {
+  const char *owner = (ins->owner) ? ins->owner : INSTALL_NULL_USER_NAME;
+  const char *group = (ins->group) ? ins->group : INSTALL_NULL_GROUP_NAME;
+
   /* build command line */
-  snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %s %d %d %o %s",
-    EXT_INST_COPY, ins->src, ins->dst, uid, gid, ins->perm,
+  snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %s %s %s %o %s",
+    EXT_INST_COPY, ins->src, ins->dst, owner, group, ins->perm,
     (flags & INSTALL_DRYRUN) ? "dryrun" : "");
 
   return run_command (cmdline_buf) == 0;
 }
 
 int
-inst_link (struct install_item *ins, unsigned int flags, int uid, int gid)
+inst_link (struct install_item *ins, unsigned int flags)
 {
-  if (!uidgid_lookup (ins, &uid, &gid)) { fail(); return 0; }
-
   /* build command line */
   snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %s %s %s",
     EXT_INST_LINK, ins->dir, ins->src, ins->dst,
@@ -243,20 +254,23 @@ inst_link (struct install_item *ins, unsigned int flags, int uid, int gid)
 }
 
 int
-inst_mkdir (struct install_item *ins, unsigned int flags, int uid, int gid)
+inst_mkdir (struct install_item *ins, unsigned int flags)
 {
+  const char *owner = (ins->owner) ? ins->owner : INSTALL_NULL_USER_NAME;
+  const char *group = (ins->group) ? ins->group : INSTALL_NULL_GROUP_NAME;
+
   /* build command line */
-  snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %d %d %o %s",
-    EXT_INST_DIR, ins->dir, uid, gid, ins->perm,
+  snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %s %s %o %s",
+    EXT_INST_DIR, ins->dir, owner, group, ins->perm,
     (flags & INSTALL_DRYRUN) ? "dryrun" : "");
 
   return run_command (cmdline_buf) == 0;
 }
 
 int
-inst_liblink (struct install_item *ins, unsigned int flags, int uid, int gid)
+inst_liblink (struct install_item *ins, unsigned int flags)
 {
-  return inst_link (ins, flags, uid, gid);
+  return inst_link (ins, flags);
 }
 
 /*
@@ -372,11 +386,12 @@ ntran_chk_liblink (struct install_item *ins)
  */
 
 int
-instchk_copy (struct install_item *ins, unsigned int flags, int uid, int gid)
+instchk_copy (struct install_item *ins, unsigned int flags)
 {
   /* build command line */
-  snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %d %d %o file",
-    EXT_INST_CHECK, ins->dst, uid, gid, ins->perm);
+  snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %s %s %o file",
+    EXT_INST_CHECK, ins->dst, INSTALL_NULL_USER_NAME, INSTALL_NULL_GROUP_NAME,
+    ins->perm);
 
   if (run_command (cmdline_buf) != 0) {
     ++install_failed;
@@ -386,11 +401,12 @@ instchk_copy (struct install_item *ins, unsigned int flags, int uid, int gid)
 }
 
 int
-instchk_link (struct install_item *ins, unsigned int flags, int uid, int gid)
+instchk_link (struct install_item *ins, unsigned int flags)
 {
   /* build command line */
-  snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %d %d %o symlink",
-    EXT_INST_CHECK, ins->dst, uid, gid, ins->perm);
+  snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %s %s %o symlink",
+    EXT_INST_CHECK, ins->dst, INSTALL_NULL_USER_NAME, INSTALL_NULL_GROUP_NAME,
+    ins->perm);
 
   if (run_command (cmdline_buf) != 0) {
     ++install_failed;
@@ -400,11 +416,12 @@ instchk_link (struct install_item *ins, unsigned int flags, int uid, int gid)
 }
 
 int
-instchk_mkdir (struct install_item *ins, unsigned int flags, int uid, int gid)
+instchk_mkdir (struct install_item *ins, unsigned int flags)
 {
   /* build command line */
-  snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %d %d %o directory",
-    EXT_INST_CHECK, ins->dir, uid, gid, ins->perm);
+  snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %s %s %o directory",
+    EXT_INST_CHECK, ins->dir, INSTALL_NULL_USER_NAME, INSTALL_NULL_GROUP_NAME,
+    ins->perm);
 
   if (run_command (cmdline_buf) != 0) {
     ++install_failed;
@@ -414,9 +431,9 @@ instchk_mkdir (struct install_item *ins, unsigned int flags, int uid, int gid)
 }
 
 int
-instchk_liblink (struct install_item *ins, unsigned int flags, int uid, int gid)
+instchk_liblink (struct install_item *ins, unsigned int flags)
 {
-  return instchk_link (ins, flags, uid, gid);
+  return instchk_link (ins, flags);
 }
 
 /*
@@ -424,7 +441,7 @@ instchk_liblink (struct install_item *ins, unsigned int flags, int uid, int gid)
  */
 
 int
-deinst_copy (struct install_item *ins, unsigned int flags, int uid, int gid)
+deinst_copy (struct install_item *ins, unsigned int flags)
 {
   printf("unlink %s\n", ins->dst);
   if (flags & INSTALL_DRYRUN) return 1;
@@ -433,7 +450,7 @@ deinst_copy (struct install_item *ins, unsigned int flags, int uid, int gid)
 }
 
 int
-deinst_link (struct install_item *ins, unsigned int flags, int uid, int gid)
+deinst_link (struct install_item *ins, unsigned int flags)
 {
   printf ("unlink %s/%s\n", ins->dir, ins->dst);
   if (snprintf (tmp_buf, INSTALL_MAX_PATHLEN, "%s/%s", ins->dir, ins->dst) < 0)
@@ -446,7 +463,7 @@ deinst_link (struct install_item *ins, unsigned int flags, int uid, int gid)
 }
 
 int
-deinst_mkdir (struct install_item *ins, unsigned int flags, int uid, int gid)
+deinst_mkdir (struct install_item *ins, unsigned int flags)
 {
   printf ("rmdir %s\n", ins->dir);
   if (flags & INSTALL_DRYRUN) return 1;
@@ -455,9 +472,9 @@ deinst_mkdir (struct install_item *ins, unsigned int flags, int uid, int gid)
 }
 
 int
-deinst_liblink (struct install_item *ins, unsigned int flags, int uid, int gid)
+deinst_liblink (struct install_item *ins, unsigned int flags)
 {
-  return deinst_link (ins, flags, uid, gid);
+  return deinst_link (ins, flags);
 }
 
 /*
@@ -465,7 +482,7 @@ deinst_liblink (struct install_item *ins, unsigned int flags, int uid, int gid)
  */
 
 struct instop {
-  int (*oper) (struct install_item *, unsigned int, int, int);
+  int (*oper) (struct install_item *, unsigned int);
   int (*trans) (struct install_item *);
 };
 struct instop install_opers[] = {
@@ -506,14 +523,10 @@ int
 install (struct install_item *ins, unsigned int flags)
 {
   int r = 1;
-  int uid;
-  int gid;
-
-  if (!uidgid_lookup (ins, &uid, &gid)) { fail(); goto CLEANUP; }
 
   r = install_opers[ins->op].trans (ins);
   if (!r) goto CLEANUP;
-  r = install_opers[ins->op].oper (ins, flags, uid, gid);
+  r = install_opers[ins->op].oper (ins, flags);
 
   CLEANUP:
   fflush (0);
@@ -524,14 +537,10 @@ int
 install_check (struct install_item *ins)
 {
   int r = 1;
-  int uid;
-  int gid;
-
-  if (!uidgid_lookup (ins, &uid, &gid)) { fail(); goto CLEANUP; }
 
   r = instchk_opers[ins->op].trans (ins);
   if (!r) goto CLEANUP;
-  r = instchk_opers[ins->op].oper (ins, 0, uid, gid);
+  r = instchk_opers[ins->op].oper (ins, 0);
 
   CLEANUP:
   fflush (0);
@@ -542,14 +551,10 @@ int
 deinstall(struct install_item *ins, unsigned int flags)
 {
   int r = 1;
-  int uid;
-  int gid;
-
-  if (!uidgid_lookup (ins, &uid, &gid)) { fail(); goto CLEANUP; }
 
   r = deinst_opers[ins->op].trans (ins);
   if (!r) goto CLEANUP;
-  r = deinst_opers[ins->op].oper (ins, 0, uid, gid);
+  r = deinst_opers[ins->op].oper (ins, 0);
 
   CLEANUP:
   fflush (0);

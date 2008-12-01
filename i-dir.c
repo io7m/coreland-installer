@@ -11,8 +11,10 @@
 #define MKDIR "mkdir"
 
 char *dir;
-int uid;
-int gid;
+char *user_name = INSTALL_NULL_USER_NAME;
+char *group_name = INSTALL_NULL_GROUP_NAME;
+user_id_t uid = INSTALL_NULL_UID;
+group_id_t gid = INSTALL_NULL_GID;
 unsigned int perm;
 
 void
@@ -24,13 +26,28 @@ die (void)
 }
 
 void
+complain (const char *s)
+{
+  if (s)
+    printf ("error: %s: %s\n", s, install_error (errno));
+  else
+    printf ("error: %s\n", install_error (errno));
+}
+
+int
+lookup (void)
+{
+  if (!install_uidgid_lookup (user_name, &uid, group_name, &gid)) {
+    complain ("uidgid_lookup");
+    return 0;
+  }
+  return 1;
+}
+
+void
 say (void)
 {
-  int t_uid;
-  int t_gid;
-  t_uid = (uid == -1) ? (int) getuid() : uid;
-  t_gid = (gid == -1) ? (int) getgid() : gid;
-  printf (MKDIR" %s %d:%d %o\n", dir, t_uid, t_gid, perm);
+  printf (MKDIR" %s %s %s %o\n", dir, user_name, group_name, perm);
   fflush (0);
 }
 
@@ -43,7 +60,6 @@ rmkdir (void)
   unsigned int buflen;
   unsigned int bufpos;
   int end;
-  int fd;
   char *ptr;
   char *ptr2;
 
@@ -83,10 +99,8 @@ rmkdir (void)
       if (!len) break;
     }
   }
-  fd = open (pbuf, O_RDONLY);
-  if (fd == -1) die();
-  if (fchown (fd, uid, gid) == -1) die();
-  if (close (fd) == -1) die();
+
+  if (!install_file_set_ownership (pbuf, uid, gid)) die();
   return 0;
 }
 
@@ -99,11 +113,12 @@ main (int argc, char *argv[])
   if (argc < 4) return 111;
 
   dir = argv[0];
-  if (!sscanf (argv[1], "%d", &uid)) return 111;
-  if (!sscanf (argv[2], "%d", &gid)) return 111;
+  user_name = argv[1];
+  group_name = argv[2];
   if (!sscanf (argv[3], "%o", &perm)) return 111;
 
   say ();
+  if (!lookup ()) return 112;
 
   if (argc < 5) return rmkdir ();
   return 0;

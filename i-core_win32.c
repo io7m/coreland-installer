@@ -5,51 +5,20 @@
 int
 iwin32_user_sid (int *uid)
 {
-  HANDLE thread_tok;
-  DWORD needed;
-  TOKEN_USER *user;
- 
-  if (!OpenProcessToken (GetCurrentProcess(),
-    STANDARD_RIGHTS_READ | READ_CONTROL | TOKEN_QUERY, &thread_tok)) return 0;
-
-  if (!GetTokenInformation (thread_tok, TokenUser, NULL, 0, &needed)) {
-    if (!GetLastError () == ERROR_INSUFFICIENT_BUFFER) {
-      user = malloc (needed);
-      if (!user) return 0;
-      if (GetTokenInformation (thread_tok, TokenUser, user, needed, &needed)) {
-        *uid = user->User.Sid;
-      }
-      free (user);
-    }
-  }
+  *uid = -1;
   return 1;
 }
 
 int
 iwin32_user_primary_group (int *gid)
 {
-  HANDLE thread_tok;
-  DWORD needed;
-  TOKEN_PRIMARY_GROUP *group;
-
-  if (!OpenProcessToken (GetCurrentProcess(),
-    STANDARD_RIGHTS_READ | READ_CONTROL | TOKEN_QUERY, &thread_tok)) return 0;
-
-  if (!GetTokenInformation (thread_tok, TokenPrimaryGroup, NULL, 0, &needed)) {
-    if (!GetLastError () == ERROR_INSUFFICIENT_BUFFER) {
-      group = malloc (needed);
-      if (!group) return 0;
-      if (GetTokenInformation (thread_tok, TokenPrimaryGroup, group, needed, &needed)) {
-        *gid = group->PrimaryGroup;
-      }
-      free (group);
-    }
-  }
+  *uid = -1;
   return 1;
 }
 
 int
-iwin32_uidgid_lookup (const char *owner, const char *group, int *uid, int *gid)
+iwin32_uidgid_lookup (const char *owner, user_id_t *uid,
+  const char *group, group_id_t *gid)
 {
   return 1;
 }

@@ -235,8 +235,8 @@ cc-link inst-copy.ld i-copy.o i-core.o i-core_posix.o i-core_win32.o i-error.o
 	./cc-link inst-copy i-copy.o i-core.o i-core_posix.o i-core_win32.o i-error.o
 
 inst-dir:\
-cc-link inst-dir.ld i-dir.o i-error.o
-	./cc-link inst-dir i-dir.o i-error.o
+cc-link inst-dir.ld i-dir.o i-core.o i-core_posix.o i-core_win32.o i-error.o
+	./cc-link inst-dir i-dir.o i-core.o i-core_posix.o i-core_win32.o i-error.o
 
 inst-link:\
 cc-link inst-link.ld i-link.o i-error.o
