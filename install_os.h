@@ -21,16 +21,30 @@
  */
 
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+#include <windows.h>
+
 typedef struct { PSID value; } user_id_t;
 typedef struct { PSID value; } group_id_t;
 
 #define INSTALL_NULL_UID {NULL}
 #define INSTALL_NULL_GID {NULL}
 
-int iwin32_file_set_ownership (const char *file, user_id_t uid, group_id_t gid);
+/* 1 byte revision + 1 byte sub authority count + 6 bytes authority ID,
+ * variable number of 4 byte subauthorities (max 15)
+ */
+
+#define INSTALL_FMT_UID 256
+#define INSTALL_FMT_GID 256
+
+int iwin32_file_set_ownership (const char *file, user_id_t, group_id_t);
 int iwin32_install_init (void);
-int iwin32_uidgid_current (user_id_t *uid, group_id_t *gid);
-int iwin32_uidgid_lookup (const char *owner, user_id_t *uid, const char *group, group_id_t *gid);
+int iwin32_uidgid_current (user_id_t *, group_id_t *);
+int iwin32_uidgid_lookup (const char *owner, user_id_t *, const char *group, group_id_t *);
+unsigned int iwin32_fmt_gid (char *, group_id_t);
+unsigned int iwin32_fmt_uid (char *, user_id_t);
+unsigned int iwin32_scan_gid (const char *, group_id_t *);
+unsigned int iwin32_scan_uid (const char *, user_id_t *);
+
 #endif
 
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
@@ -40,10 +54,25 @@ typedef struct { int value; } group_id_t;
 #define INSTALL_NULL_UID {-1}
 #define INSTALL_NULL_GID {-1}
 
-int iposix_file_set_ownership (const char *file, user_id_t uid, group_id_t gid);
+#define INSTALL_FMT_UID (sizeof (int) << 3)
+#define INSTALL_FMT_GID (sizeof (int) << 3)
+
+int iposix_compare_gid (group_id_t, group_id_t);
+int iposix_compare_uid (user_id_t, user_id_t);
+int iposix_file_get_mode (const char *file, unsigned int *);
+int iposix_file_get_ownership (const char *file, user_id_t *, group_id_t *);
+int iposix_file_set_ownership (const char *file, user_id_t, group_id_t);
+int iposix_gid_current (group_id_t *);
+int iposix_gid_lookup (const char *, group_id_t *);
 int iposix_install_init (void);
-int iposix_uidgid_lookup (const char *, user_id_t *uid, const char *, group_id_t *gid);
+int iposix_uid_current (user_id_t *);
+int iposix_uid_lookup (const char *, user_id_t *);
+unsigned int iposix_fmt_gid (char *, group_id_t);
+unsigned int iposix_fmt_uid (char *, user_id_t);
+unsigned int iposix_scan_gid (const char *, group_id_t *);
+unsigned int iposix_scan_uid (const char *, user_id_t *);
 void iposix_uidgid_current (user_id_t *, group_id_t *);
+
 #endif
 
 #endif

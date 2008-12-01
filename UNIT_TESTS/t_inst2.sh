@@ -8,7 +8,7 @@ echo  "files/t2/t2.${suffix}" > "files/t2/t2.vlb"
 touch "files/t2/t2.${suffix}"
 
 echo
-echo '-- testing shared library installation'
+echo '-- testing shared library installation ./t_inst2'
 ./t_inst2
 if [ $? -ne 0 ]
 then
@@ -17,7 +17,7 @@ then
 fi
 
 echo
-echo '-- checking shared library installation'
+echo '-- checking shared library installation ./t_instchk2'
 ./t_instchk2
 if [ $? -ne 0 ]
 then
@@ -26,7 +26,7 @@ then
 fi
 
 echo
-echo '-- testing shared library deinstallation'
+echo '-- testing shared library deinstallation ./t_deinst2'
 ./t_deinst2
 if [ $? -ne 0 ]
 then

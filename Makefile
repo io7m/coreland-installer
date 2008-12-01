@@ -46,19 +46,6 @@ tests:
 tests_clean:
 	(cd UNIT_TESTS && make clean)
 
-UNIT_TESTS/conf-sosuffix:\
-mk-sosuffix
-	./mk-sosuffix > UNIT_TESTS/conf-sosuffix.tmp && mv UNIT_TESTS/conf-sosuffix.tmp \
-UNIT_TESTS/conf-sosuffix
-
-UNIT_TESTS/conf-systype:\
-mk-systype
-	./mk-systype > UNIT_TESTS/conf-systype.tmp && mv UNIT_TESTS/conf-systype.tmp \
-UNIT_TESTS/conf-systype
-
-UNIT_TESTS/mk-sosuffix:\
-conf-systype
-
 UNIT_TESTS/t_deinst1:\
 cc-link UNIT_TESTS/t_deinst1.ld UNIT_TESTS/t_deinst1.o UNIT_TESTS/t_inst1h.o \
 i-core.o i-core_posix.o i-core_win32.o i-error.o
@@ -227,8 +214,9 @@ cc-compile i-link.c install.h
 	./cc-compile i-link.c
 
 inst-check:\
-cc-link inst-check.ld i-check.o i-error.o
-	./cc-link inst-check i-check.o i-error.o
+cc-link inst-check.ld i-check.o i-core.o i-core_posix.o i-core_win32.o \
+i-error.o
+	./cc-link inst-check i-check.o i-core.o i-core_posix.o i-core_win32.o i-error.o
 
 inst-copy:\
 cc-link inst-copy.ld i-copy.o i-core.o i-core_posix.o i-core_win32.o i-error.o
@@ -302,8 +290,7 @@ obj_clean:
 	i-link.o inst-check inst-copy inst-dir inst-link installer installer.o instchk \
 	instchk.o insthier.o
 ext_clean:
-	rm -f UNIT_TESTS/conf-sosuffix UNIT_TESTS/conf-systype conf-cctype conf-ldtype \
-	conf-sosuffix conf-systype mk-ctxt
+	rm -f conf-cctype conf-ldtype conf-sosuffix conf-systype mk-ctxt
 
 regen:
 	cpj-genmk > Makefile.tmp && mv Makefile.tmp Makefile

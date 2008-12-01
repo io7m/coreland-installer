@@ -2,12 +2,15 @@
 
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <grp.h>
 #include <pwd.h>
+#include <stdio.h>
 #include <unistd.h>
 
-static int
-lookup_uid (const char *user, user_id_t *uid)
+int
+iposix_uid_lookup (const char *user, user_id_t *uid)
 {
   struct passwd *pwd;
 
@@ -18,8 +21,8 @@ lookup_uid (const char *user, user_id_t *uid)
   return 1;
 }
 
-static int
-lookup_gid (const char *group, group_id_t *gid)
+int
+iposix_gid_lookup (const char *group, group_id_t *gid)
 {
   struct group *grp;
 
@@ -31,19 +34,17 @@ lookup_gid (const char *group, group_id_t *gid)
 }
 
 int
-iposix_uidgid_lookup (const char *owner, user_id_t *uid,
-  const char *group, group_id_t *gid)
+iposix_gid_current (group_id_t *gid)
 {
-  if (owner) if (!lookup_uid (owner, uid)) return 0;
-  if (group) if (!lookup_gid (group, gid)) return 0;
+  gid->value = getgid();
   return 1;
 }
 
-void
-iposix_uidgid_current (user_id_t *uid, group_id_t *gid)
+int
+iposix_uid_current (user_id_t *uid)
 {
-  uid->value = getuid ();
-  gid->value = getgid ();
+  uid->value = getuid();
+  return 1;
 }
 
 int
@@ -54,9 +55,71 @@ iposix_file_set_ownership (const char *file, user_id_t uid, group_id_t gid)
 }
 
 int
+iposix_file_get_ownership (const char *file, user_id_t *uid, group_id_t *gid)
+{
+  struct stat sb;
+
+  if (stat (file, &sb) == -1) return 0;
+
+  uid->value = sb.st_uid;
+  gid->value = sb.st_gid;
+  return 1;
+}
+
+int
+iposix_file_get_mode (const char *file, unsigned int *mode)
+{
+  struct stat sb;
+
+  if (stat (file, &sb) == -1) return 0;
+  *mode = sb.st_mode;
+  return 1;
+}
+
+int
+iposix_compare_uid (user_id_t a, user_id_t b)
+{
+  return a.value == b.value;
+}
+
+int
+iposix_compare_gid (group_id_t a, group_id_t b)
+{
+  return a.value == b.value;
+}
+
+int
 iposix_install_init (void)
 {
   return 1;
+}
+
+unsigned int
+iposix_fmt_gid (char *buffer, group_id_t gid)
+{
+  unsigned int size = snprintf (buffer, INSTALL_FMT_GID, "%d", gid.value);
+  return size;
+}
+
+unsigned int
+iposix_fmt_uid (char *buffer, user_id_t uid)
+{
+  unsigned int size = snprintf (buffer, INSTALL_FMT_UID, "%d", uid.value);
+  return size;
+}
+
+unsigned int
+iposix_scan_gid (const char *buffer, group_id_t *gid)
+{
+  unsigned int size = sscanf (buffer, "%d", &gid->value);
+  return size;
+}
+
+unsigned int
+iposix_scan_uid (const char *buffer, user_id_t *uid)
+{
+  unsigned int size = sscanf (buffer, "%d", &uid->value);
+  return size;
 }
 
 #endif

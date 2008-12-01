@@ -3,12 +3,11 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "install.h"
-
-#define MKDIR "mkdir"
 
 char *dir;
 char *user_name = INSTALL_NULL_USER_NAME;
@@ -22,7 +21,7 @@ die (void)
 {
   printf("failed: %s\n", install_error (errno));
   fflush (0);
-  _exit (112);
+  exit (112);
 }
 
 void
@@ -34,20 +33,26 @@ complain (const char *s)
     printf ("error: %s\n", install_error (errno));
 }
 
-int
+void
 lookup (void)
 {
-  if (!install_uidgid_lookup (user_name, &uid, group_name, &gid)) {
-    complain ("uidgid_lookup");
-    return 0;
+  if (strcmp (user_name, ":") == 0) {
+    if (!install_uid_current (&uid)) die();
+  } else {
+    if (!install_uid_lookup (user_name, &uid)) die();
   }
-  return 1;
+
+  if (strcmp (group_name, ":") == 0) {
+    if (!install_gid_current (&gid)) die();
+  } else {
+    if (!install_gid_lookup (user_name, &gid)) die();
+  }
 }
 
 void
 say (void)
 {
-  printf (MKDIR" %s %s %s %o\n", dir, user_name, group_name, perm);
+  printf ("mkdir %s %s %s %o\n", dir, user_name, group_name, perm);
   fflush (0);
 }
 
@@ -118,7 +123,7 @@ main (int argc, char *argv[])
   if (!sscanf (argv[3], "%o", &perm)) return 111;
 
   say ();
-  if (!lookup ()) return 112;
+  lookup ();
 
   if (argc < 5) return rmkdir ();
   return 0;

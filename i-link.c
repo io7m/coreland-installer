@@ -7,28 +7,31 @@
 
 #include "install.h"
 
-#define LINK "link"
-
 char *dir;
 char *src;
 char *dst;
 
-void say()
+void
+say (void)
 {
-  printf(LINK" %s %s %s\n", dir, src, dst);
-  fflush(0);
+  printf ("link %s %s %s\n", dir, src, dst);
+  fflush (0);
 }
-void complain(const char *s)
+
+void
+complain (const char *s)
 {
   if (s)
-    printf("failed: %s: %s\n", s, install_error(errno));
+    printf("failed: %s: %s\n", s, install_error (errno));
   else
-    printf("failed: %s\n", install_error(errno));
+    printf("failed: %s\n", install_error (errno));
 }
-int create_link()
+
+int
+create_link (void)
 {
-  if (chdir(dir) == -1) { complain("chdir"); return 113; }
-  if (symlink(src, dst) == -1) { complain("symlink"); return 114; }
+  if (chdir (dir) == -1) { complain ("chdir"); return 113; }
+  if (symlink (src, dst) == -1) { complain ("symlink"); return 114; }
   return 0;
 }
 
@@ -44,8 +47,8 @@ main (int argc, char *argv[])
   src = argv[1];
   dst = argv[2];
 
-  say();
+  say ();
 
-  if (argc < 4) return create_link();
+  if (argc < 4) return create_link ();
   return 0;
 }

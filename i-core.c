@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include "install.h"
 
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
@@ -12,6 +15,9 @@
 #include <io.h>
 #endif
 
+#define COPYBUF_SIZE 8192
+
+static char copy_buf[COPYBUF_SIZE];
 static char src_name[INSTALL_MAX_PATHLEN];
 static char dst_name[INSTALL_MAX_PATHLEN];
 static char src_tmp[INSTALL_MAX_PATHLEN];
@@ -71,22 +77,282 @@ install_file_set_ownership (const char *file, user_id_t uid, group_id_t gid)
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
   return iposix_file_set_ownership (file, uid, gid);
 #endif
-
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
   return iwin32_file_set_ownership (file, uid, gid);
 #endif
 }
 
 int
-install_uidgid_lookup (const char *user_name, user_id_t *uid,
-  const char *group_name, group_id_t *gid)
+install_file_get_ownership (const char *file, user_id_t *uid, group_id_t *gid)
 {
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_uidgid_lookup (user_name, uid, group_name, gid);
+  return iposix_file_get_ownership (file, uid, gid);
 #endif
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_uidgid_lookup (user_name, uid, group_name, gid);
+  return iwin32_file_get_ownership (file, uid, gid);
 #endif
+}
+
+int
+install_file_get_mode (const char *file, unsigned int *mode)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_file_get_mode (file, mode);
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_file_get_mode (file, mode);
+#endif
+}
+
+int
+install_gid_current (group_id_t *gid)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_gid_current (gid);
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_gid_current (gid);
+#endif
+}
+
+int
+install_uid_current (user_id_t *uid)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_uid_current (uid);
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_uid_current (uid);
+#endif
+}
+
+int
+install_gid_lookup (const char *name, group_id_t *gid)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_gid_lookup (name, gid);
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_gid_lookup (name, gid);
+#endif
+}
+
+int
+install_uid_lookup (const char *name, user_id_t *uid)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_uid_lookup (name, uid);
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_uid_lookup (name, uid);
+#endif
+}
+
+unsigned int
+install_fmt_gid (char *buffer, group_id_t gid)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_fmt_gid (buffer, gid);
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_fmt_gid (buffer, gid);
+#endif
+}
+
+unsigned int
+install_fmt_uid (char *buffer, user_id_t uid)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_fmt_uid (buffer, uid);
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_fmt_uid (buffer, uid);
+#endif
+}
+
+unsigned int
+install_scan_gid (const char *buffer, group_id_t *gid)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_scan_gid (buffer, gid);
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_scan_gid (buffer, gid);
+#endif
+}
+
+unsigned int
+install_scan_uid (const char *buffer, user_id_t *uid)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_scan_uid (buffer, uid);
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_scan_uid (buffer, uid);
+#endif
+}
+
+int
+install_compare_uid (user_id_t a, user_id_t b)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_compare_uid (a, b);
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_compare_uid (a, b);
+#endif
+}
+
+int
+install_compare_gid (group_id_t a, group_id_t b)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_compare_gid (a, b);
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_compare_gid (a, b);
+#endif
+}
+
+/* portability macro */
+#ifndef S_ISSOCK
+#  if defined(S_IFMT) && defined(S_IFSOCK)
+#    define S_ISSOCK(mode) (((mode) & S_IFMT) == S_IFSOCK)
+#  else
+#    define S_ISSOCK(mode)
+#  endif
+#endif
+
+int s_ifreg (unsigned int m)  { return S_ISREG(m); }
+int s_ifchr (unsigned int m)  { return S_ISCHR(m); }
+int s_ifdir (unsigned int m)  { return S_ISDIR(m); }
+int s_iflnk (unsigned int m)  { return S_ISLNK(m); }
+int s_ifsock (unsigned int m) { return S_ISSOCK(m); }
+int s_ififo (unsigned int m)  { return S_ISFIFO(m); }
+
+static const struct {
+  int (*check)(unsigned int);
+  const char *name;
+  const enum install_file_type_t type;
+} file_type_lookups[] = {
+  { &s_ifreg,  "file",              INSTALL_FILE_TYPE_FILE },
+  { &s_ifchr,  "character_special", INSTALL_FILE_TYPE_CHARACTER_SPECIAL },
+  { &s_ifdir,  "directory",         INSTALL_FILE_TYPE_DIRECTORY },
+  { &s_iflnk,  "symlink",           INSTALL_FILE_TYPE_SYMLINK },
+  { &s_ifsock, "socket",            INSTALL_FILE_TYPE_SOCKET },
+  { &s_ififo,  "fifo",              INSTALL_FILE_TYPE_FIFO },
+};
+static const unsigned int file_type_lookups_size =
+  sizeof (file_type_lookups) / sizeof (file_type_lookups[0]);
+
+int
+install_file_type (const char *file, enum install_file_type_t *type, int nofollow)
+{
+  struct stat sb;
+  unsigned int index;
+
+  if (nofollow) {
+    if (lstat (file, &sb) == -1) return 0;
+  } else {
+    if (stat (file, &sb) == -1) return 0;
+  }
+
+  for (index = 0; index < file_type_lookups_size; ++index) {
+    if (file_type_lookups [index].check (sb.st_mode)) {
+      *type = file_type_lookups [index].type;
+      return 1;
+    }
+  }
+  return 0;
+}
+
+int
+install_file_type_lookup (const char *type_name, enum install_file_type_t *type)
+{
+  unsigned int index;
+  for (index = 0; index < file_type_lookups_size; ++index) {
+    if (strcmp (file_type_lookups [index].name, type_name) == 0) {
+      *type = file_type_lookups [index].type;
+      return 1;
+    }
+  }
+  return 0;
+}
+
+int
+install_file_type_name_lookup (enum install_file_type_t type, const char **name)
+{
+  unsigned int index;
+  for (index = 0; index < file_type_lookups_size; ++index) {
+    if (file_type_lookups [index].type == type) {
+      *name = file_type_lookups [index].name;
+      return 1;
+    }
+  }
+  return 0;
+}
+
+int
+install_file_set_mode (const char *file, unsigned int mode)
+{
+  if (chmod (file, mode) == -1) return 0;
+  return 1;
+}
+
+int
+install_file_copy (const char *src, const char *dst,
+  user_id_t uid, group_id_t gid, unsigned int mode)
+{
+  FILE *fd_src;
+  FILE *fd_dst;
+  size_t r;
+  size_t w;
+
+  if (snprintf (dst_tmp, sizeof (dst_tmp), "%s.tmp", dst) < 0) return 0;
+
+  fd_src = fopen (src, "rb");
+  if (fd_src == NULL) return 0;
+  fd_dst = fopen (dst_tmp, "wb");
+  if (fd_dst == NULL) goto ERR;
+
+  for (;;) {
+    r = fread (copy_buf, 1, COPYBUF_SIZE, fd_src);
+    if (r == 0) {
+      if (feof (fd_src)) break;
+      if (ferror (fd_src)) goto ERR;
+    }
+    while (r) {
+      w = fwrite (copy_buf, 1, r, fd_dst);
+      if (w == 0) {
+        if (feof (fd_src)) break;
+        if (ferror (fd_src)) goto ERR;
+      }
+      r -= w;
+    }
+  }
+
+  if (fflush (fd_dst) != 0) goto ERR;
+  if (!install_file_set_mode (dst_tmp, mode)) goto ERR;
+  if (!install_file_set_ownership (dst_tmp, uid, gid)) goto ERR;
+  if (rename (dst_tmp, dst) == -1) goto ERR;
+  if (fclose (fd_dst) == -1) goto ERR;
+  if (fclose (fd_src) == -1) goto ERR;
+
+  return 1;
+  ERR:
+  unlink (dst_tmp);
+  return 0;
+}
+
+int
+install_file_size (const char *file, unsigned long *size)
+{
+  struct stat sb;
+
+  if (stat (file, &sb) == -1) return 0;
+
+  *size = sb.st_size;
+  return 1;
 }
 
 /* portability functions */
@@ -389,9 +655,9 @@ int
 instchk_copy (struct install_item *ins, unsigned int flags)
 {
   /* build command line */
-  snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %s %s %o file",
-    EXT_INST_CHECK, ins->dst, INSTALL_NULL_USER_NAME, INSTALL_NULL_GROUP_NAME,
-    ins->perm);
+  snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %s %s %s %o file",
+    EXT_INST_CHECK, ins->src, ins->dst, INSTALL_NULL_USER_NAME,
+    INSTALL_NULL_GROUP_NAME, ins->perm);
 
   if (run_command (cmdline_buf) != 0) {
     ++install_failed;
@@ -404,9 +670,9 @@ int
 instchk_link (struct install_item *ins, unsigned int flags)
 {
   /* build command line */
-  snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %s %s %o symlink",
-    EXT_INST_CHECK, ins->dst, INSTALL_NULL_USER_NAME, INSTALL_NULL_GROUP_NAME,
-    ins->perm);
+  snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %s %s %s %o symlink",
+    EXT_INST_CHECK, ins->src, ins->dst, INSTALL_NULL_USER_NAME,
+    INSTALL_NULL_GROUP_NAME, ins->perm);
 
   if (run_command (cmdline_buf) != 0) {
     ++install_failed;
@@ -419,9 +685,9 @@ int
 instchk_mkdir (struct install_item *ins, unsigned int flags)
 {
   /* build command line */
-  snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %s %s %o directory",
-    EXT_INST_CHECK, ins->dir, INSTALL_NULL_USER_NAME, INSTALL_NULL_GROUP_NAME,
-    ins->perm);
+  snprintf (cmdline_buf, sizeof (cmdline_buf), "%s %s %s %s %s %o directory",
+    EXT_INST_CHECK, ins->dir, ins->dir, INSTALL_NULL_USER_NAME,
+    INSTALL_NULL_GROUP_NAME, ins->perm);
 
   if (run_command (cmdline_buf) != 0) {
     ++install_failed;

@@ -3,7 +3,7 @@
 exec 2>&1
 
 echo
-echo '-- files do not exist before testing'
+echo '-- files do not exist before testing ./t_instchkpre'
 ./t_instchkpre
 if [ $? -ne 0 ]
 then
@@ -11,7 +11,7 @@ then
 fi
 
 echo
-echo '-- deinstaller objects to removing nonexistant files'
+echo '-- deinstaller objects to removing nonexistant files ./t_deinst12'
 ./t_deinst12
 if [ $? -ne 0 ]
 then
@@ -19,7 +19,7 @@ then
 fi
 
 echo
-echo '-- installer installs files, directories and symlinks'
+echo '-- installer installs files, directories and symlinks ./t_inst1'
 ./t_inst1
 if [ $? -ne 0 ]
 then
@@ -27,7 +27,7 @@ then
 fi
 
 echo
-echo '-- instchk checks existence and attributes'
+echo '-- instchk checks existence and attributes ./t_instchk1'
 ./t_instchk1
 if [ $? -ne 0 ]
 then
@@ -35,7 +35,7 @@ then
 fi
 
 echo
-echo '-- deinstaller removes files, directories and symlinks'
+echo '-- deinstaller removes files, directories and symlinks ./t_deinst1'
 ./t_deinst1
 if [ $? -ne 0 ]
 then
@@ -43,7 +43,7 @@ then
 fi
 
 echo
-echo '-- files have definitely been removed '
+echo '-- files have definitely been removed ./t_deinst12'
 ./t_deinst12
 if [ $? -ne 0 ]
 then
