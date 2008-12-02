@@ -27,11 +27,6 @@
 #  define WINVER 0x0500
 #endif
 
-/* non-POSIX mkdir() */
-#ifndef mkdir
-#  define mkdir(path,perm) mkdir(path)
-#endif
-
 #include <windows.h>
 
 typedef struct { PSID value; } user_id_t;

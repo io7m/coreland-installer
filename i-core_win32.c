@@ -4,6 +4,7 @@
 
 #include <windows.h>
 #include <sddl.h>
+#include <io.h>
 #include <stdio.h>
 
 static int
