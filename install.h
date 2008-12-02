@@ -49,24 +49,24 @@ extern unsigned long install_failed;
 
 int install_compare_gid (group_id_t, group_id_t);
 int install_compare_uid (user_id_t, user_id_t);
+int install_file_copy (const char *, const char *, user_id_t, group_id_t, unsigned int);
 int install_file_get_mode (const char *, unsigned int *);
 int install_file_get_ownership (const char *, user_id_t *, group_id_t *);
+int install_file_link (const char *, const char *);
 int install_file_set_ownership (const char *, user_id_t, group_id_t);
+int install_file_size (const char *, unsigned long *);
 int install_file_type (const char *, enum install_file_type_t *, int);
 int install_file_type_lookup (const char *, enum install_file_type_t *);
 int install_file_type_name_lookup (enum install_file_type_t, const char **);
-int install_file_copy (const char *, const char *, user_id_t, group_id_t, unsigned int);
-int install_file_link (const char *, const char *);
-int install_file_size (const char *, unsigned long *);
 int install_gid_current (group_id_t *);
 int install_gid_lookup (const char *, group_id_t *);
+int install_mkdir (const char *, unsigned int);
 int install_uid_current (user_id_t *);
 int install_uid_lookup (const char *, user_id_t *);
 unsigned int install_fmt_gid (char *, group_id_t);
 unsigned int install_fmt_uid (char *, user_id_t);
 unsigned int install_scan_gid (const char *, group_id_t *);
 unsigned int install_scan_uid (const char *, user_id_t *);
-
 unsigned int install_umask (unsigned int);
 
 #endif

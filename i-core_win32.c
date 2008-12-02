@@ -167,4 +167,10 @@ iwin32_umask (unsigned int m)
   return m;
 }
 
+int
+iwin32_mkdir (const char *dir, unsigned int mode)
+{
+  return mkdir (dir);
+}
+
 #endif

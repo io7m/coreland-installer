@@ -386,6 +386,17 @@ install_umask (unsigned int m)
 #endif
 }
 
+int
+install_mkdir (const char *dir, unsigned int mode)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_mkdir (dir, mode);
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_mkdir (dir, mode);
+#endif
+}
+
 /* portability functions */
 
 int

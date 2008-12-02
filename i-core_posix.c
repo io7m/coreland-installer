@@ -135,4 +135,10 @@ iposix_umask (unsigned int m)
   return umask (m);
 }
 
+int
+iposix_mkdir (const char *dir, unsigned int mode)
+{
+  return mkdir (dir, mode) == 0;
+}
+
 #endif
