@@ -3,6 +3,7 @@
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
 
 #include <windows.h>
+#include <sddl.h>
 #include <stdio.h>
 
 static int
@@ -137,7 +138,7 @@ iwin32_fmt_gid (char *buffer, group_id_t gid)
 }
 
 unsigned int
-iwin32_fmt_uid (char *, user_id_t uid)
+iwin32_fmt_uid (char *buffer, user_id_t uid)
 {
   char *sid_str;
   if (!ConvertSidToStringSid (uid.value, &sid_str)) return 0;
