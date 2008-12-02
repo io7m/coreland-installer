@@ -5,7 +5,8 @@ const char progname[] = "t_deinst1";
 
 extern unsigned int return_codes[5];
 
-int main()
+int
+main (void)
 {
   unsigned long i;
   struct install_status_t status;
