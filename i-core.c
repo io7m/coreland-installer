@@ -105,6 +105,17 @@ install_file_get_mode (const char *file, unsigned int *mode)
 }
 
 int
+install_file_link (const char *src, const char *dst)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_file_link (src, dst);
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_file_link (src, dst);
+#endif
+}
+
+int
 install_gid_current (group_id_t *gid)
 {
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
@@ -362,17 +373,6 @@ install_file_size (const char *file, unsigned long *size)
 
   *size = sb.st_size;
   return 1;
-}
-
-int
-install_file_link (const char *src, const char *dst)
-{
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_file_link (src, dst);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_file_link (src, dst);
-#endif
 }
 
 unsigned int

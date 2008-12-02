@@ -31,7 +31,7 @@ int
 create_link (void)
 {
   if (chdir (dir) == -1) { complain ("chdir"); return 113; }
-  if (symlink (src, dst) == -1) { complain ("symlink"); return 114; }
+  if (!install_file_link (src, dst)) { complain ("symlink"); return 114; }
   return 0;
 }
 

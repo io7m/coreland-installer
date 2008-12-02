@@ -144,11 +144,11 @@ cc-slib:\
 conf-systype
 
 conf-cctype:\
-conf-cc conf-cc mk-cctype
+conf-cc mk-cctype
 	./mk-cctype > conf-cctype.tmp && mv conf-cctype.tmp conf-cctype
 
 conf-ldtype:\
-conf-ld conf-ld mk-ldtype
+conf-ld mk-ldtype
 	./mk-ldtype > conf-ldtype.tmp && mv conf-ldtype.tmp conf-ldtype
 
 conf-sosuffix:\
@@ -227,8 +227,8 @@ cc-link inst-dir.ld i-dir.o i-core.o i-core_posix.o i-core_win32.o i-error.o
 	./cc-link inst-dir i-dir.o i-core.o i-core_posix.o i-core_win32.o i-error.o
 
 inst-link:\
-cc-link inst-link.ld i-link.o i-error.o
-	./cc-link inst-link i-link.o i-error.o
+cc-link inst-link.ld i-link.o i-core.o i-core_posix.o i-core_win32.o i-error.o
+	./cc-link inst-link i-link.o i-core.o i-core_posix.o i-core_win32.o i-error.o
 
 install.h:\
 install_os.h
