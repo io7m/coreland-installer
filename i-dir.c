@@ -91,7 +91,7 @@ rmkdir (void)
     ++bufpos;
     --buflen;
     pbuf[bufpos] = 0;
-    if (mkdir (pbuf, perm) == -1) {
+    if (install_mkdir (pbuf, perm) == -1) {
       if (!end) {
         if (errno != EEXIST && errno != EISDIR) die();
       } else die();
