@@ -3,19 +3,19 @@
 
 const char progname[] = "t_deinst1";
 
-extern int return_codes[5];
+extern unsigned int return_codes[5];
 
 int main()
 {
   unsigned long i;
-  int ret;
+  struct install_status_t status;
 
   if (!install_init ()) return 112;
 
   for (i = insthier_len - 1;; --i) {
-    ret = deinstall (&insthier[i], 0);
-    if (return_codes[i] != ret) {
-      printf("deinstall[%lu] returned %d expected %d\n", i, ret,
+    status = deinstall (&insthier[i], 0);
+    if (return_codes[i] != status.status) {
+      printf("deinstall[%lu] returned %d expected %d\n", i, status.status,
               return_codes[i]);
       return 1;
     }

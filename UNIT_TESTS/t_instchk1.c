@@ -4,23 +4,24 @@
 
 const char progname[] = "t_instchk1";
 
-extern int return_codes[5];
+extern unsigned int return_codes[5];
 
-int main()
+int
+main (void)
 {
   unsigned long i;
   unsigned int um;
-  int ret;
+  struct install_status_t status;
 
   um = install_umask (022);
 
   if (!install_init ()) return 112;
 
   for (i = 0; i < insthier_len; ++i) {
-    ret = install_check (&insthier[i]);
-    if (ret != return_codes[i]) {
-      printf("install_check[%lu] returned %d expected %d\n", i, ret,
-              return_codes[i]);
+    status = install_check (&insthier[i]);
+    if (status.status != return_codes[i]) {
+      printf("install_check[%lu] returned %d expected %d\n", i, status.status,
+        return_codes[i]);
       install_umask (um);
       return 1;
     }

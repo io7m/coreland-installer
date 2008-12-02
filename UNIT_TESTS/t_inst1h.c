@@ -12,9 +12,9 @@ struct install_item insthier[] = {
 unsigned long insthier_len = sizeof(insthier) / sizeof(struct install_item);
 
 int return_codes[5] = {
-  1,
-  1,
-  0,
-  1,
-  1,
+  INSTALL_STATUS_OK,
+  INSTALL_STATUS_OK,
+  INSTALL_STATUS_ERROR,
+  INSTALL_STATUS_OK,
+  INSTALL_STATUS_OK,
 };

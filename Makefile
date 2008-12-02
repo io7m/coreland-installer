@@ -9,9 +9,8 @@ UNIT_TESTS/t_inst1 UNIT_TESTS/t_inst1.o UNIT_TESTS/t_inst1h.o \
 UNIT_TESTS/t_inst2 UNIT_TESTS/t_inst2.o UNIT_TESTS/t_inst2h.o \
 UNIT_TESTS/t_instchk1 UNIT_TESTS/t_instchk1.o UNIT_TESTS/t_instchk2 \
 UNIT_TESTS/t_instchk2.o UNIT_TESTS/t_instchkpre UNIT_TESTS/t_instchkpre.o \
-ctxt/ctxt.a ctxt/repos.o deinstaller deinstaller.o generic-conf.o i-check.o \
-i-copy.o i-core.o i-core_posix.o i-core_win32.o i-dir.o i-error.o i-link.o \
-inst-check inst-copy inst-dir inst-link installer installer.o instchk instchk.o \
+ctxt/ctxt.a ctxt/repos.o deinstaller deinstaller.o generic-conf.o i-core.o \
+i-core_posix.o i-core_win32.o i-error.o installer installer.o instchk instchk.o \
 insthier.o
 
 # Mkf-deinstall
@@ -144,11 +143,11 @@ cc-slib:\
 conf-systype
 
 conf-cctype:\
-conf-cc mk-cctype
+conf-cc conf-cc mk-cctype
 	./mk-cctype > conf-cctype.tmp && mv conf-cctype.tmp conf-cctype
 
 conf-ldtype:\
-conf-ld mk-ldtype
+conf-ld conf-ld mk-ldtype
 	./mk-ldtype > conf-ldtype.tmp && mv conf-ldtype.tmp conf-ldtype
 
 conf-sosuffix:\
@@ -181,14 +180,6 @@ generic-conf.o:\
 cc-compile generic-conf.c ctxt.h
 	./cc-compile generic-conf.c
 
-i-check.o:\
-cc-compile i-check.c install.h
-	./cc-compile i-check.c
-
-i-copy.o:\
-cc-compile i-copy.c install.h
-	./cc-compile i-copy.c
-
 i-core.o:\
 cc-compile i-core.c install.h
 	./cc-compile i-core.c
@@ -201,34 +192,9 @@ i-core_win32.o:\
 cc-compile i-core_win32.c install.h
 	./cc-compile i-core_win32.c
 
-i-dir.o:\
-cc-compile i-dir.c install.h
-	./cc-compile i-dir.c
-
 i-error.o:\
 cc-compile i-error.c install.h
 	./cc-compile i-error.c
-
-i-link.o:\
-cc-compile i-link.c install.h
-	./cc-compile i-link.c
-
-inst-check:\
-cc-link inst-check.ld i-check.o i-core.o i-core_posix.o i-core_win32.o \
-i-error.o
-	./cc-link inst-check i-check.o i-core.o i-core_posix.o i-core_win32.o i-error.o
-
-inst-copy:\
-cc-link inst-copy.ld i-copy.o i-core.o i-core_posix.o i-core_win32.o i-error.o
-	./cc-link inst-copy i-copy.o i-core.o i-core_posix.o i-core_win32.o i-error.o
-
-inst-dir:\
-cc-link inst-dir.ld i-dir.o i-core.o i-core_posix.o i-core_win32.o i-error.o
-	./cc-link inst-dir i-dir.o i-core.o i-core_posix.o i-core_win32.o i-error.o
-
-inst-link:\
-cc-link inst-link.ld i-link.o i-core.o i-core_posix.o i-core_win32.o i-error.o
-	./cc-link inst-link i-link.o i-core.o i-core_posix.o i-core_win32.o i-error.o
 
 install.h:\
 install_os.h
@@ -286,8 +252,7 @@ obj_clean:
 	UNIT_TESTS/t_instchk1 UNIT_TESTS/t_instchk1.o UNIT_TESTS/t_instchk2 \
 	UNIT_TESTS/t_instchk2.o UNIT_TESTS/t_instchkpre UNIT_TESTS/t_instchkpre.o \
 	ctxt/ctxt.a ctxt/repos.c ctxt/repos.o deinstaller deinstaller.o generic-conf.o \
-	i-check.o i-copy.o i-core.o i-core_posix.o i-core_win32.o i-dir.o i-error.o \
-	i-link.o inst-check inst-copy inst-dir inst-link installer installer.o instchk \
+	i-core.o i-core_posix.o i-core_win32.o i-error.o installer installer.o instchk \
 	instchk.o insthier.o
 ext_clean:
 	rm -f conf-cctype conf-ldtype conf-sosuffix conf-systype mk-ctxt

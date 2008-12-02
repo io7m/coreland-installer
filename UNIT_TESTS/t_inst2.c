@@ -5,12 +5,13 @@
 
 const char progname[] = "t_inst2";
 
-int main()
+int
+main (void)
 {
   unsigned long i;
   unsigned int um;
-  int r;
   int tret;
+  struct install_status_t status;
 
   um = install_umask (022);
   tret = 0;
@@ -19,8 +20,8 @@ int main()
 
   printf("installing...\n");
   for (i = 0; i < insthier_len; ++i) {
-    r = install (&insthier[i], 0);
-    if (r == 0) {
+    status = install (&insthier[i], 0);
+    if (status.status != INSTALL_STATUS_OK) {
       printf ("install %lu failed\n", i);
       tret = 1;
     }

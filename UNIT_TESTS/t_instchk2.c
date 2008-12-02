@@ -5,12 +5,13 @@
 
 const char progname[] = "t_instchk2";
 
-int main()
+int
+main (void)
 {
   unsigned long i;
   unsigned int um;
-  int r;
   int tret;
+  struct install_status_t status;
 
   um = install_umask (022);
   tret = 0;
@@ -19,8 +20,8 @@ int main()
 
   printf("checking...\n");
   for (i = 0; i < insthier_len; ++i) {
-    r = install_check (&insthier[i]);
-    if (r == 0) tret = 1;
+    status = install_check (&insthier[i]);
+    if (status.status != INSTALL_STATUS_OK) tret = 1;
   }
 
   fflush (0);

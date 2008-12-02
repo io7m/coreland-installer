@@ -15,6 +15,17 @@
 #define INSTALL_NULL_USER_NAME ":"
 #define INSTALL_NULL_GROUP_NAME ":"
 
+struct install_status_t {
+  enum {
+    INSTALL_STATUS_OK,
+    INSTALL_STATUS_ERROR,
+    INSTALL_STATUS_FATAL
+  } status;
+  const char *message;
+};
+
+#define INSTALL_STATUS_INIT {INSTALL_STATUS_FATAL,0}
+
 enum install_file_type_t {
   INSTALL_FILE_TYPE_FILE,
   INSTALL_FILE_TYPE_CHARACTER_SPECIAL,
@@ -35,9 +46,9 @@ struct install_item {
 };
 
 int install_init (void);
-int install (struct install_item *, unsigned int);
-int install_check (struct install_item *);
-int deinstall (struct install_item *, unsigned int);
+struct install_status_t install (struct install_item *, unsigned int);
+struct install_status_t install_check (struct install_item *);
+struct install_status_t deinstall (struct install_item *, unsigned int);
 
 const char *install_error (int);
 
