@@ -9,7 +9,7 @@ extern unsigned int return_codes[5];
 int
 main (void)
 {
-  unsigned long i;
+  unsigned long index;
   unsigned int um;
   struct install_status_t status;
 
@@ -17,11 +17,11 @@ main (void)
 
   if (!install_init ()) return 112;
 
-  for (i = 0; i < insthier_len; ++i) {
-    status = install (&insthier[i], 0);
-    if (return_codes[i] != status.status) {
-      printf ("install[%lu] returned %d expected %d\n", i, status.status,
-        return_codes[i]);
+  for (index = 0; index < insthier_len; ++index) {
+    status = install (&insthier [index], 0);
+    if (return_codes [index] != status.status) {
+      printf ("install [%lu] returned %d expected %d\n", index,
+        status.status, return_codes [index]);
       install_umask (um);
       return 1;
     }

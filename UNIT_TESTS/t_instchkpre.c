@@ -18,11 +18,12 @@ main (void)
   for (i = 0; i < insthier_len; ++i) {
     status = install_check (&insthier[i]);
     if (status.status != INSTALL_STATUS_ERROR) {
-      printf("install_check[%lu] returned %d expected %d\n", i, status.status,
+      printf("install_check [%lu] returned %d expected %d\n", i, status.status,
         INSTALL_STATUS_ERROR);
       install_umask (um);
       return 1;
     }
+    printf ("install_check: %s\n", status.message);
   }
 
   install_umask (um);
