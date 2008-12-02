@@ -375,6 +375,17 @@ install_file_link (const char *src, const char *dst)
 #endif
 }
 
+unsigned int
+install_umask (unsigned int m)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_umask (m);
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_umask (m);
+#endif
+}
+
 /* portability functions */
 
 int

@@ -129,4 +129,10 @@ iposix_scan_uid (const char *buffer, user_id_t *uid)
   return size;
 }
 
+unsigned int
+iposix_umask (unsigned int m)
+{
+  return umask (m);
+}
+
 #endif

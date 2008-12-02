@@ -10,7 +10,7 @@ int main()
   unsigned int um;
   int ret;
 
-  um = umask (022);
+  um = install_umask (022);
 
   if (!install_init ()) return 112;
 
@@ -18,11 +18,11 @@ int main()
     ret = install_check (&insthier[i]);
     if (ret != 0) {
       printf("install_check[%lu] returned %d expected %d\n", i, ret, 0);
-      umask (um);
+      install_umask (um);
       return 1;
     }
   }
 
-  umask (um);
+  install_umask (um);
   return 0;
 }

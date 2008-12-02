@@ -2,6 +2,9 @@
 
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
 
+#include <windows.h>
+#include <stdio.h>
+
 static int
 iwin32_user_sid (user_id_t *uid)
 {
@@ -17,7 +20,7 @@ iwin32_user_sid (user_id_t *uid)
       user = malloc (needed);
       if (!user) return 0;
       if (GetTokenInformation (thread_tok, TokenUser, user, needed, &needed)) {
-        *uid = user->User.Sid;
+        uid->value = user->User.Sid;
       }
       free (user);
     }
@@ -40,7 +43,7 @@ iwin32_user_primary_group (group_id_t *gid)
       group = malloc (needed);
       if (!group) return 0;
       if (GetTokenInformation (thread_tok, TokenPrimaryGroup, group, needed, &needed)) {
-        *gid = group->PrimaryGroup;
+        gid->value = group->PrimaryGroup;
       }
       free (group);
     }
@@ -97,6 +100,12 @@ iwin32_file_get_ownership (const char *file, user_id_t *uid, group_id_t *gid)
 }
 
 int
+iwin32_file_get_mode (const char *file, unsigned int *mode)
+{
+  return 0;
+}
+
+int
 iwin32_file_link (const char *src, const char *dst)
 {
   user_id_t uid;
@@ -120,7 +129,7 @@ iwin32_install_init (void)
 unsigned int
 iwin32_fmt_gid (char *buffer, group_id_t gid)
 {
-  const char *sid_str;
+  char *sid_str;
   if (!ConvertSidToStringSid (gid.value, &sid_str)) return 0;
   memcpy (buffer, sid_str, strlen (sid_str));
   LocalFree (sid_str);
@@ -128,10 +137,10 @@ iwin32_fmt_gid (char *buffer, group_id_t gid)
 }
 
 unsigned int
-iwin32_fmt_uid (char *, user_id_t)
+iwin32_fmt_uid (char *, user_id_t uid)
 {
-  const char *sid_str;
-  if (!ConvertSidToStringSid (gid.value, &sid_str)) return 0;
+  char *sid_str;
+  if (!ConvertSidToStringSid (uid.value, &sid_str)) return 0;
   memcpy (buffer, sid_str, strlen (sid_str));
   LocalFree (sid_str);
   return 1;
@@ -140,15 +149,21 @@ iwin32_fmt_uid (char *, user_id_t)
 unsigned int
 iwin32_scan_gid (const char *buffer, group_id_t *gid)
 {
-  if (!ConvertStringSidToSid (buffer, &gid->value)) return 0;
+  if (!ConvertStringSidToSid ((char *) buffer, &gid->value)) return 0;
   return strlen (buffer);
 }
 
 unsigned int
 iwin32_scan_uid (const char *buffer, user_id_t *uid)
 {
-  if (!ConvertStringSidToSid (buffer, &gid->value)) return 0;
+  if (!ConvertStringSidToSid ((char *) buffer, &uid->value)) return 0;
   return strlen (buffer);
+}
+
+unsigned int
+iwin32_umask (unsigned int m)
+{
+  return m;
 }
 
 #endif

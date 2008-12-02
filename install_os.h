@@ -21,6 +21,12 @@
  */
 
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+
+/* require >= Windows 2000 */
+#ifndef WINVER
+#  define WINVER 0x0500
+#endif
+
 #include <windows.h>
 
 typedef struct { PSID value; } user_id_t;
@@ -54,6 +60,7 @@ unsigned int iwin32_fmt_uid (char *, user_id_t);
 unsigned int iwin32_scan_gid (const char *, group_id_t *);
 unsigned int iwin32_scan_uid (const char *, user_id_t *);
 void iwin32_uidgid_current (user_id_t *, group_id_t *);
+unsigned int iwin32_umask (unsigned int);
 
 #endif
 
@@ -85,6 +92,7 @@ unsigned int iposix_fmt_uid (char *, user_id_t);
 unsigned int iposix_scan_gid (const char *, group_id_t *);
 unsigned int iposix_scan_uid (const char *, user_id_t *);
 void iposix_uidgid_current (user_id_t *, group_id_t *);
+unsigned int iposix_umask (unsigned int);
 
 #endif
 

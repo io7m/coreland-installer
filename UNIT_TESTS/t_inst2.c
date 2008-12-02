@@ -12,7 +12,7 @@ int main()
   int r;
   int tret;
 
-  um = umask (022);
+  um = install_umask (022);
   tret = 0;
 
   if (!install_init ()) return 112;
@@ -27,6 +27,6 @@ int main()
   }
 
   fflush (0);
-  umask (um);
+  install_umask (um);
   return tret;
 }
