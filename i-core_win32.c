@@ -10,23 +10,21 @@
 static int
 iwin32_user_sid (user_id_t *uid)
 {
-  HANDLE thread_tok;
-  DWORD needed;
-  TOKEN_USER *user;
- 
-  if (!OpenProcessToken (GetCurrentProcess(),
-    STANDARD_RIGHTS_READ | READ_CONTROL | TOKEN_QUERY, &thread_tok)) return 0;
+  char name [MAX_SIZE];
+  char domain [MAX_SIZE];
+  DWORD domain_size = MAX_SIZE;
+  DWORD sid_size = MAX_SIZE;
+  DWORD name_size = MAX_SIZE;
+  SID *sid;
+  SID_NAME_USE account_type;
 
-  if (!GetTokenInformation (thread_tok, TokenUser, NULL, 0, &needed)) {
-    if (!GetLastError () == ERROR_INSUFFICIENT_BUFFER) {
-      user = malloc (needed);
-      if (!user) return 0;
-      if (GetTokenInformation (thread_tok, TokenUser, user, needed, &needed)) {
-        uid->value = user->User.Sid;
-      }
-      free (user);
-    }
-  }
+  if (!GetUserName (name, &name_size)) return 0;
+  
+  sid = malloc (MAX_SIZE);
+  if (!LookupAccountName (NULL, name, sid, &sid_size,
+    domain, &domain_size, &account_type)) return 0;
+
+  uid->value = sid;
   return 1;
 }
 
