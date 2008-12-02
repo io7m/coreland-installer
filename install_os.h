@@ -36,6 +36,8 @@ typedef struct { PSID value; } group_id_t;
 #define INSTALL_FMT_UID 256
 #define INSTALL_FMT_GID 256
 
+#undef INSTALL_HAVE_SYMLINKS
+
 int iwin32_compare_gid (group_id_t, group_id_t);
 int iwin32_compare_uid (user_id_t, user_id_t);
 int iwin32_file_get_mode (const char *, unsigned int *);
@@ -64,6 +66,8 @@ typedef struct { int value; } group_id_t;
 
 #define INSTALL_FMT_UID (sizeof (int) << 3)
 #define INSTALL_FMT_GID (sizeof (int) << 3)
+
+#define INSTALL_HAVE_SYMLINKS
 
 int iposix_compare_gid (group_id_t, group_id_t);
 int iposix_compare_uid (user_id_t, user_id_t);

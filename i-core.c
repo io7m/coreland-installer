@@ -219,16 +219,21 @@ install_compare_gid (group_id_t a, group_id_t b)
 #  if defined(S_IFMT) && defined(S_IFSOCK)
 #    define S_ISSOCK(mode) (((mode) & S_IFMT) == S_IFSOCK)
 #  else
-#    define S_ISSOCK(mode)
+#    define S_ISSOCK(mode) (0)
 #  endif
 #endif
 
 int s_ifreg (unsigned int m)  { return S_ISREG(m); }
 int s_ifchr (unsigned int m)  { return S_ISCHR(m); }
 int s_ifdir (unsigned int m)  { return S_ISDIR(m); }
-int s_iflnk (unsigned int m)  { return S_ISLNK(m); }
 int s_ifsock (unsigned int m) { return S_ISSOCK(m); }
 int s_ififo (unsigned int m)  { return S_ISFIFO(m); }
+
+#ifdef INSTALL_HAVE_SYMLINKS
+int s_iflnk (unsigned int m)  { return S_ISLNK(m); }
+#else
+int s_iflnk (unsigned int m)  { return 0; }
+#endif
 
 static const struct {
   int (*check)(unsigned int);
@@ -251,11 +256,15 @@ install_file_type (const char *file, enum install_file_type_t *type, int nofollo
   struct stat sb;
   unsigned int index;
 
+#ifdef INSTALL_HAVE_SYMLINKS
   if (nofollow) {
     if (lstat (file, &sb) == -1) return 0;
   } else {
     if (stat (file, &sb) == -1) return 0;
   }
+#else
+  if (stat (file, &sb) == -1) return 0;
+#endif
 
   for (index = 0; index < file_type_lookups_size; ++index) {
     if (file_type_lookups [index].check (sb.st_mode)) {
