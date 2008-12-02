@@ -77,6 +77,13 @@ iposix_file_get_mode (const char *file, unsigned int *mode)
 }
 
 int
+iposix_file_link (const char *src, const char *dst)
+{
+  if (symlink (src, dst) == -1) return 0;
+  return 1;
+}
+
+int
 iposix_compare_uid (user_id_t a, user_id_t b)
 {
   return a.value == b.value;

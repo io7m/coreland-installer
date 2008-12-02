@@ -56,6 +56,7 @@ int install_file_type (const char *, enum install_file_type_t *, int);
 int install_file_type_lookup (const char *, enum install_file_type_t *);
 int install_file_type_name_lookup (enum install_file_type_t, const char **);
 int install_file_copy (const char *, const char *, user_id_t, group_id_t, unsigned int);
+int install_file_link (const char *, const char *);
 int install_file_size (const char *, unsigned long *);
 int install_gid_current (group_id_t *);
 int install_gid_lookup (const char *, group_id_t *);
