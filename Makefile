@@ -9,9 +9,9 @@ UNIT_TESTS/t_inst1 UNIT_TESTS/t_inst1.o UNIT_TESTS/t_inst1h.o \
 UNIT_TESTS/t_inst2 UNIT_TESTS/t_inst2.o UNIT_TESTS/t_inst2h.o \
 UNIT_TESTS/t_instchk1 UNIT_TESTS/t_instchk1.o UNIT_TESTS/t_instchk2 \
 UNIT_TESTS/t_instchk2.o UNIT_TESTS/t_instchkpre UNIT_TESTS/t_instchkpre.o \
-ctxt/ctxt.a ctxt/repos.o deinstaller deinstaller.o generic-conf.o i-core.o \
-i-core_posix.o i-core_win32.o i-error.o install.a installer installer.o instchk \
-instchk.o insthier.o
+ctxt/ctxt.a ctxt/repos.o deinstaller deinstaller.o generic-conf.o \
+install-error.o install-posix.o install-win32.o install.a install.o installer \
+installer.o instchk instchk.o insthier.o
 
 # Mkf-deinstall
 deinstall: deinstaller inst-check inst-copy inst-dir inst-link
@@ -178,28 +178,28 @@ generic-conf.o:\
 cc-compile generic-conf.c ctxt.h
 	./cc-compile generic-conf.c
 
-i-core.o:\
-cc-compile i-core.c install.h
-	./cc-compile i-core.c
+install-error.o:\
+cc-compile install-error.c install.h
+	./cc-compile install-error.c
 
-i-core_posix.o:\
-cc-compile i-core_posix.c install.h
-	./cc-compile i-core_posix.c
+install-posix.o:\
+cc-compile install-posix.c install.h
+	./cc-compile install-posix.c
 
-i-core_win32.o:\
-cc-compile i-core_win32.c install.h
-	./cc-compile i-core_win32.c
-
-i-error.o:\
-cc-compile i-error.c install.h
-	./cc-compile i-error.c
+install-win32.o:\
+cc-compile install-win32.c install.h
+	./cc-compile install-win32.c
 
 install.a:\
-cc-slib install.sld i-core.o i-core_posix.o i-core_win32.o i-error.o
-	./cc-slib install i-core.o i-core_posix.o i-core_win32.o i-error.o
+cc-slib install.sld install.o install-posix.o install-win32.o install-error.o
+	./cc-slib install install.o install-posix.o install-win32.o install-error.o
 
 install.h:\
 install_os.h
+
+install.o:\
+cc-compile install.c install.h
+	./cc-compile install.c
 
 installer:\
 cc-link installer.ld installer.o insthier.o install.a ctxt/ctxt.a
@@ -250,7 +250,7 @@ obj_clean:
 	UNIT_TESTS/t_instchk1 UNIT_TESTS/t_instchk1.o UNIT_TESTS/t_instchk2 \
 	UNIT_TESTS/t_instchk2.o UNIT_TESTS/t_instchkpre UNIT_TESTS/t_instchkpre.o \
 	ctxt/ctxt.a ctxt/repos.c ctxt/repos.o deinstaller deinstaller.o generic-conf.o \
-	i-core.o i-core_posix.o i-core_win32.o i-error.o install.a installer \
+	install-error.o install-posix.o install-win32.o install.a install.o installer \
 	installer.o instchk instchk.o insthier.o
 ext_clean:
 	rm -f conf-cctype conf-ldtype conf-sosuffix conf-systype mk-ctxt

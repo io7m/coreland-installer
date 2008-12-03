@@ -7,10 +7,12 @@
 
 #include "install.h"
 
+/*
 static char src_name [INSTALL_MAX_PATHLEN];
 static char dst_name [INSTALL_MAX_PATHLEN];
 static char src_tmp [INSTALL_MAX_PATHLEN];
 static char dst_tmp [INSTALL_MAX_PATHLEN];
+*/
 
 char exec_suffix [16];
 char dlib_suffix [16];
@@ -890,6 +892,10 @@ inst_liblink (struct install_item *ins, unsigned int flags)
 int
 ntran_copy (struct install_item *ins)
 {
+  static char src_name [INSTALL_MAX_PATHLEN];
+  static char dst_name [INSTALL_MAX_PATHLEN];
+  static char dst_tmp [INSTALL_MAX_PATHLEN];
+
   if (!ins->src) return fails ("src file undefined");
   if (!ins->dir) return fails ("directory unefined");
   if (!ins->dst) ins->dst = ins->src;
@@ -904,10 +910,22 @@ ntran_copy (struct install_item *ins)
   }
 
   if (!base_name (ins->dst, &ins->dst)) return fails ("invalid path");
-  if (snprintf (dst_tmp, INSTALL_MAX_PATHLEN, "%s/%s", ins->dir, ins->dst) < 0)
+  if (snprintf (dst_tmp, sizeof (dst_tmp), "%s/%s", ins->dir, ins->dst) < 0)
     return fails_sys ("snprintf");
 
   ins->dst = dst_tmp;
+  return 1;
+}
+
+int
+ntran_copy_exec (struct install_item *ins)
+{
+  static char src_name [INSTALL_MAX_PATHLEN];
+  static char dst_name [INSTALL_MAX_PATHLEN];
+
+  if (!ntran_copy (ins)) return 0;
+  if (snprintf (src_name, sizeof (src_name), "%s%s", ins->src, exec_suffix) < 0) return 0;
+  if (snprintf (dst_name, sizeof (dst_name), "%s%s", ins->dst, exec_suffix) < 0) return 0;
   return 1;
 }
 
@@ -923,6 +941,10 @@ ntran_link (struct install_item *ins)
 int
 ntran_liblink (struct install_item *ins)
 {
+  static char dst_tmp [INSTALL_MAX_PATHLEN];
+  static char src_name [INSTALL_MAX_PATHLEN];
+  static char src_tmp [INSTALL_MAX_PATHLEN];
+
   if (!ins->src) return fails("src file undefined");
   if (!ins->dir) return fails("directory unefined");
   if (!ins->dst) return fails("dst name undefined");
@@ -954,6 +976,8 @@ ntran_mkdir (struct install_item *ins)
 int
 ntran_chk_link (struct install_item *ins)
 {
+  static char dst_name [INSTALL_MAX_PATHLEN];
+
   if (!ntran_link (ins)) return 0;
   if (snprintf (dst_name, INSTALL_MAX_PATHLEN, "%s/%s", ins->dir, ins->dst) < 0)
     return fails_sys ("sprintf");
@@ -965,6 +989,8 @@ ntran_chk_link (struct install_item *ins)
 int
 ntran_chk_liblink (struct install_item *ins)
 {
+  static char dst_name [INSTALL_MAX_PATHLEN];
+
   if (!ntran_liblink (ins)) return 0;
   if (snprintf (dst_name, INSTALL_MAX_PATHLEN, "%s/%s", ins->dir, ins->dst) < 0)
     return fails_sys ("sprintf");
@@ -1126,21 +1152,21 @@ struct instop {
 };
 struct instop install_opers [] = {
   { inst_copy,    ntran_copy },
-  { 0,            0 },
+  { inst_copy,    ntran_copy_exec },
   { inst_link,    ntran_link },
   { inst_mkdir,   ntran_mkdir },
   { inst_liblink, ntran_liblink },
 };
 struct instop instchk_opers [] = {
   { instchk_copy,    ntran_copy },
-  { 0,               0 },
+  { instchk_copy,    ntran_copy_exec },
   { instchk_link,    ntran_chk_link },
   { instchk_mkdir,   ntran_mkdir },
   { instchk_liblink, ntran_chk_liblink },
 };
 struct instop deinst_opers [] = {
   { deinst_copy,    ntran_copy },
-  { 0,              0 },
+  { deinst_copy,    ntran_copy_exec },
   { deinst_link,    ntran_link },
   { deinst_mkdir,   ntran_mkdir },
   { deinst_liblink, ntran_liblink },
