@@ -6,3 +6,5 @@
 20070608 code: added generic-conf.c
 20080115 code: updated inst-check.c
 20080911 code: unit tests update.
+20081203 code: rewrite. win32 "support". new copy_exec mode. install size
+               checks/reports. unit tests.
