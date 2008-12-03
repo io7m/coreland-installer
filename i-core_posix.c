@@ -85,7 +85,7 @@ iposix_file_get_mode (const char *file, permissions_t *mode)
   struct stat sb;
 
   if (stat (file, &sb) == -1) return 0;
-  mode->value = sb.st_mode;
+  mode->value = sb.st_mode & 0755;
   return 1;
 }
 

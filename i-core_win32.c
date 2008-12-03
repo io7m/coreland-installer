@@ -122,9 +122,16 @@ iwin32_file_get_ownership (const char *file, user_id_t *uid, group_id_t *gid)
 }
 
 int
-iwin32_file_get_mode (const char *file, unsigned int *mode)
+iwin32_file_set_mode (const char *file, permissions_t mode)
 {
-  return 0;
+  return 1;
+}
+
+int
+iwin32_file_get_mode (const char *file, permissions_t *mode)
+{
+  mode->value = 0;
+  return 1;
 }
 
 int
@@ -132,7 +139,7 @@ iwin32_file_link (const char *src, const char *dst)
 {
   user_id_t uid;
   group_id_t gid;
-  unsigned int mode;
+  permissions_t mode;
   struct install_status_t status = INSTALL_STATUS_INIT;
 
   fprintf (stderr, "warn: filesystem does not support symlinks, copying...\n");

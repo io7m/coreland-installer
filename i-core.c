@@ -386,10 +386,6 @@ install_file_copy (const char *src, const char *dst,
     status.message = "could not set file ownership";
     goto ERR;
   }
-  if (rename (dst_tmp, dst) == -1) {
-    status.message = "could not rename temporary file";
-    goto ERR;
-  }
   if (fclose (fd_dst) == -1) {
     status.message = "could not close destination file";
     goto ERR;
@@ -398,10 +394,17 @@ install_file_copy (const char *src, const char *dst,
     status.message = "could not close source file";
     goto ERR;
   }
+  if (rename (dst_tmp, dst) == -1) {
+    status.message = "could not rename temporary file";
+    goto ERR;
+  }
 
   status.status = INSTALL_STATUS_OK;
   return status;
+
   ERR:
+  fclose (fd_dst);
+  fclose (fd_src);
   unlink (dst_tmp);
   return status;
 }
@@ -791,6 +794,8 @@ inst_link (struct install_item *ins, unsigned int flags)
 {
   static char path_buf [INSTALL_MAX_PATHLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
+
+  printf ("symlink %s %s\n", ins->src, ins->dst);
 
   if (!getcwd (path_buf, sizeof (path_buf))) {
     status.message = "could not get current working directory";

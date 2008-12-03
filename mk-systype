@@ -172,7 +172,7 @@ EOF
   then
     fatal "could not create _mk_systype"
   fi
-  ./_mk_systype | tr -Cd '[[:alnum:]_\n]'
+  ./_mk_systype | tr -cd '[[:alnum:]_\n]'
   if [ $? -ne 0 ]
   then
     fatal "could not execute _mk_systype"
