@@ -49,28 +49,23 @@ fi
 
 repos=$1
 
-copy ${repos}/deinstaller.c .
-copy ${repos}/deinstaller.ld .
-copy ${repos}/generic-conf.c .
-copy ${repos}/inst-check.c .
-copy ${repos}/inst-check.ld .
-copy ${repos}/inst-copy.c .
-copy ${repos}/inst-copy.ld .
-copy ${repos}/inst-dir.c .
-copy ${repos}/inst-dir.ld .
-copy ${repos}/inst-link.c .
-copy ${repos}/inst-link.ld .
-copy ${repos}/install.h .
-copy ${repos}/install_core.c .
-copy ${repos}/install_error.c .
-copy ${repos}/installer.c .
-copy ${repos}/installer.ld .
-copy ${repos}/instchk.c .
-copy ${repos}/instchk.ld .
-copy ${repos}/postinstall
-copy ${repos}/Mkf-install
 copy ${repos}/Mkf-deinstall
+copy ${repos}/Mkf-install
 copy ${repos}/Mkf-instchk
+copy ${repos}/deinstaller.c
+copy ${repos}/deinstaller.ld
+copy ${repos}/generic-conf.c
+copy ${repos}/i-core.c
+copy ${repos}/i-core_posix.c
+copy ${repos}/i-core_win32.c
+copy ${repos}/i-error.c
+copy ${repos}/install.sld
+copy ${repos}/installer.c
+copy ${repos}/installer.ld
+copy ${repos}/instchk.c
+copy ${repos}/instchk.ld
+copy ${repos}/insthier.c
+copy ${repos}/postinstall
 
 makedir ctxt
 for f in bindir dlibdir incdir repos slibdir

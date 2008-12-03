@@ -21,7 +21,6 @@
  */
 
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-
 /* require >= Windows 2000 */
 #ifndef WINVER
 #  define WINVER 0x0500
@@ -41,7 +40,6 @@ typedef struct { PSID value; } group_id_t;
 
 #define INSTALL_FMT_UID 256
 #define INSTALL_FMT_GID 256
-
 #undef INSTALL_HAVE_SYMLINKS
 
 int iwin32_compare_gid (group_id_t, group_id_t);
@@ -62,7 +60,6 @@ unsigned int iwin32_scan_gid (const char *, group_id_t *);
 unsigned int iwin32_scan_uid (const char *, user_id_t *);
 unsigned int iwin32_umask (unsigned int);
 void iwin32_uidgid_current (user_id_t *, group_id_t *);
-
 #endif
 
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
@@ -71,10 +68,8 @@ typedef struct { int value; } group_id_t;
 
 #define INSTALL_NULL_UID {-1}
 #define INSTALL_NULL_GID {-1}
-
 #define INSTALL_FMT_UID (sizeof (int) << 3)
 #define INSTALL_FMT_GID (sizeof (int) << 3)
-
 #define INSTALL_HAVE_SYMLINKS
 
 int iposix_compare_gid (group_id_t, group_id_t);
@@ -95,7 +90,6 @@ unsigned int iposix_scan_gid (const char *, group_id_t *);
 unsigned int iposix_scan_uid (const char *, user_id_t *);
 unsigned int iposix_umask (unsigned int);
 void iposix_uidgid_current (user_id_t *, group_id_t *);
-
 #endif
 
 #endif

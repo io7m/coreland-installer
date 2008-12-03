@@ -10,8 +10,8 @@ UNIT_TESTS/t_inst2 UNIT_TESTS/t_inst2.o UNIT_TESTS/t_inst2h.o \
 UNIT_TESTS/t_instchk1 UNIT_TESTS/t_instchk1.o UNIT_TESTS/t_instchk2 \
 UNIT_TESTS/t_instchk2.o UNIT_TESTS/t_instchkpre UNIT_TESTS/t_instchkpre.o \
 ctxt/ctxt.a ctxt/repos.o deinstaller deinstaller.o generic-conf.o i-core.o \
-i-core_posix.o i-core_win32.o i-error.o installer installer.o instchk instchk.o \
-insthier.o
+i-core_posix.o i-core_win32.o i-error.o install.a installer installer.o instchk \
+instchk.o insthier.o
 
 # Mkf-deinstall
 deinstall: deinstaller inst-check inst-copy inst-dir inst-link
@@ -47,9 +47,9 @@ tests_clean:
 
 UNIT_TESTS/t_deinst1:\
 cc-link UNIT_TESTS/t_deinst1.ld UNIT_TESTS/t_deinst1.o UNIT_TESTS/t_inst1h.o \
-i-core.o i-core_posix.o i-core_win32.o i-error.o
+install.a
 	./cc-link UNIT_TESTS/t_deinst1 UNIT_TESTS/t_deinst1.o UNIT_TESTS/t_inst1h.o \
-	i-core.o i-core_posix.o i-core_win32.o i-error.o
+	install.a
 
 UNIT_TESTS/t_deinst1.o:\
 cc-compile UNIT_TESTS/t_deinst1.c install.h
@@ -57,9 +57,9 @@ cc-compile UNIT_TESTS/t_deinst1.c install.h
 
 UNIT_TESTS/t_deinst12:\
 cc-link UNIT_TESTS/t_deinst12.ld UNIT_TESTS/t_deinst12.o UNIT_TESTS/t_inst1h.o \
-i-core.o i-core_posix.o i-core_win32.o i-error.o
+install.a
 	./cc-link UNIT_TESTS/t_deinst12 UNIT_TESTS/t_deinst12.o UNIT_TESTS/t_inst1h.o \
-	i-core.o i-core_posix.o i-core_win32.o i-error.o
+	install.a
 
 UNIT_TESTS/t_deinst12.o:\
 cc-compile UNIT_TESTS/t_deinst12.c install.h
@@ -67,9 +67,9 @@ cc-compile UNIT_TESTS/t_deinst12.c install.h
 
 UNIT_TESTS/t_deinst2:\
 cc-link UNIT_TESTS/t_deinst2.ld UNIT_TESTS/t_deinst2.o UNIT_TESTS/t_inst2h.o \
-i-core.o i-core_posix.o i-core_win32.o i-error.o
+install.a
 	./cc-link UNIT_TESTS/t_deinst2 UNIT_TESTS/t_deinst2.o UNIT_TESTS/t_inst2h.o \
-	i-core.o i-core_posix.o i-core_win32.o i-error.o
+	install.a
 
 UNIT_TESTS/t_deinst2.o:\
 cc-compile UNIT_TESTS/t_deinst2.c install.h
@@ -77,9 +77,9 @@ cc-compile UNIT_TESTS/t_deinst2.c install.h
 
 UNIT_TESTS/t_inst1:\
 cc-link UNIT_TESTS/t_inst1.ld UNIT_TESTS/t_inst1.o UNIT_TESTS/t_inst1h.o \
-i-core.o i-core_posix.o i-core_win32.o i-error.o
+install.a
 	./cc-link UNIT_TESTS/t_inst1 UNIT_TESTS/t_inst1.o UNIT_TESTS/t_inst1h.o \
-	i-core.o i-core_posix.o i-core_win32.o i-error.o
+	install.a
 
 UNIT_TESTS/t_inst1.o:\
 cc-compile UNIT_TESTS/t_inst1.c install.h
@@ -91,9 +91,9 @@ cc-compile UNIT_TESTS/t_inst1h.c install.h
 
 UNIT_TESTS/t_inst2:\
 cc-link UNIT_TESTS/t_inst2.ld UNIT_TESTS/t_inst2.o UNIT_TESTS/t_inst2h.o \
-i-core.o i-core_posix.o i-core_win32.o i-error.o
+install.a
 	./cc-link UNIT_TESTS/t_inst2 UNIT_TESTS/t_inst2.o UNIT_TESTS/t_inst2h.o \
-	i-core.o i-core_posix.o i-core_win32.o i-error.o
+	install.a
 
 UNIT_TESTS/t_inst2.o:\
 cc-compile UNIT_TESTS/t_inst2.c install.h
@@ -105,9 +105,9 @@ cc-compile UNIT_TESTS/t_inst2h.c install.h
 
 UNIT_TESTS/t_instchk1:\
 cc-link UNIT_TESTS/t_instchk1.ld UNIT_TESTS/t_instchk1.o UNIT_TESTS/t_inst1h.o \
-i-core.o i-core_posix.o i-core_win32.o i-error.o
+install.a
 	./cc-link UNIT_TESTS/t_instchk1 UNIT_TESTS/t_instchk1.o UNIT_TESTS/t_inst1h.o \
-	i-core.o i-core_posix.o i-core_win32.o i-error.o
+	install.a
 
 UNIT_TESTS/t_instchk1.o:\
 cc-compile UNIT_TESTS/t_instchk1.c install.h
@@ -115,9 +115,9 @@ cc-compile UNIT_TESTS/t_instchk1.c install.h
 
 UNIT_TESTS/t_instchk2:\
 cc-link UNIT_TESTS/t_instchk2.ld UNIT_TESTS/t_instchk2.o UNIT_TESTS/t_inst2h.o \
-i-core.o i-core_posix.o i-core_win32.o i-error.o
+install.a
 	./cc-link UNIT_TESTS/t_instchk2 UNIT_TESTS/t_instchk2.o UNIT_TESTS/t_inst2h.o \
-	i-core.o i-core_posix.o i-core_win32.o i-error.o
+	install.a
 
 UNIT_TESTS/t_instchk2.o:\
 cc-compile UNIT_TESTS/t_instchk2.c install.h
@@ -125,9 +125,9 @@ cc-compile UNIT_TESTS/t_instchk2.c install.h
 
 UNIT_TESTS/t_instchkpre:\
 cc-link UNIT_TESTS/t_instchkpre.ld UNIT_TESTS/t_instchkpre.o \
-UNIT_TESTS/t_inst1h.o i-core.o i-core_posix.o i-core_win32.o i-error.o
+UNIT_TESTS/t_inst1h.o install.a
 	./cc-link UNIT_TESTS/t_instchkpre UNIT_TESTS/t_instchkpre.o \
-	UNIT_TESTS/t_inst1h.o i-core.o i-core_posix.o i-core_win32.o i-error.o
+	UNIT_TESTS/t_inst1h.o install.a
 
 UNIT_TESTS/t_instchkpre.o:\
 cc-compile UNIT_TESTS/t_instchkpre.c install.h
@@ -167,10 +167,8 @@ cc-compile ctxt/repos.c
 	./cc-compile ctxt/repos.c
 
 deinstaller:\
-cc-link deinstaller.ld deinstaller.o insthier.o i-core.o i-core_posix.o \
-i-core_win32.o i-error.o ctxt/ctxt.a
-	./cc-link deinstaller deinstaller.o insthier.o i-core.o i-core_posix.o \
-	i-core_win32.o i-error.o ctxt/ctxt.a
+cc-link deinstaller.ld deinstaller.o insthier.o install.a ctxt/ctxt.a
+	./cc-link deinstaller deinstaller.o insthier.o install.a ctxt/ctxt.a
 
 deinstaller.o:\
 cc-compile deinstaller.c install.h
@@ -196,24 +194,24 @@ i-error.o:\
 cc-compile i-error.c install.h
 	./cc-compile i-error.c
 
+install.a:\
+cc-slib install.sld i-core.o i-core_posix.o i-core_win32.o i-error.o
+	./cc-slib install i-core.o i-core_posix.o i-core_win32.o i-error.o
+
 install.h:\
 install_os.h
 
 installer:\
-cc-link installer.ld installer.o insthier.o i-core.o i-core_posix.o \
-i-core_win32.o i-error.o ctxt/ctxt.a
-	./cc-link installer installer.o insthier.o i-core.o i-core_posix.o \
-	i-core_win32.o i-error.o ctxt/ctxt.a
+cc-link installer.ld installer.o insthier.o install.a ctxt/ctxt.a
+	./cc-link installer installer.o insthier.o install.a ctxt/ctxt.a
 
 installer.o:\
 cc-compile installer.c install.h
 	./cc-compile installer.c
 
 instchk:\
-cc-link instchk.ld instchk.o insthier.o i-core.o i-core_posix.o i-core_win32.o \
-i-error.o ctxt/ctxt.a
-	./cc-link instchk instchk.o insthier.o i-core.o i-core_posix.o i-core_win32.o \
-	i-error.o ctxt/ctxt.a
+cc-link instchk.ld instchk.o insthier.o install.a ctxt/ctxt.a
+	./cc-link instchk instchk.o insthier.o install.a ctxt/ctxt.a
 
 instchk.o:\
 cc-compile instchk.c install.h
@@ -252,8 +250,8 @@ obj_clean:
 	UNIT_TESTS/t_instchk1 UNIT_TESTS/t_instchk1.o UNIT_TESTS/t_instchk2 \
 	UNIT_TESTS/t_instchk2.o UNIT_TESTS/t_instchkpre UNIT_TESTS/t_instchkpre.o \
 	ctxt/ctxt.a ctxt/repos.c ctxt/repos.o deinstaller deinstaller.o generic-conf.o \
-	i-core.o i-core_posix.o i-core_win32.o i-error.o installer installer.o instchk \
-	instchk.o insthier.o
+	i-core.o i-core_posix.o i-core_win32.o i-error.o install.a installer \
+	installer.o instchk instchk.o insthier.o
 ext_clean:
 	rm -f conf-cctype conf-ldtype conf-sosuffix conf-systype mk-ctxt
 
