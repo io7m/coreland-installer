@@ -60,6 +60,8 @@ unsigned int iwin32_fmt_uid (char *, user_id_t);
 unsigned int iwin32_scan_gid (const char *, group_id_t *);
 unsigned int iwin32_scan_uid (const char *, user_id_t *);
 unsigned int iwin32_umask (unsigned int);
+void iwin32_gid_free (group_id_t *);
+void iwin32_uid_free (user_id_t *);
 void iwin32_uidgid_current (user_id_t *, group_id_t *);
 #endif
 

@@ -201,7 +201,7 @@ install_compare_gid (group_id_t a, group_id_t b)
 }
 
 void
-install_gid_free (group_id_t gid)
+install_gid_free (group_id_t *gid)
 {
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
   iwin32_gid_free (gid);
@@ -209,7 +209,7 @@ install_gid_free (group_id_t gid)
 }
 
 void
-install_uid_free (user_id_t uid)
+install_uid_free (user_id_t *uid)
 {
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
   iwin32_uid_free (uid);
@@ -391,12 +391,14 @@ install_uidgid_lookup (const char *user, user_id_t *uid,
     if (!install_gid_lookup (group, gid)) {
       status.message = "could not lookup group id";
       status.status = INSTALL_STATUS_ERROR;
+      install_uid_free (uid);
       return status;
     }
   } else {
     if (!install_gid_current (gid)) {
       status.message = "could not determined current group id";
       status.status = INSTALL_STATUS_ERROR;
+      install_uid_free (uid);
       return status;
     }
   }
@@ -502,7 +504,7 @@ install_file_check (const char *file_src, unsigned int mode_want,
   if (!install_file_get_ownership (file_dst, &uid_got, &gid_got)) {
     status.message = "could not determine destination file ownership";
     status.status = INSTALL_STATUS_ERROR;
-    return status;
+    goto END;
   }
   uid_got_str [install_fmt_uid (uid_got_str, uid_got)] = 0;
   gid_got_str [install_fmt_gid (gid_got_str, gid_got)] = 0;
@@ -512,17 +514,20 @@ install_file_check (const char *file_src, unsigned int mode_want,
       uid_got_str, uid_want_str);
     status.message = error_buffer;
     status.status = INSTALL_STATUS_ERROR;
-    return status;
+    goto END;
   }
   if (!install_compare_gid (gid_want, gid_got)) {
     snprintf (error_buffer, sizeof (error_buffer), "gid %s not %s",
       gid_got_str, gid_want_str);
     status.message = error_buffer;
     status.status = INSTALL_STATUS_ERROR;
-    return status;
+    goto END;
   }
 
   status.status = INSTALL_STATUS_OK;
+  END:
+  install_uid_free (&uid_got);
+  install_gid_free (&gid_got);
   return status; 
 }
 
@@ -739,10 +744,14 @@ inst_copy (struct install_item *ins, unsigned int flags)
     if (!install_file_copy (ins->src, ins->dst, uid, gid, ins->perm)) {
       status.message = "could not copy file";
       status.status = INSTALL_STATUS_ERROR;
-      return status;
+      goto END;
     }
 
   status.status = INSTALL_STATUS_OK;
+
+  END:
+  install_uid_free (&uid);
+  install_gid_free (&gid);
   return status;
 }
 
@@ -805,16 +814,20 @@ inst_mkdir (struct install_item *ins, unsigned int flags)
     if (!install_rmkdir (ins->dir, ins->perm)) {
       status.message = "could not create directory";
       status.status = INSTALL_STATUS_ERROR;
-      return status;
+      goto END;
     }
     if (!install_file_set_ownership (ins->dir, uid, gid)) {
       status.message = "could not set ownership on directory";
       status.status = INSTALL_STATUS_ERROR;
-      return status;
+      goto END;
     }
   }
 
   status.status = INSTALL_STATUS_OK;
+
+  END:
+  install_uid_free (&uid);
+  install_gid_free (&gid);
   return status;
 }
 
@@ -932,6 +945,8 @@ instchk_copy (struct install_item *ins, unsigned int flags)
     uid, gid, ins->dst);
   if (status.status != INSTALL_STATUS_OK) ++install_failed;
 
+  install_uid_free (&uid);
+  install_gid_free (&gid);
   return status;
 }
 
@@ -949,6 +964,8 @@ instchk_link (struct install_item *ins, unsigned int flags)
     uid, gid, ins->dst);
   if (status.status != INSTALL_STATUS_OK) ++install_failed;
 
+  install_uid_free (&uid);
+  install_gid_free (&gid);
   return status;
 }
 
@@ -966,6 +983,8 @@ instchk_mkdir (struct install_item *ins, unsigned int flags)
     uid, gid, ins->dir);
   if (status.status != INSTALL_STATUS_OK) ++install_failed;
 
+  install_uid_free (&uid);
+  install_gid_free (&gid);
   return status;
 }
 

@@ -183,13 +183,13 @@ iwin32_mkdir (const char *dir, unsigned int mode)
 }
 
 void
-iwin32_uid_free (user_id_t uid)
+iwin32_uid_free (user_id_t *uid)
 {
   free (uid.value);
 }
 
 void
-iwin32_gid_free (group_id_t gid)
+iwin32_gid_free (group_id_t *gid)
 {
   free (gid.value);
 }

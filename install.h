@@ -82,7 +82,7 @@ unsigned int install_fmt_uid (char *, user_id_t);
 unsigned int install_scan_gid (const char *, group_id_t *);
 unsigned int install_scan_uid (const char *, user_id_t *);
 unsigned int install_umask (unsigned int);
-void install_gid_free (group_id_t);
-void install_uid_free (user_id_t);
+void install_gid_free (group_id_t *);
+void install_uid_free (user_id_t *);
 
 #endif
