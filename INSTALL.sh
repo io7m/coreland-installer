@@ -55,10 +55,11 @@ copy ${repos}/Mkf-instchk
 copy ${repos}/deinstaller.c
 copy ${repos}/deinstaller.ld
 copy ${repos}/generic-conf.c
-copy ${repos}/i-core.c
-copy ${repos}/i-core_posix.c
-copy ${repos}/i-core_win32.c
-copy ${repos}/i-error.c
+copy ${repos}/install.c
+copy ${repos}/install.sld
+copy ${repos}/install-posix.c
+copy ${repos}/install-win32.c
+copy ${repos}/install-error.c
 copy ${repos}/install.sld
 copy ${repos}/installer.c
 copy ${repos}/installer.ld
