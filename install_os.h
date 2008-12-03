@@ -45,9 +45,10 @@ typedef struct { PSID value; } group_id_t;
 
 int iwin32_compare_gid (group_id_t, group_id_t);
 int iwin32_compare_uid (user_id_t, user_id_t);
-int iwin32_file_get_mode (const char *, unsigned int *);
+int iwin32_file_get_mode (const char *, permissions_t *);
 int iwin32_file_get_ownership (const char *, user_id_t *, group_id_t *);
 int iwin32_file_link (const char *, const char *);
+int iwin32_file_set_mode (const char *, permissions_t);
 int iwin32_file_set_ownership (const char *, user_id_t, group_id_t);
 int iwin32_gid_current (group_id_t *);
 int iwin32_gid_lookup (const char *, group_id_t *);
@@ -79,7 +80,8 @@ typedef struct { int value; } group_id_t;
 
 int iposix_compare_gid (group_id_t, group_id_t);
 int iposix_compare_uid (user_id_t, user_id_t);
-int iposix_file_get_mode (const char *, unsigned int *);
+int iposix_file_set_mode (const char *, permissions_t);
+int iposix_file_get_mode (const char *, permissions_t *);
 int iposix_file_get_ownership (const char *, user_id_t *, group_id_t *);
 int iposix_file_link (const char *, const char *);
 int iposix_file_set_ownership (const char *, user_id_t, group_id_t);

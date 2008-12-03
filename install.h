@@ -45,6 +45,10 @@ struct install_item {
   int perm;
 };
 
+typedef struct {
+  unsigned int value;
+} permissions_t;
+
 struct install_status_t install_init (void);
 struct install_status_t install (struct install_item *, unsigned int);
 struct install_status_t install_check (struct install_item *);
@@ -63,7 +67,8 @@ extern char dlib_suffix [16];
 
 int install_compare_gid (group_id_t, group_id_t);
 int install_compare_uid (user_id_t, user_id_t);
-int install_file_get_mode (const char *, unsigned int *);
+int install_compare_permissions (permissions_t, permissions_t);
+int install_file_get_mode (const char *, permissions_t *);
 int install_file_get_ownership (const char *, user_id_t *, group_id_t *);
 int install_file_link (const char *, const char *);
 int install_file_set_ownership (const char *, user_id_t, group_id_t);
@@ -76,7 +81,7 @@ int install_gid_lookup (const char *, group_id_t *);
 int install_mkdir (const char *, unsigned int);
 int install_uid_current (user_id_t *);
 int install_uid_lookup (const char *, user_id_t *);
-struct install_status_t install_file_copy (const char *, const char *, user_id_t, group_id_t, unsigned int);
+struct install_status_t install_file_copy (const char *, const char *, user_id_t, group_id_t, permissions_t);
 unsigned int install_fmt_gid (char *, group_id_t);
 unsigned int install_fmt_uid (char *, user_id_t);
 unsigned int install_scan_gid (const char *, group_id_t *);

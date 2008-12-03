@@ -10,23 +10,19 @@
 #define BUFFER_SIZE 256
 
 static int
-iwin32_user_sid (user_id_t *uid)
+iwin32_get_sid (const char *name, PSID *ext_sid)
 {
-  char name [BUFFER_SIZE];
   char domain [BUFFER_SIZE];
   DWORD domain_size = BUFFER_SIZE;
   DWORD sid_size = BUFFER_SIZE;
-  DWORD name_size = BUFFER_SIZE;
   SID *sid;
   SID_NAME_USE account_type;
 
-  if (!GetUserName (name, &name_size)) return 0;
-  
   sid = malloc (BUFFER_SIZE);
   if (!LookupAccountName (NULL, name, sid, &sid_size,
     domain, &domain_size, &account_type)) return 0;
 
-  uid->value = sid;
+  *ext_sid = sid;
   return 1;
 }
 
@@ -74,25 +70,49 @@ iwin32_gid_current (group_id_t *gid)
 int
 iwin32_gid_lookup (const char *name, group_id_t *gid)
 {
-  return 0;
+  if (name) {
+    return iwin32_get_sid (name, &gid->value);
+  } else {
+    return iwin32_get_sid ("None", &gid->value);
+  }
 }
 
 int
 iwin32_uid_current (user_id_t *uid)
 {
-  return iwin32_user_sid (uid);
+  return 0;
 }
 
 int
 iwin32_uid_lookup (const char *name, user_id_t *uid)
 {
-  return 0;
+  if (name) {
+    return iwin32_get_sid (name, &uid->value);
+  } else {
+    return iwin32_get_sid ("Administrator", &uid->value);
+  }
+}
+
+int
+iwin32_file_set_sid (const char *file, PSID sid)
+{
+  char file_sd_buf [256];
+  PSECURITY_DESCRIPTOR file_sd = (PSECURITY_DESCRIPTOR) &file_sd_buf;
+
+  if (!InitializeSecurityDescriptor (file_sd, SECURITY_DESCRIPTOR_REVISION)) return 0;
+  if (!SetSecurityDescriptorOwner (file_sd, sid, FALSE)) return 0;
+  if (!IsValidSecurityDescriptor (file_sd)) return 0;
+  if (!SetFileSecurity (file, (SECURITY_INFORMATION)(OWNER_SECURITY_INFORMATION),
+    file_sd)) return 0;
+
+  return 1;
 }
 
 int
 iwin32_file_set_ownership (const char *file, user_id_t uid, group_id_t gid)
 {
-  return 0;
+  if (!iwin32_file_set_sid (file, uid.value)) return 0;
+  return 1;
 }
 
 int

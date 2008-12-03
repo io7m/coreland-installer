@@ -74,12 +74,18 @@ iposix_file_get_ownership (const char *file, user_id_t *uid, group_id_t *gid)
 }
 
 int
-iposix_file_get_mode (const char *file, unsigned int *mode)
+iposix_file_set_mode (const char *file, permissions_t mode)
+{
+  return chmod (file, mode.value) == 0;
+}
+
+int
+iposix_file_get_mode (const char *file, permissions_t *mode)
 {
   struct stat sb;
 
   if (stat (file, &sb) == -1) return 0;
-  *mode = sb.st_mode;
+  mode->value = sb.st_mode;
   return 1;
 }
 

@@ -69,7 +69,7 @@ install_file_get_ownership (const char *file, user_id_t *uid, group_id_t *gid)
 }
 
 int
-install_file_get_mode (const char *file, unsigned int *mode)
+install_file_get_mode (const char *file, permissions_t *mode)
 {
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
   return iposix_file_get_mode (file, mode);
@@ -216,6 +216,17 @@ install_uid_free (user_id_t *uid)
 #endif
 }
 
+int
+install_compare_permissions (permissions_t a, permissions_t b)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return 1;
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return a.value == b.value;
+#endif
+}
+
 /* portability macro */
 #ifndef S_ISSOCK
 #  if defined(S_IFMT) && defined(S_IFSOCK)
@@ -304,15 +315,19 @@ install_file_type_name_lookup (enum install_file_type_t type, const char **name)
 }
 
 int
-install_file_set_mode (const char *file, unsigned int mode)
+install_file_set_mode (const char *file, permissions_t mode)
 {
-  if (chmod (file, mode) == -1) return 0;
-  return 1;
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_file_set_mode (file, mode);
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_file_set_mode (file, mode);
+#endif
 }
 
 struct install_status_t
 install_file_copy (const char *src, const char *dst,
-  user_id_t uid, group_id_t gid, unsigned int mode)
+  user_id_t uid, group_id_t gid, permissions_t mode)
 {
   static char dst_tmp [INSTALL_MAX_PATHLEN];
   static char copy_buf [65536];
@@ -425,7 +440,7 @@ install_uidgid_lookup (const char *user, user_id_t *uid,
 }
 
 struct install_status_t
-install_file_check (const char *file_src, unsigned int mode_want,
+install_file_check (const char *file_src, permissions_t mode_want,
   enum install_file_type_t type_want, user_id_t uid_want, group_id_t gid_want,
   const char *file_dst)
 {
@@ -437,7 +452,7 @@ install_file_check (const char *file_src, unsigned int mode_want,
   user_id_t uid_got;
   group_id_t gid_got;
   enum install_file_type_t type_got;
-  unsigned int mode_got;
+  permissions_t mode_got;
   const char *type_got_name;
   const char *type_want_name;
   unsigned long size_got = 0;
@@ -465,7 +480,8 @@ install_file_check (const char *file_src, unsigned int mode_want,
   gid_want_str [install_fmt_gid (gid_want_str, gid_want)] = 0;
 
   printf ("check %s %s %s %s %o %s %lu\n", file_src, file_dst,
-    uid_want_str, gid_want_str, mode_want, type_want_name, size_want);
+    uid_want_str, gid_want_str, mode_want.value & 0755, type_want_name,
+    size_want);
 
   /* check file type */
   if (!install_file_type (file_dst, &type_got, no_follow)) {
@@ -508,10 +524,9 @@ install_file_check (const char *file_src, unsigned int mode_want,
     status.status = INSTALL_STATUS_ERROR;
     return status;
   }
-  mode_got = mode_got & 0755;
-  if (mode_got != mode_want) {
+  if (install_compare_permissions (mode_got, mode_want)) {
     snprintf (error_buffer, sizeof (error_buffer), "mode %o not %o",
-      mode_got, mode_want);
+      mode_got.value & 0755, mode_want.value & 0755);
     status.message = error_buffer;
     status.status = INSTALL_STATUS_ERROR;
     return status;
@@ -743,6 +758,7 @@ inst_copy (struct install_item *ins, unsigned int flags)
   char gid_str [INSTALL_FMT_GID];
   user_id_t uid;
   group_id_t gid;
+  permissions_t perm = { ins->perm };
   unsigned long size = 0;
   struct install_status_t status = INSTALL_STATUS_INIT;
 
@@ -755,10 +771,10 @@ inst_copy (struct install_item *ins, unsigned int flags)
   gid_str [install_fmt_gid (gid_str, gid)] = 0;
 
   printf ("copy %s %s %s %s %o %lu\n",
-    ins->src, ins->dst, uid_str, gid_str, ins->perm, size);
+    ins->src, ins->dst, uid_str, gid_str, perm.value, size);
 
   if (!(flags & INSTALL_DRYRUN)) {
-    status = install_file_copy (ins->src, ins->dst, uid, gid, ins->perm);
+    status = install_file_copy (ins->src, ins->dst, uid, gid, perm);
     if (status.status != INSTALL_STATUS_OK) goto END;
   }
 
@@ -952,11 +968,12 @@ instchk_copy (struct install_item *ins, unsigned int flags)
   struct install_status_t status = INSTALL_STATUS_INIT;
   user_id_t uid;
   group_id_t gid;
+  permissions_t perm = { ins->perm };
 
   status = install_uidgid_lookup (ins->owner, &uid, ins->group, &gid);
   if (status.status != INSTALL_STATUS_OK) return status;
 
-  status = install_file_check (ins->src, ins->perm, INSTALL_FILE_TYPE_FILE,
+  status = install_file_check (ins->src, perm, INSTALL_FILE_TYPE_FILE,
     uid, gid, ins->dst);
   if (status.status != INSTALL_STATUS_OK) ++install_failed;
 
@@ -971,11 +988,12 @@ instchk_link (struct install_item *ins, unsigned int flags)
   struct install_status_t status = INSTALL_STATUS_INIT;
   user_id_t uid;
   group_id_t gid;
+  permissions_t perm = { ins->perm };
 
   status = install_uidgid_lookup (ins->owner, &uid, ins->group, &gid);
   if (status.status != INSTALL_STATUS_OK) return status;
 
-  status = install_file_check (ins->src, ins->perm, INSTALL_FILE_TYPE_SYMLINK,
+  status = install_file_check (ins->src, perm, INSTALL_FILE_TYPE_SYMLINK,
     uid, gid, ins->dst);
   if (status.status != INSTALL_STATUS_OK) ++install_failed;
 
@@ -990,11 +1008,12 @@ instchk_mkdir (struct install_item *ins, unsigned int flags)
   struct install_status_t status = INSTALL_STATUS_INIT;
   user_id_t uid;
   group_id_t gid;
+  permissions_t perm = { ins->perm };
 
   status = install_uidgid_lookup (ins->owner, &uid, ins->group, &gid);
   if (status.status != INSTALL_STATUS_OK) return status;
 
-  status = install_file_check (ins->dir, ins->perm, INSTALL_FILE_TYPE_DIRECTORY,
+  status = install_file_check (ins->dir, perm, INSTALL_FILE_TYPE_DIRECTORY,
     uid, gid, ins->dir);
   if (status.status != INSTALL_STATUS_OK) ++install_failed;
 
