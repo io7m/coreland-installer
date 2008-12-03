@@ -7,13 +7,6 @@
 
 #include "install.h"
 
-/*
-static char src_name [INSTALL_MAX_PATHLEN];
-static char dst_name [INSTALL_MAX_PATHLEN];
-static char src_tmp [INSTALL_MAX_PATHLEN];
-static char dst_tmp [INSTALL_MAX_PATHLEN];
-*/
-
 char exec_suffix [16];
 char dlib_suffix [16];
 unsigned long install_failed;
@@ -23,34 +16,6 @@ static int have_symlinks = 1;
 #else
 static int have_symlinks = 0;
 #endif
-
-/* error functions */
-
-int
-fails_sys (const char *s)
-{
-  printf ("failed: %s: %s\n", s, install_error (errno));
-  return 0;
-}
-
-int
-fails (const char *s)
-{
-  printf ("failed: %s\n", s);
-  return 0;
-}
-
-void
-fail (void)
-{
-  printf ("failed: %s\n", install_error (errno));
-}
-
-void
-fail_noread (void)
-{
-  printf ("failed: no bytes read\n");
-}
 
 /* credential functions */
 
@@ -726,12 +691,11 @@ libname (char *name, char *buf)
   int clean;
 
   fp = fopen (name, "rb");
-  if (fp == NULL) return fails_sys (name);
+  if (fp == NULL) return 0;
 
   r = fread (read_buf, 1, INSTALL_MAX_PATHLEN, fp);
   if (r < INSTALL_MAX_PATHLEN) {
     if (ferror (fp)) {
-      fails_sys (name);
       ret = 0;
       goto END;
     }
@@ -760,7 +724,7 @@ libname (char *name, char *buf)
   buf [s - read_buf] = 0;
 
   END:
-  if (fclose (fp) != 0) fails_sys (name);
+  if (fclose (fp) != 0) return 0;
   return ret;
 }
 
@@ -889,117 +853,181 @@ inst_liblink (struct install_item *ins, unsigned int flags)
  * name translation callbacks
  */
 
-int
+struct install_status_t
 ntran_copy (struct install_item *ins)
 {
   static char src_name [INSTALL_MAX_PATHLEN];
   static char dst_name [INSTALL_MAX_PATHLEN];
   static char dst_tmp [INSTALL_MAX_PATHLEN];
+  struct install_status_t status = INSTALL_STATUS_INIT;
 
-  if (!ins->src) return fails ("src file undefined");
-  if (!ins->dir) return fails ("directory unefined");
+  if (!ins->src) { status.message = "source file undefined"; return status; }
+  if (!ins->dir) { status.message = "directory undefined"; return status; }
   if (!ins->dst) ins->dst = ins->src;
 
   if (str_ends (ins->src, ".vlb")) {
-    if (!libname (ins->src, src_name)) return 0;
+    if (!libname (ins->src, src_name)) {
+      status.message = "could not build library name";
+      return status;
+    }
     ins->src = src_name;
   }
   if (str_ends (ins->dst, ".vlb")) {
-    if (!libname (ins->dst, dst_name)) return 0;
+    if (!libname (ins->dst, dst_name)) {
+      status.message = "could not build library name";
+      return status;
+    }
     ins->dst = dst_name;
   }
 
-  if (!base_name (ins->dst, &ins->dst)) return fails ("invalid path");
-  if (snprintf (dst_tmp, sizeof (dst_tmp), "%s/%s", ins->dir, ins->dst) < 0)
-    return fails_sys ("snprintf");
+  if (!base_name (ins->dst, &ins->dst)) {
+    status.message = "invalid destination path";
+    return status;
+  }
+  if (snprintf (dst_tmp, sizeof (dst_tmp), "%s/%s", ins->dir, ins->dst) < 0) {
+    status.status = INSTALL_STATUS_ERROR;
+    status.message = "could not format destination path";
+    return status;
+  }
 
   ins->dst = dst_tmp;
-  return 1;
+
+  status.status = INSTALL_STATUS_OK;
+  return status;
 }
 
-int
+struct install_status_t
 ntran_copy_exec (struct install_item *ins)
 {
   static char src_name [INSTALL_MAX_PATHLEN];
   static char dst_name [INSTALL_MAX_PATHLEN];
+  struct install_status_t status = INSTALL_STATUS_INIT;
 
-  if (!ntran_copy (ins)) return 0;
-  if (snprintf (src_name, sizeof (src_name), "%s%s", ins->src, exec_suffix) < 0) return 0;
-  if (snprintf (dst_name, sizeof (dst_name), "%s%s", ins->dst, exec_suffix) < 0) return 0;
+  status = ntran_copy (ins);
+  if (status.status != INSTALL_STATUS_OK) return status;
+
+  if (snprintf (src_name, sizeof (src_name), "%s%s", ins->src, exec_suffix) < 0) {
+    status.status = INSTALL_STATUS_ERROR;
+    status.message = "could not format source path";
+    return status;
+  }
+  if (snprintf (dst_name, sizeof (dst_name), "%s%s", ins->dst, exec_suffix) < 0) {
+    status.status = INSTALL_STATUS_ERROR;
+    status.message = "could not format destination path";
+    return status;
+  }
 
   ins->src = src_name;
   ins->dst = dst_name;
-  return 1;
+
+  status.status = INSTALL_STATUS_OK;
+  return status;
 }
 
-int
+struct install_status_t
 ntran_link (struct install_item *ins)
 {
-  if (!ins->src) return fails ("src file undefined");
-  if (!ins->dir) return fails ("directory unefined");
-  if (!ins->dst) return fails ("dst name undefined");
-  return 1;
+  struct install_status_t status = INSTALL_STATUS_INIT;
+
+  if (!ins->src) { status.message = "source file undefined"; return status; }
+  if (!ins->dir) { status.message = "directory undefined"; return status; }
+  if (!ins->dst) { status.message = "destination file undefined"; return status; }
+
+  status.status = INSTALL_STATUS_OK;
+  return status;
 }
 
-int
+struct install_status_t
 ntran_liblink (struct install_item *ins)
 {
   static char dst_tmp [INSTALL_MAX_PATHLEN];
   static char src_name [INSTALL_MAX_PATHLEN];
   static char src_tmp [INSTALL_MAX_PATHLEN];
+  struct install_status_t status = INSTALL_STATUS_INIT;
 
-  if (!ins->src) return fails("src file undefined");
-  if (!ins->dir) return fails("directory unefined");
-  if (!ins->dst) return fails("dst name undefined");
+  if (!ins->src) { status.message = "source file undefined"; return status; }
+  if (!ins->dir) { status.message = "directory undefined"; return status; }
+  if (!ins->dst) { status.message = "destination file undefined"; return status; }
 
   if (str_ends (ins->src, ".vlb")) {
-    if (!libname (ins->src, src_tmp)) return 0;
+    if (!libname (ins->src, src_tmp)) {
+      status.message = "could not build library name";
+      return status;
+    }
     ins->src = src_tmp;
-    if (!base_name (ins->src, &ins->src)) return fails("invalid path");
+    if (!base_name (ins->src, &ins->src)) {
+      status.message = "invalid source path";
+      return status;
+    }
     memcpy (src_name, ins->src, INSTALL_MAX_PATHLEN);
     ins->src = src_name;
   }
 
   /* build name of library */
-  if (!base_name (ins->dst, &ins->dst)) return fails("invalid path");
-  if (snprintf (dst_tmp, INSTALL_MAX_PATHLEN, "%s%s", ins->dst, dlib_suffix) < 0)
-    return fails_sys ("snprintf");
+  if (!base_name (ins->dst, &ins->dst)) {
+    status.message = "invalid destination path";
+    return status;
+  }
+  if (snprintf (dst_tmp, INSTALL_MAX_PATHLEN, "%s%s", ins->dst, dlib_suffix) < 0) {
+    status.status = INSTALL_STATUS_ERROR;
+    status.message = "could not format destination path";
+    return status;
+  }
   ins->dst = dst_tmp;
 
-  return 1;
+  status.status = INSTALL_STATUS_OK;
+  return status;
 }
 
-int
+struct install_status_t
 ntran_mkdir (struct install_item *ins)
 {
+  struct install_status_t status = INSTALL_STATUS_INIT;
   if (!ins->dst) ins->dst = ins->src;
-  return 1;
+  status.status = INSTALL_STATUS_OK;
+  return status;
 }
 
-int
+struct install_status_t
 ntran_chk_link (struct install_item *ins)
 {
   static char dst_name [INSTALL_MAX_PATHLEN];
+  struct install_status_t status = INSTALL_STATUS_INIT;
 
-  if (!ntran_link (ins)) return 0;
-  if (snprintf (dst_name, INSTALL_MAX_PATHLEN, "%s/%s", ins->dir, ins->dst) < 0)
-    return fails_sys ("sprintf");
+  status = ntran_link (ins);
+  if (status.status != INSTALL_STATUS_OK) return status;
+
+  if (snprintf (dst_name, INSTALL_MAX_PATHLEN, "%s/%s", ins->dir, ins->dst) < 0) {
+    status.status = INSTALL_STATUS_ERROR;
+    status.message = "could not format destination path";
+    return status;
+  }
 
   ins->dst = dst_name;
-  return 1;
+
+  status.status = INSTALL_STATUS_OK;
+  return status;
 }
 
-int
+struct install_status_t
 ntran_chk_liblink (struct install_item *ins)
 {
   static char dst_name [INSTALL_MAX_PATHLEN];
+  struct install_status_t status = INSTALL_STATUS_INIT;
 
-  if (!ntran_liblink (ins)) return 0;
-  if (snprintf (dst_name, INSTALL_MAX_PATHLEN, "%s/%s", ins->dir, ins->dst) < 0)
-    return fails_sys ("sprintf");
+  status = ntran_liblink (ins);
+  if (status.status != INSTALL_STATUS_OK) return status;
+
+  if (snprintf (dst_name, INSTALL_MAX_PATHLEN, "%s/%s", ins->dir, ins->dst) < 0) {
+    status.status = INSTALL_STATUS_ERROR;
+    status.message = "could not format destination path";
+    return status;
+  }
 
   ins->dst = dst_name;
-  return 1;
+
+  status.status = INSTALL_STATUS_OK;
+  return status;
 }
 
 /*
@@ -1151,7 +1179,7 @@ deinst_liblink (struct install_item *ins, unsigned int flags)
 
 struct instop {
   struct install_status_t (*oper) (struct install_item *, unsigned int);
-  int (*trans) (struct install_item *);
+  struct install_status_t (*trans) (struct install_item *);
 };
 struct instop install_opers [] = {
   { inst_copy,    ntran_copy },
@@ -1248,7 +1276,8 @@ install (struct install_item *ins, unsigned int flags)
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
 
-  if (!install_opers [ins->op].trans (ins)) goto CLEANUP;
+  status = install_opers [ins->op].trans (ins);
+  if (status.status != INSTALL_STATUS_OK) goto CLEANUP;
   status = install_opers [ins->op].oper (ins, flags);
 
   CLEANUP:
@@ -1261,7 +1290,8 @@ install_check (struct install_item *ins)
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
 
-  if (!instchk_opers [ins->op].trans (ins)) goto CLEANUP;
+  status = instchk_opers [ins->op].trans (ins);
+  if (status.status != INSTALL_STATUS_OK) goto CLEANUP;
   status = instchk_opers [ins->op].oper (ins, 0);
 
   CLEANUP:
@@ -1274,7 +1304,8 @@ deinstall(struct install_item *ins, unsigned int flags)
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
 
-  if (!deinst_opers [ins->op].trans (ins)) goto CLEANUP;
+  status = deinst_opers [ins->op].trans (ins);
+  if (status.status != INSTALL_STATUS_OK) goto CLEANUP;
   status = deinst_opers [ins->op].oper (ins, flags);
 
   CLEANUP:
