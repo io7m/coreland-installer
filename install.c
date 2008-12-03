@@ -5,11 +5,16 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#define INSTALL_IMPLEMENTATION
 #include "install.h"
 
-char exec_suffix [16];
-char dlib_suffix [16];
+char inst_exec_suffix [16];
+char inst_dlib_suffix [16];
 unsigned long install_failed;
+
+void (*install_callback_warn)(const char *, void *);
+void (*install_callback_info)(const char *, void *);
+void *install_callback_data;
 
 #ifdef INSTALL_HAVE_SYMLINKS
 static int have_symlinks = 1;
@@ -420,11 +425,11 @@ install_file_check (const char *file_src, permissions_t mode_want,
   enum install_file_type_t type_want, user_id_t uid_want, group_id_t gid_want,
   const char *file_dst)
 {
-  static char error_buffer [INSTALL_MAX_PATHLEN];
-  char uid_want_str [INSTALL_FMT_UID];
-  char uid_got_str [INSTALL_FMT_UID];
-  char gid_want_str [INSTALL_FMT_GID];
-  char gid_got_str [INSTALL_FMT_GID];
+  static char msg_buffer [INSTALL_MAX_MSGLEN];
+  static char uid_want_str [INSTALL_FMT_UID];
+  static char uid_got_str [INSTALL_FMT_UID];
+  static char gid_want_str [INSTALL_FMT_GID];
+  static char gid_got_str [INSTALL_FMT_GID];
   user_id_t uid_got;
   group_id_t gid_got;
   enum install_file_type_t type_got;
@@ -455,9 +460,13 @@ install_file_check (const char *file_src, permissions_t mode_want,
   uid_want_str [install_fmt_uid (uid_want_str, uid_want)] = 0;
   gid_want_str [install_fmt_gid (gid_want_str, gid_want)] = 0;
 
-  printf ("check %s %s %s %s %o %s %lu\n", file_src, file_dst,
-    uid_want_str, gid_want_str, mode_want.value & 0755, type_want_name,
-    size_want);
+  /* call info callback if defined */
+  if (install_callback_info) {
+    snprintf (msg_buffer, sizeof (msg_buffer), "check %s %s %s %s %o %s %lu",
+      file_src, file_dst, uid_want_str, gid_want_str, mode_want.value,
+      type_want_name, size_want);
+    install_callback_info (msg_buffer, install_callback_data);
+  }
 
   /* check file type */
   if (!install_file_type (file_dst, &type_got, no_follow)) {
@@ -473,9 +482,9 @@ install_file_check (const char *file_src, permissions_t mode_want,
 
   if ((!have_symlinks) && (type_want != INSTALL_FILE_TYPE_SYMLINK)) {
     if (type_want != type_got) {
-      snprintf (error_buffer, sizeof (error_buffer), "filetype %s not %s",
+      snprintf (msg_buffer, sizeof (msg_buffer), "filetype %s not %s",
         type_got_name, type_want_name);
-      status.message = error_buffer;
+      status.message = msg_buffer;
       status.status = INSTALL_STATUS_ERROR;
       return status;
     }
@@ -489,9 +498,9 @@ install_file_check (const char *file_src, permissions_t mode_want,
       return status;
     }
     if (size_want != size_got) {
-      snprintf (error_buffer, sizeof (error_buffer), "size %lu not %lu",
+      snprintf (msg_buffer, sizeof (msg_buffer), "size %lu not %lu",
         size_got, size_want);
-      status.message = error_buffer;
+      status.message = msg_buffer;
       status.status = INSTALL_STATUS_ERROR;
       return status;
     }
@@ -505,9 +514,9 @@ install_file_check (const char *file_src, permissions_t mode_want,
   }
 
   if (!install_compare_permissions (mode_got, mode_want)) {
-    snprintf (error_buffer, sizeof (error_buffer), "mode %o not %o",
+    snprintf (msg_buffer, sizeof (msg_buffer), "mode %o not %o",
       mode_got.value, mode_want.value);
-    status.message = error_buffer;
+    status.message = msg_buffer;
     status.status = INSTALL_STATUS_ERROR;
     return status;
   }
@@ -522,16 +531,16 @@ install_file_check (const char *file_src, permissions_t mode_want,
   gid_got_str [install_fmt_gid (gid_got_str, gid_got)] = 0;
 
   if (!install_compare_uid (uid_want, uid_got)) {
-    snprintf (error_buffer, sizeof (error_buffer), "uid %s not %s",
+    snprintf (msg_buffer, sizeof (msg_buffer), "uid %s not %s",
       uid_got_str, uid_want_str);
-    status.message = error_buffer;
+    status.message = msg_buffer;
     status.status = INSTALL_STATUS_ERROR;
     goto END;
   }
   if (!install_compare_gid (gid_want, gid_got)) {
-    snprintf (error_buffer, sizeof (error_buffer), "gid %s not %s",
+    snprintf (msg_buffer, sizeof (msg_buffer), "gid %s not %s",
       gid_got_str, gid_want_str);
-    status.message = error_buffer;
+    status.message = msg_buffer;
     status.status = INSTALL_STATUS_ERROR;
     goto END;
   }
@@ -733,8 +742,9 @@ libname (char *name, char *buf)
 struct install_status_t
 inst_copy (struct install_item *ins, unsigned int flags)
 {
-  char uid_str [INSTALL_FMT_UID];
-  char gid_str [INSTALL_FMT_GID];
+  static char msg_buffer [INSTALL_MAX_MSGLEN];
+  static char uid_str [INSTALL_FMT_UID];
+  static char gid_str [INSTALL_FMT_GID];
   user_id_t uid;
   group_id_t gid;
   permissions_t perm = { ins->perm };
@@ -749,8 +759,12 @@ inst_copy (struct install_item *ins, unsigned int flags)
   uid_str [install_fmt_uid (uid_str, uid)] = 0;
   gid_str [install_fmt_gid (gid_str, gid)] = 0;
 
-  printf ("copy %s %s %s %s %o %lu\n",
-    ins->src, ins->dst, uid_str, gid_str, perm.value, size);
+  /* call info callback */
+  if (install_callback_info) {
+    snprintf (msg_buffer, sizeof (msg_buffer), "copy %s %s %s %s %o %lu",
+      ins->src, ins->dst, uid_str, gid_str, perm.value, size);
+    install_callback_info (msg_buffer, install_callback_data);
+  }
 
   if (!(flags & INSTALL_DRYRUN)) {
     status = install_file_copy (ins->src, ins->dst, uid, gid, perm);
@@ -768,10 +782,16 @@ inst_copy (struct install_item *ins, unsigned int flags)
 struct install_status_t
 inst_link (struct install_item *ins, unsigned int flags)
 {
+  static char msg_buffer [INSTALL_MAX_MSGLEN];
   static char path_buf [INSTALL_MAX_PATHLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
 
-  printf ("symlink %s %s\n", ins->src, ins->dst);
+  /* call info callback */
+  if (install_callback_info) {
+    snprintf (msg_buffer, sizeof (msg_buffer), "symlink %s %s",
+      ins->src, ins->dst);
+    install_callback_info (msg_buffer, install_callback_data);
+  }
 
   if (!getcwd (path_buf, sizeof (path_buf))) {
     status.message = "could not get current working directory";
@@ -808,8 +828,9 @@ inst_link (struct install_item *ins, unsigned int flags)
 struct install_status_t
 inst_mkdir (struct install_item *ins, unsigned int flags)
 {
-  char uid_str [INSTALL_FMT_UID];
-  char gid_str [INSTALL_FMT_GID];
+  static char msg_buffer [INSTALL_MAX_MSGLEN];
+  static char uid_str [INSTALL_FMT_UID];
+  static char gid_str [INSTALL_FMT_GID];
   user_id_t uid;
   group_id_t gid;
   struct install_status_t status = INSTALL_STATUS_INIT;
@@ -820,7 +841,12 @@ inst_mkdir (struct install_item *ins, unsigned int flags)
   uid_str [install_fmt_uid (uid_str, uid)] = 0;
   gid_str [install_fmt_gid (gid_str, gid)] = 0;
 
-  printf ("mkdir %s %s %s %o\n", ins->dir, uid_str, gid_str, ins->perm);
+  /* call info callback */
+  if (install_callback_info) {
+    snprintf (msg_buffer, sizeof (msg_buffer), "mkdir %s %s %s %o", ins->dir,
+      uid_str, gid_str, ins->perm);
+    install_callback_info (msg_buffer, install_callback_data);
+  }
 
   if (!(flags & INSTALL_DRYRUN)) {
     if (!install_rmkdir (ins->dir, ins->perm)) {
@@ -906,12 +932,12 @@ ntran_copy_exec (struct install_item *ins)
   status = ntran_copy (ins);
   if (status.status != INSTALL_STATUS_OK) return status;
 
-  if (snprintf (src_name, sizeof (src_name), "%s%s", ins->src, exec_suffix) < 0) {
+  if (snprintf (src_name, sizeof (src_name), "%s%s", ins->src, inst_exec_suffix) < 0) {
     status.status = INSTALL_STATUS_ERROR;
     status.message = "could not format source path";
     return status;
   }
-  if (snprintf (dst_name, sizeof (dst_name), "%s%s", ins->dst, exec_suffix) < 0) {
+  if (snprintf (dst_name, sizeof (dst_name), "%s%s", ins->dst, inst_exec_suffix) < 0) {
     status.status = INSTALL_STATUS_ERROR;
     status.message = "could not format destination path";
     return status;
@@ -968,7 +994,7 @@ ntran_liblink (struct install_item *ins)
     status.message = "invalid destination path";
     return status;
   }
-  if (snprintf (dst_tmp, INSTALL_MAX_PATHLEN, "%s%s", ins->dst, dlib_suffix) < 0) {
+  if (snprintf (dst_tmp, INSTALL_MAX_PATHLEN, "%s%s", ins->dst, inst_dlib_suffix) < 0) {
     status.status = INSTALL_STATUS_ERROR;
     status.message = "could not format destination path";
     return status;
@@ -1107,9 +1133,15 @@ instchk_liblink (struct install_item *ins, unsigned int flags)
 struct install_status_t
 deinst_copy (struct install_item *ins, unsigned int flags)
 {
+  static char msg_buffer [INSTALL_MAX_MSGLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
 
-  printf("unlink %s\n", ins->dst);
+  /* call info callback */
+  if (install_callback_info) {
+    snprintf (msg_buffer, sizeof (msg_buffer), "unlink %s", ins->dst);
+    install_callback_info (msg_buffer, install_callback_data);
+  }
+
   if (flags & INSTALL_DRYRUN) goto END;
 
   if (unlink (ins->dst) == -1) {
@@ -1126,10 +1158,15 @@ deinst_copy (struct install_item *ins, unsigned int flags)
 struct install_status_t
 deinst_link (struct install_item *ins, unsigned int flags)
 {
+  static char msg_buffer [INSTALL_MAX_MSGLEN];
   static char path_buf [INSTALL_MAX_PATHLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
 
-  printf ("unlink %s/%s\n", ins->dir, ins->dst);
+  if (install_callback_info) {
+    snprintf (msg_buffer, sizeof (msg_buffer), "unlink %s/%s", ins->dir, ins->dst);
+    install_callback_info (msg_buffer, install_callback_data);
+  }
+
   if (flags & INSTALL_DRYRUN) goto END;
 
   if (snprintf (path_buf, sizeof (path_buf), "%s/%s", ins->dir, ins->dst) < 0) {
@@ -1151,9 +1188,14 @@ deinst_link (struct install_item *ins, unsigned int flags)
 struct install_status_t
 deinst_mkdir (struct install_item *ins, unsigned int flags)
 {
+  static char msg_buffer [INSTALL_MAX_MSGLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
 
-  printf ("rmdir %s\n", ins->dir);
+  if (install_callback_info) {
+    snprintf (msg_buffer, sizeof (msg_buffer), "rmdir %s", ins->dir);
+    install_callback_info (msg_buffer, install_callback_data);
+  }
+
   if (flags & INSTALL_DRYRUN) goto END;
 
   if (rmdir (ins->dir) == -1) {
@@ -1238,11 +1280,11 @@ install_init (void)
     return status;
   }
 
-  memset (exec_suffix, 0, sizeof (exec_suffix));
-  memset (dlib_suffix, 0, sizeof (dlib_suffix));
+  memset (inst_exec_suffix, 0, sizeof (inst_exec_suffix));
+  memset (inst_dlib_suffix, 0, sizeof (inst_dlib_suffix));
 
-  dlib_suffix [0] = '.';
-  if (fread (dlib_suffix + 1, 1, sizeof (dlib_suffix) - 2, fp) == 0) {
+  inst_dlib_suffix [0] = '.';
+  if (fread (inst_dlib_suffix + 1, 1, sizeof (inst_dlib_suffix) - 2, fp) == 0) {
     if (ferror (fp)) {
       status.message = "error reading conf-sosuffix";
       status.status = INSTALL_STATUS_ERROR;
@@ -1255,7 +1297,7 @@ install_init (void)
     return status;
   }
 
-  install_suffix_sanitize (dlib_suffix, sizeof (dlib_suffix));
+  install_suffix_sanitize (inst_dlib_suffix, sizeof (inst_dlib_suffix));
 
   if (fclose (fp) != 0) {
     status.message = "could not close conf-sosuffix";
@@ -1312,3 +1354,22 @@ deinstall(struct install_item *ins, unsigned int flags)
   fflush (0);
   return status;
 }
+
+void
+install_callback_warn_set (void (*callback)(const char *, void *))
+{
+  install_callback_warn = callback;
+}
+
+void
+install_callback_info_set (void (*callback)(const char *, void *))
+{
+  install_callback_info = callback;
+}
+
+void
+install_callback_data_set (void *data)
+{
+  install_callback_data = data;
+}
+

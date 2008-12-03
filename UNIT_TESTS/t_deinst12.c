@@ -1,7 +1,21 @@
 #include <stdio.h>
+
+#define INSTALL_IMPLEMENTATION
 #include "../install.h"
 
 const char progname[] = "t_deinst12";
+
+void
+cb_info (const char *str, void *data)
+{
+  printf ("%s\n", str);
+}
+
+void
+cb_warn (const char *str, void *data)
+{
+  printf ("%s\n", str);
+}
 
 int
 main (void)
@@ -14,6 +28,9 @@ main (void)
     printf ("deinstall: init: %s\n", status.message);
     return 1;
   }
+
+  install_callback_warn_set (cb_warn);
+  install_callback_info_set (cb_info);
 
   for (index = insthier_len - 1;; --index) {
     status = deinstall (&insthier[index], 0);

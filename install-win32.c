@@ -1,3 +1,4 @@
+#define INSTALL_IMPLEMENTATION
 #include "install.h"
 
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
@@ -196,7 +197,10 @@ iwin32_file_link (const char *src, const char *dst)
   permissions_t mode;
   struct install_status_t status = INSTALL_STATUS_INIT;
 
-  fprintf (stderr, "warn: filesystem does not support symlinks, copying...\n");
+  if (install_callback_warn) {
+    install_callback_warn ("filesystem does not support symlinks - copying",
+      install_callback_data);
+  }
 
   /* only vista supports symlinks */
   if (!iwin32_file_get_ownership (src, &uid, &gid)) return 0;
@@ -212,7 +216,7 @@ iwin32_install_init (void)
   struct install_status_t status = INSTALL_STATUS_INIT;
   status.status = INSTALL_STATUS_OK;
 
-  memcpy (exec_suffix, ".exe", 4);
+  memcpy (inst_exec_suffix, ".exe", 4);
   return status; 
 }
 

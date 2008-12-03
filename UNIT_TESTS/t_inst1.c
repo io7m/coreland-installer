@@ -1,10 +1,24 @@
 #include <sys/stat.h>
 #include <stdio.h>
+
+#define INSTALL_IMPLEMENTATION
 #include "../install.h"
 
 const char progname[] = "t_inst1";
 
 extern unsigned int return_codes[5];
+
+void
+cb_info (const char *str, void *data)
+{
+  printf ("%s\n", str);
+}
+
+void
+cb_warn (const char *str, void *data)
+{
+  printf ("%s\n", str);
+}
 
 int
 main (void)
@@ -20,6 +34,9 @@ main (void)
     printf ("install: init: %s\n", status.message);
     return 1;
   }
+
+  install_callback_warn_set (cb_warn);
+  install_callback_info_set (cb_info);
 
   for (index = 0; index < insthier_len; ++index) {
     status = install (&insthier [index], 0);

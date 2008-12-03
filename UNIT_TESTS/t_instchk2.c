@@ -1,9 +1,23 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <stdio.h>
+
+#define INSTALL_IMPLEMENTATION
 #include "../install.h"
 
 const char progname[] = "t_instchk2";
+
+void
+cb_info (const char *str, void *data)
+{
+  printf ("%s\n", str);
+}
+
+void
+cb_warn (const char *str, void *data)
+{
+  printf ("%s\n", str);
+}
 
 int
 main (void)
@@ -21,6 +35,9 @@ main (void)
     printf ("check: init: %s\n", status.message);
     return 1;
   }
+
+  install_callback_warn_set (cb_warn);
+  install_callback_info_set (cb_info);
 
   printf("checking...\n");
   for (i = 0; i < insthier_len; ++i) {

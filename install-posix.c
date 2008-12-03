@@ -1,3 +1,4 @@
+#define INSTALL_IMPLEMENTATION
 #include "install.h"
 
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
@@ -114,7 +115,7 @@ iposix_install_init (void)
   struct install_status_t status = INSTALL_STATUS_INIT;
   status.status = INSTALL_STATUS_OK;
 
-  exec_suffix [0] = 0;
+  inst_exec_suffix [0] = 0;
   return status;
 }
 
