@@ -408,33 +408,16 @@ install_uidgid_lookup (const char *user, user_id_t *uid,
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
 
-  if (user) {
-    if (!install_uid_lookup (user, uid)) {
-      status.message = "could not lookup user id";
-      status.status = INSTALL_STATUS_ERROR;
-      return status;
-    }
-  } else {
-    if (!install_uid_current (uid)) {
-      status.message = "could not get current user id";
-      status.status = INSTALL_STATUS_ERROR;
-      return status;
-    }
+  if (!install_uid_lookup (user, uid)) {
+    status.message = "could not lookup user id";
+    status.status = INSTALL_STATUS_ERROR;
+    return status;
   }
-  if (group) {
-    if (!install_gid_lookup (group, gid)) {
-      status.message = "could not lookup group id";
-      status.status = INSTALL_STATUS_ERROR;
-      install_uid_free (uid);
-      return status;
-    }
-  } else {
-    if (!install_gid_current (gid)) {
-      status.message = "could not determined current group id";
-      status.status = INSTALL_STATUS_ERROR;
-      install_uid_free (uid);
-      return status;
-    }
+  if (!install_gid_lookup (group, gid)) {
+    status.message = "could not lookup group id";
+    status.status = INSTALL_STATUS_ERROR;
+    install_uid_free (uid);
+    return status;
   }
 
   status.status = INSTALL_STATUS_OK;

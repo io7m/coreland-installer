@@ -25,6 +25,8 @@ main (void)
       printf ("deinstall: %s\n", status.message);
       return 1;
     }
+    if (status.message)
+      printf ("deinstall: %s - %s\n", status.message, install_error (errno));
     if (index == 0) break;
   }
 

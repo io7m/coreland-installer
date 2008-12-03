@@ -14,10 +14,14 @@ iposix_uid_lookup (const char *user, user_id_t *uid)
 {
   struct passwd *pwd;
 
-  pwd = getpwnam(user);
-  if (!pwd) return 0;
+  if (user) {
+    pwd = getpwnam (user);
+    if (!pwd) return 0;
+    uid->value = pwd->pw_uid;
+  } else {
+    uid->value = getuid ();
+  }
 
-  uid->value = pwd->pw_uid;
   return 1;
 }
 
@@ -26,24 +30,27 @@ iposix_gid_lookup (const char *group, group_id_t *gid)
 {
   struct group *grp;
 
-  grp = getgrnam(group);
-  if (!grp) return 0;
-
-  gid->value = grp->gr_gid;
+  if (group) {
+    grp = getgrnam (group);
+    if (!grp) return 0;
+    gid->value = grp->gr_gid;
+  } else {
+    gid->value = getgid ();
+  }
   return 1;
 }
 
 int
 iposix_gid_current (group_id_t *gid)
 {
-  gid->value = getgid();
+  gid->value = getgid ();
   return 1;
 }
 
 int
 iposix_uid_current (user_id_t *uid)
 {
-  uid->value = getuid();
+  uid->value = getuid ();
   return 1;
 }
 

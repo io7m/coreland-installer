@@ -122,7 +122,7 @@ iwin32_file_link (const char *src, const char *dst)
   if (!iwin32_file_get_mode (src, &mode)) return 0;
 
   status = install_file_copy (src, dst, uid, gid, mode);
-  return status == INSTALL_STATUS_OK;
+  return status.status == INSTALL_STATUS_OK;
 }
 
 struct install_status_t

@@ -31,6 +31,8 @@ main (void)
       install_umask (um);
       return 1;
     }
+    if (status.message)
+      printf ("install: %s - %s\n", status.message, install_error (errno));
   }
 
   install_umask (um);
