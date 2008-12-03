@@ -26,6 +26,8 @@ main (void)
     if (return_codes [index] != status.status) {
       printf ("install [%lu] returned %d expected %d\n", index,
         status.status, return_codes [index]);
+      if (status.message)
+        printf ("install: %s - %s\n", status.message, install_error (errno));
       install_umask (um);
       return 1;
     }
