@@ -2,18 +2,18 @@
 #define INSTALL_H
 
 #define INSTALL_DRYRUN 0x0001
-
-#define INST_COPY 0
-#define INST_SYMLINK 1
-#define INST_MKDIR 2
-#define INST_LIBLINK 3
-#define INST_COPY_EXEC 4
-
 #define INSTALL_MAX_PATHLEN 1024
 #define INSTALL_MAX_MSGLEN  8192
-
 #define INSTALL_NULL_USER_NAME ":"
 #define INSTALL_NULL_GROUP_NAME ":"
+
+enum {
+  INST_COPY       = 0,
+  INST_COPY_EXEC  = 1,
+  INST_SYMLINK    = 2,
+  INST_MKDIR      = 3,
+  INST_LIBLINK    = 4,
+};
 
 struct install_status_t {
   enum {

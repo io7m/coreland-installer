@@ -16,6 +16,12 @@ char exec_suffix [16];
 char dlib_suffix [16];
 unsigned long install_failed;
 
+#ifdef INSTALL_HAVE_SYMLINKS
+static int have_symlinks = 1;
+#else
+static int have_symlinks = 0;
+#endif
+
 /* error functions */
 
 int
@@ -219,7 +225,12 @@ install_uid_free (user_id_t *uid)
 int
 install_compare_permissions (permissions_t a, permissions_t b)
 {
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return 1;
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
   return a.value == b.value;
+#endif
 }
 
 /* portability macro */
@@ -492,12 +503,15 @@ install_file_check (const char *file_src, permissions_t mode_want,
     status.status = INSTALL_STATUS_ERROR;
     return status;
   }
-  if (type_want != type_got) {
-    snprintf (error_buffer, sizeof (error_buffer), "filetype %s not %s",
-      type_got_name, type_want_name);
-    status.message = error_buffer;
-    status.status = INSTALL_STATUS_ERROR;
-    return status;
+
+  if ((!have_symlinks) && (type_want != INSTALL_FILE_TYPE_SYMLINK)) {
+    if (type_want != type_got) {
+      snprintf (error_buffer, sizeof (error_buffer), "filetype %s not %s",
+        type_got_name, type_want_name);
+      status.message = error_buffer;
+      status.status = INSTALL_STATUS_ERROR;
+      return status;
+    }
   }
 
   /* check file size */
@@ -522,6 +536,7 @@ install_file_check (const char *file_src, permissions_t mode_want,
     status.status = INSTALL_STATUS_ERROR;
     return status;
   }
+
   if (!install_compare_permissions (mode_got, mode_want)) {
     snprintf (error_buffer, sizeof (error_buffer), "mode %o not %o",
       mode_got.value, mode_want.value);
@@ -1110,21 +1125,24 @@ struct instop {
   int (*trans) (struct install_item *);
 };
 struct instop install_opers [] = {
-  { inst_copy, ntran_copy },
-  { inst_link, ntran_link },
-  { inst_mkdir, ntran_mkdir },
+  { inst_copy,    ntran_copy },
+  { 0,            0 },
+  { inst_link,    ntran_link },
+  { inst_mkdir,   ntran_mkdir },
   { inst_liblink, ntran_liblink },
 };
 struct instop instchk_opers [] = {
-  { instchk_copy, ntran_copy },
-  { instchk_link, ntran_chk_link },
-  { instchk_mkdir, ntran_mkdir },
+  { instchk_copy,    ntran_copy },
+  { 0,               0 },
+  { instchk_link,    ntran_chk_link },
+  { instchk_mkdir,   ntran_mkdir },
   { instchk_liblink, ntran_chk_liblink },
 };
 struct instop deinst_opers [] = {
-  { deinst_copy, ntran_copy },
-  { deinst_link, ntran_link },
-  { deinst_mkdir, ntran_mkdir },
+  { deinst_copy,    ntran_copy },
+  { 0,              0 },
+  { deinst_link,    ntran_link },
+  { deinst_mkdir,   ntran_mkdir },
   { deinst_liblink, ntran_liblink },
 };
 
