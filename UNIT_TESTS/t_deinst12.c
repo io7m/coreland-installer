@@ -9,7 +9,11 @@ main (void)
   unsigned long index;
   struct install_status_t status;
 
-  if (!install_init ()) return 112;
+  status = install_init ();
+  if (status.status != INSTALL_STATUS_OK) {
+    printf ("deinstall: init: %s\n", status.message);
+    return 1;
+  }
 
   for (index = insthier_len - 1;; --index) {
     status = deinstall (&insthier[index], 0);
@@ -18,7 +22,7 @@ main (void)
         status.status, INSTALL_STATUS_ERROR);
       return 1;
     }
-    printf ("deinstall: %s\n", status.message);
+    printf ("deinstall: %s - %s\n", status.message, install_error (errno));
     if (index == 0) break;
   }
 

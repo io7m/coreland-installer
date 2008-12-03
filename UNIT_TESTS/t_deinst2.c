@@ -16,7 +16,11 @@ main (void)
   um = install_umask (022);
   tret = 0;
 
-  if (!install_init ()) return 112;
+  status = install_init ();
+  if (status.status != INSTALL_STATUS_OK) {
+    printf ("deinstall: init: %s\n", status.message);
+    return 1;
+  }
 
   printf("deinstalling...\n");
   for (i = insthier_len - 1;; --i) {

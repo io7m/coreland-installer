@@ -7,20 +7,13 @@
 
 #include "install.h"
 
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-#include <unistd.h>
-#endif
-
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-#include <io.h>
-#endif
-
 static char src_name [INSTALL_MAX_PATHLEN];
 static char dst_name [INSTALL_MAX_PATHLEN];
 static char src_tmp [INSTALL_MAX_PATHLEN];
 static char dst_tmp [INSTALL_MAX_PATHLEN];
-static char tmp_buf [INSTALL_MAX_PATHLEN];
 
+char exec_suffix [16];
+char dlib_suffix [16];
 unsigned long install_failed;
 
 /* error functions */
@@ -855,9 +848,6 @@ ntran_link (struct install_item *ins)
 int
 ntran_liblink (struct install_item *ins)
 {
-  FILE *fp;
-  size_t size;
-
   if (!ins->src) return fails("src file undefined");
   if (!ins->dir) return fails("directory unefined");
   if (!ins->dst) return fails("dst name undefined");
@@ -870,22 +860,9 @@ ntran_liblink (struct install_item *ins)
     ins->src = src_name;
   }
 
-  /* build command line */
-  fp = popen ("./mk-sosuffix", "r");
-  if (!fp) { fails_sys ("popen"); return 0; }
-
-  size = fread (tmp_buf, 1, sizeof (tmp_buf), fp);
-  if (size == 0) {
-    if (feof (fp)) { fail_noread (); return 0; }
-    if (ferror (fp)) { fails_sys ("ferror"); return 0; }
-  }
-  tmp_buf [size - 1] = 0;
-
-  if (pclose (fp) == -1) { fails_sys ("pclose"); return 0; }
- 
   /* build name of library */
   if (!base_name (ins->dst, &ins->dst)) return fails("invalid path");
-  if (snprintf (dst_tmp, INSTALL_MAX_PATHLEN, "%s.%s", ins->dst, tmp_buf) < 0)
+  if (snprintf (dst_tmp, INSTALL_MAX_PATHLEN, "%s%s", ins->dst, dlib_suffix) < 0)
     return fails_sys ("snprintf");
   ins->dst = dst_tmp;
 
@@ -1086,9 +1063,62 @@ struct instop deinst_opers [] = {
  * interface
  */
 
-int
+void
+install_suffix_sanitize (char *buffer, unsigned int size)
+{
+  char ch;
+  unsigned int index;
+
+  /* sanitize suffix */
+  for (index = 0; index < size; ++index) {
+    ch = buffer [index];
+    if (ch == '.') continue;
+    if ((ch >= '0') && (ch <= '9')) continue;
+    if ((ch >= 'A') && (ch <= 'Z')) continue;
+    if ((ch >= 'a') && (ch <= 'z')) continue;
+    buffer [index] = 0;
+    break;
+  }
+}
+
+struct install_status_t
 install_init (void)
 {
+  struct install_status_t status = INSTALL_STATUS_INIT;
+  FILE *fp;
+
+  fp = fopen ("conf-sosuffix", "rb");
+  if (fp == NULL) {
+    status.message = "could not open conf-sosuffix";
+    status.status = INSTALL_STATUS_ERROR;
+    return status;
+  }
+
+  memset (exec_suffix, 0, sizeof (exec_suffix));
+  memset (dlib_suffix, 0, sizeof (dlib_suffix));
+
+  dlib_suffix [0] = '.';
+  if (fread (dlib_suffix + 1, 1, sizeof (dlib_suffix) - 2, fp) == 0) {
+    if (ferror (fp)) {
+      status.message = "error reading conf-sosuffix";
+      status.status = INSTALL_STATUS_ERROR;
+    }
+    if (feof (fp)) {
+      status.message = "empty conf-sosuffix";
+      status.status = INSTALL_STATUS_ERROR;
+    }
+    fclose (fp);
+    return status;
+  }
+
+  install_suffix_sanitize (dlib_suffix, sizeof (dlib_suffix));
+
+  if (fclose (fp) != 0) {
+    status.message = "could not close conf-sosuffix";
+    status.status = INSTALL_STATUS_ERROR;
+    return status;
+  }
+
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
   return iposix_install_init ();
 #endif

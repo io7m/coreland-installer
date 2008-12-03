@@ -3,7 +3,7 @@
 # cannot compare output of this script due to name differences in
 # shared libraries across platforms.
 
-suffix="`./mk-sosuffix`"
+suffix="`cat conf-sosuffix`"
 echo  "files/t2/t2.${suffix}" > "files/t2/t2.vlb"
 touch "files/t2/t2.${suffix}"
 

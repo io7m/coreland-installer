@@ -120,10 +120,14 @@ iwin32_file_link (const char *src, const char *dst)
   return install_file_copy (src, dst, uid, gid, mode);
 }
 
-int
+struct install_status_t
 iwin32_install_init (void)
 {
-  return 1;
+  struct install_status_t status;
+  status.status = INSTALL_STATUS_OK;
+
+  memcpy (exec_suffix, ".exe", 4);
+  return status; 
 }
 
 unsigned int

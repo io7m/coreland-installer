@@ -45,16 +45,19 @@ struct install_item {
   int perm;
 };
 
-int install_init (void);
+struct install_status_t install_init (void);
 struct install_status_t install (struct install_item *, unsigned int);
 struct install_status_t install_check (struct install_item *);
 struct install_status_t deinstall (struct install_item *, unsigned int);
 
-const char *install_error (int);
+#include <errno.h>
 
+const char *install_error (int);
 extern struct install_item insthier[];
 extern unsigned long insthier_len;
 extern unsigned long install_failed;
+extern char exec_suffix [16];
+extern char dlib_suffix [16];
 
 #include "install_os.h"
 

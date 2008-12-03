@@ -32,7 +32,7 @@ install-check: instchk inst-check
 	./instchk
 
 # Mkf-local
-local:
+local: conf-sosuffix
 local_clean:
 
 ctxt/repos.c: mk-ctxt conf-repos
@@ -44,6 +44,11 @@ tests:
 	(cd UNIT_TESTS && make tests)
 tests_clean:
 	(cd UNIT_TESTS && make clean)
+
+UNIT_TESTS/conf-systype:\
+mk-systype
+	./mk-systype > UNIT_TESTS/conf-systype.tmp && mv UNIT_TESTS/conf-systype.tmp \
+UNIT_TESTS/conf-systype
 
 UNIT_TESTS/t_deinst1:\
 cc-link UNIT_TESTS/t_deinst1.ld UNIT_TESTS/t_deinst1.o UNIT_TESTS/t_inst1h.o \
@@ -143,11 +148,11 @@ cc-slib:\
 conf-systype
 
 conf-cctype:\
-conf-cc mk-cctype
+conf-cc conf-cc mk-cctype
 	./mk-cctype > conf-cctype.tmp && mv conf-cctype.tmp conf-cctype
 
 conf-ldtype:\
-conf-ld mk-ldtype
+conf-ld conf-ld mk-ldtype
 	./mk-ldtype > conf-ldtype.tmp && mv conf-ldtype.tmp conf-ldtype
 
 conf-sosuffix:\
@@ -253,7 +258,8 @@ obj_clean:
 	i-core.o i-core_posix.o i-core_win32.o i-error.o install.a installer \
 	installer.o instchk instchk.o insthier.o
 ext_clean:
-	rm -f conf-cctype conf-ldtype conf-sosuffix conf-systype mk-ctxt
+	rm -f UNIT_TESTS/conf-systype conf-cctype conf-ldtype conf-sosuffix \
+	conf-systype mk-ctxt
 
 regen:
 	cpj-genmk > Makefile.tmp && mv Makefile.tmp Makefile

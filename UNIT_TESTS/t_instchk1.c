@@ -15,7 +15,11 @@ main (void)
 
   um = install_umask (022);
 
-  if (!install_init ()) return 112;
+  status = install_init ();
+  if (status.status != INSTALL_STATUS_OK) {
+    printf ("install: init: %s\n", status.message);
+    return 1;
+  }
 
   for (i = 0; i < insthier_len; ++i) {
     status = install_check (&insthier[i]);

@@ -1,4 +1,4 @@
-local:
+local: conf-sosuffix
 local_clean:
 
 ctxt/repos.c: mk-ctxt conf-repos

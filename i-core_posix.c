@@ -95,10 +95,14 @@ iposix_compare_gid (group_id_t a, group_id_t b)
   return a.value == b.value;
 }
 
-int
+struct install_status_t
 iposix_install_init (void)
 {
-  return 1;
+  struct install_status_t status = INSTALL_STATUS_INIT;
+  status.status = INSTALL_STATUS_OK;
+
+  exec_suffix [0] = 0;
+  return status;
 }
 
 unsigned int

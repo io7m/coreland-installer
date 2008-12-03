@@ -12,7 +12,11 @@ main (void)
   unsigned long i;
   struct install_status_t status;
 
-  if (!install_init ()) return 112;
+  status = install_init ();
+  if (status.status != INSTALL_STATUS_OK) {
+    printf ("instchk: init: %s - %s\n", status.message, install_error (errno));
+    exit (112);
+  }
 
   for (i = 0; i < insthier_len; ++i) {
     status = install_check (&insthier[i]);

@@ -14,7 +14,12 @@ main (int argc, char *argv[])
   struct install_status_t status;
 
   argv = 0;
-  if (!install_init ()) return 112;
+
+  status = install_init ();
+  if (status.status != INSTALL_STATUS_OK) {
+    printf ("installer: init: %s - %s\n", status.message, install_error (errno));
+    exit (112);
+  }
 
   flag = (argc > 1) ? INSTALL_DRYRUN : 0;
   for (i = 0; i < insthier_len; ++i) {

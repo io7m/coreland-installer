@@ -27,6 +27,7 @@
 #endif
 
 #include <windows.h>
+#include <io.h>
 
 typedef struct { PSID value; } user_id_t;
 typedef struct { PSID value; } group_id_t;
@@ -50,10 +51,10 @@ int iwin32_file_link (const char *, const char *);
 int iwin32_file_set_ownership (const char *, user_id_t, group_id_t);
 int iwin32_gid_current (group_id_t *);
 int iwin32_gid_lookup (const char *, group_id_t *);
-int iwin32_install_init (void);
 int iwin32_mkdir (const char *, unsigned int);
 int iwin32_uid_current (user_id_t *);
 int iwin32_uid_lookup (const char *, user_id_t *);
+struct install_status_t iwin32_install_init (void);
 unsigned int iwin32_fmt_gid (char *, group_id_t);
 unsigned int iwin32_fmt_uid (char *, user_id_t);
 unsigned int iwin32_scan_gid (const char *, group_id_t *);
@@ -63,6 +64,8 @@ void iwin32_uidgid_current (user_id_t *, group_id_t *);
 #endif
 
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+#include <unistd.h>
+
 typedef struct { int value; } user_id_t;
 typedef struct { int value; } group_id_t;
 
@@ -80,10 +83,10 @@ int iposix_file_link (const char *, const char *);
 int iposix_file_set_ownership (const char *, user_id_t, group_id_t);
 int iposix_gid_current (group_id_t *);
 int iposix_gid_lookup (const char *, group_id_t *);
-int iposix_install_init (void);
 int iposix_mkdir (const char *, unsigned int);
 int iposix_uid_current (user_id_t *);
 int iposix_uid_lookup (const char *, user_id_t *);
+struct install_status_t iposix_install_init (void);
 unsigned int iposix_fmt_gid (char *, group_id_t);
 unsigned int iposix_fmt_uid (char *, user_id_t);
 unsigned int iposix_scan_gid (const char *, group_id_t *);
