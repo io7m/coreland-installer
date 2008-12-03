@@ -310,7 +310,7 @@ install_file_set_mode (const char *file, unsigned int mode)
   return 1;
 }
 
-int
+struct install_status_t
 install_file_copy (const char *src, const char *dst,
   user_id_t uid, group_id_t gid, unsigned int mode)
 {
@@ -320,41 +320,75 @@ install_file_copy (const char *src, const char *dst,
   FILE *fd_dst;
   size_t r;
   size_t w;
+  struct install_status_t status = INSTALL_STATUS_INIT;
 
-  if (snprintf (dst_tmp, sizeof (dst_tmp), "%s.tmp", dst) < 0) return 0;
+  status.status = INSTALL_STATUS_ERROR;
+
+  if (snprintf (dst_tmp, sizeof (dst_tmp), "%s.tmp", dst) < 0) {
+    status.message = "could not format string";
+    return status;
+  }
 
   fd_src = fopen (src, "rb");
-  if (fd_src == NULL) return 0;
+  if (fd_src == NULL) {
+    status.message = "could not open source file";
+    return status;
+  }
   fd_dst = fopen (dst_tmp, "wb");
-  if (fd_dst == NULL) goto ERR;
+  if (fd_dst == NULL) {
+    status.message = "could not open destination file";
+    goto ERR;
+  }
 
   for (;;) {
     r = fread (copy_buf, 1, sizeof (copy_buf), fd_src);
     if (r == 0) {
       if (feof (fd_src)) break;
-      if (ferror (fd_src)) goto ERR;
+      if (ferror (fd_src)) {
+        status.message = "read error";
+        goto ERR;
+      }
     }
     while (r) {
       w = fwrite (copy_buf, 1, r, fd_dst);
       if (w == 0) {
         if (feof (fd_src)) break;
-        if (ferror (fd_src)) goto ERR;
+        if (ferror (fd_src)) {
+          status.message = "write error";
+          goto ERR;
+        }
       }
       r -= w;
     }
   }
 
-  if (fflush (fd_dst) != 0) goto ERR;
-  if (!install_file_set_mode (dst_tmp, mode)) goto ERR;
-  if (!install_file_set_ownership (dst_tmp, uid, gid)) goto ERR;
-  if (rename (dst_tmp, dst) == -1) goto ERR;
-  if (fclose (fd_dst) == -1) goto ERR;
-  if (fclose (fd_src) == -1) goto ERR;
+  if (fflush (fd_dst) != 0) { status.message = "write error"; goto ERR; }
+  if (!install_file_set_mode (dst_tmp, mode)) {
+    status.message = "could not set file permissions";
+    goto ERR;
+  }
+  if (!install_file_set_ownership (dst_tmp, uid, gid)) {
+    status.message = "could not set file ownership";
+    goto ERR;
+  }
+  if (rename (dst_tmp, dst) == -1) {
+    status.message = "could not rename temporary file";
+    goto ERR;
+  }
+  if (fclose (fd_dst) == -1) {
+    status.message = "could not close destination file";
+    goto ERR;
+  }
+  if (fclose (fd_src) == -1) {
+    status.message = "could not close source file";
+    goto ERR;
+  }
 
-  return 1;
+  status.status = INSTALL_STATUS_OK;
+  return status;
   ERR:
   unlink (dst_tmp);
-  return 0;
+  return status;
 }
 
 int
@@ -740,12 +774,10 @@ inst_copy (struct install_item *ins, unsigned int flags)
   printf ("copy %s %s %s %s %o %lu\n",
     ins->src, ins->dst, uid_str, gid_str, ins->perm, size);
 
-  if (!(flags & INSTALL_DRYRUN))
-    if (!install_file_copy (ins->src, ins->dst, uid, gid, ins->perm)) {
-      status.message = "could not copy file";
-      status.status = INSTALL_STATUS_ERROR;
-      goto END;
-    }
+  if (!(flags & INSTALL_DRYRUN)) {
+    status = install_file_copy (ins->src, ins->dst, uid, gid, ins->perm);
+    if (status.status != INSTALL_STATUS_OK) goto END;
+  }
 
   status.status = INSTALL_STATUS_OK;
 

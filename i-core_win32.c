@@ -113,13 +113,16 @@ iwin32_file_link (const char *src, const char *dst)
   user_id_t uid;
   group_id_t gid;
   unsigned int mode;
+  struct install_status_t status = INSTALL_STATUS_INIT;
 
   fprintf (stderr, "warn: filesystem does not support symlinks, copying...\n");
 
   /* only vista supports symlinks */
   if (!iwin32_file_get_ownership (src, &uid, &gid)) return 0;
   if (!iwin32_file_get_mode (src, &mode)) return 0;
-  return install_file_copy (src, dst, uid, gid, mode);
+
+  status = install_file_copy (src, dst, uid, gid, mode);
+  return status == INSTALL_STATUS_OK;
 }
 
 struct install_status_t
