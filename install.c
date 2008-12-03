@@ -926,6 +926,9 @@ ntran_copy_exec (struct install_item *ins)
   if (!ntran_copy (ins)) return 0;
   if (snprintf (src_name, sizeof (src_name), "%s%s", ins->src, exec_suffix) < 0) return 0;
   if (snprintf (dst_name, sizeof (dst_name), "%s%s", ins->dst, exec_suffix) < 0) return 0;
+
+  ins->src = src_name;
+  ins->dst = dst_name;
   return 1;
 }
 
