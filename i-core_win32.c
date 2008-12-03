@@ -7,20 +7,22 @@
 #include <io.h>
 #include <stdio.h>
 
+#define BUFFER_SIZE 256
+
 static int
 iwin32_user_sid (user_id_t *uid)
 {
-  char name [MAX_SIZE];
-  char domain [MAX_SIZE];
-  DWORD domain_size = MAX_SIZE;
-  DWORD sid_size = MAX_SIZE;
-  DWORD name_size = MAX_SIZE;
+  char name [BUFFER_SIZE];
+  char domain [BUFFER_SIZE];
+  DWORD domain_size = BUFFER_SIZE;
+  DWORD sid_size = BUFFER_SIZE;
+  DWORD name_size = BUFFER_SIZE;
   SID *sid;
   SID_NAME_USE account_type;
 
   if (!GetUserName (name, &name_size)) return 0;
   
-  sid = malloc (MAX_SIZE);
+  sid = malloc (BUFFER_SIZE);
   if (!LookupAccountName (NULL, name, sid, &sid_size,
     domain, &domain_size, &account_type)) return 0;
 
@@ -123,7 +125,7 @@ iwin32_file_link (const char *src, const char *dst)
 struct install_status_t
 iwin32_install_init (void)
 {
-  struct install_status_t status;
+  struct install_status_t status = INSTALL_STATUS_INIT;
   status.status = INSTALL_STATUS_OK;
 
   memcpy (exec_suffix, ".exe", 4);
@@ -134,20 +136,24 @@ unsigned int
 iwin32_fmt_gid (char *buffer, group_id_t gid)
 {
   char *sid_str;
+  unsigned long len;
   if (!ConvertSidToStringSid (gid.value, &sid_str)) return 0;
-  memcpy (buffer, sid_str, strlen (sid_str));
+  len = strlen (sid_str);
+  memcpy (buffer, sid_str, len);
   LocalFree (sid_str);
-  return 1;
+  return len;
 }
 
 unsigned int
 iwin32_fmt_uid (char *buffer, user_id_t uid)
 {
   char *sid_str;
+  unsigned long len;
   if (!ConvertSidToStringSid (uid.value, &sid_str)) return 0;
-  memcpy (buffer, sid_str, strlen (sid_str));
+  len = strlen (sid_str);
+  memcpy (buffer, sid_str, len);
   LocalFree (sid_str);
-  return 1;
+  return len;
 }
 
 unsigned int
@@ -174,6 +180,18 @@ int
 iwin32_mkdir (const char *dir, unsigned int mode)
 {
   return mkdir (dir);
+}
+
+void
+iwin32_uid_free (user_id_t uid)
+{
+  free (uid.value);
+}
+
+void
+iwin32_gid_free (group_id_t gid)
+{
+  free (gid.value);
 }
 
 #endif

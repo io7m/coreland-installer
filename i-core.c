@@ -200,6 +200,22 @@ install_compare_gid (group_id_t a, group_id_t b)
 #endif
 }
 
+void
+install_gid_free (group_id_t gid)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  iwin32_gid_free (gid);
+#endif
+}
+
+void
+install_uid_free (user_id_t uid)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  iwin32_uid_free (uid);
+#endif
+}
+
 /* portability macro */
 #ifndef S_ISSOCK
 #  if defined(S_IFMT) && defined(S_IFSOCK)
