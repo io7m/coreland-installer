@@ -10,8 +10,8 @@ UNIT_TESTS/t_inst2 UNIT_TESTS/t_inst2.o UNIT_TESTS/t_inst2h.o \
 UNIT_TESTS/t_instchk1 UNIT_TESTS/t_instchk1.o UNIT_TESTS/t_instchk2 \
 UNIT_TESTS/t_instchk2.o UNIT_TESTS/t_instchkpre UNIT_TESTS/t_instchkpre.o \
 ctxt/ctxt.a ctxt/repos.o deinstaller deinstaller.o generic-conf.o \
-install-error.o install-posix.o install-win32.o install.a install.o installer \
-installer.o instchk instchk.o insthier.o
+install-core.o install-error.o install-posix.o install-win32.o install.a \
+installer installer.o instchk instchk.o insthier.o
 
 # Mkf-deinstall
 deinstall: deinstaller inst-check inst-copy inst-dir inst-link
@@ -178,6 +178,10 @@ generic-conf.o:\
 cc-compile generic-conf.c ctxt.h
 	./cc-compile generic-conf.c
 
+install-core.o:\
+cc-compile install-core.c install.h
+	./cc-compile install-core.c
+
 install-error.o:\
 cc-compile install-error.c install.h
 	./cc-compile install-error.c
@@ -191,15 +195,13 @@ cc-compile install-win32.c install.h
 	./cc-compile install-win32.c
 
 install.a:\
-cc-slib install.sld install.o install-posix.o install-win32.o install-error.o
-	./cc-slib install install.o install-posix.o install-win32.o install-error.o
+cc-slib install.sld install-core.o install-posix.o install-win32.o \
+install-error.o
+	./cc-slib install install-core.o install-posix.o install-win32.o \
+	install-error.o
 
 install.h:\
 install_os.h
-
-install.o:\
-cc-compile install.c install.h
-	./cc-compile install.c
 
 installer:\
 cc-link installer.ld installer.o insthier.o install.a ctxt/ctxt.a
@@ -250,8 +252,8 @@ obj_clean:
 	UNIT_TESTS/t_instchk1 UNIT_TESTS/t_instchk1.o UNIT_TESTS/t_instchk2 \
 	UNIT_TESTS/t_instchk2.o UNIT_TESTS/t_instchkpre UNIT_TESTS/t_instchkpre.o \
 	ctxt/ctxt.a ctxt/repos.c ctxt/repos.o deinstaller deinstaller.o generic-conf.o \
-	install-error.o install-posix.o install-win32.o install.a install.o installer \
-	installer.o instchk instchk.o insthier.o
+	install-core.o install-error.o install-posix.o install-win32.o install.a \
+	installer installer.o instchk instchk.o insthier.o
 ext_clean:
 	rm -f conf-cctype conf-ldtype conf-sosuffix conf-systype mk-ctxt
 
