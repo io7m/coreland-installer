@@ -2,6 +2,7 @@
 
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
 
+#include <sys/stat.h>
 #include <windows.h>
 #include <sddl.h>
 #include <io.h>
@@ -18,7 +19,9 @@ iwin32_get_sid (const char *name, PSID *ext_sid)
   SID *sid;
   SID_NAME_USE account_type;
 
-  sid = malloc (BUFFER_SIZE);
+  sid = malloc (sid_size);
+  if (!sid) return 0;
+
   if (!LookupAccountName (NULL, name, sid, &sid_size,
     domain, &domain_size, &account_type)) return 0;
 
@@ -80,7 +83,7 @@ iwin32_gid_lookup (const char *name, group_id_t *gid)
 int
 iwin32_uid_current (user_id_t *uid)
 {
-  return 0;
+  return iwin32_get_sid ("Administrator", &uid->value);
 }
 
 int
@@ -116,21 +119,72 @@ iwin32_file_set_ownership (const char *file, user_id_t uid, group_id_t gid)
 }
 
 int
+iwin32_file_get_owner (const char *file, user_id_t *uid)
+{
+  char file_sd_buf [256];
+  DWORD sd_size = 256;
+  PSECURITY_DESCRIPTOR file_sd = (PSECURITY_DESCRIPTOR) &file_sd_buf;
+  PSID sid;
+  BOOL dummy;
+
+  if (!InitializeSecurityDescriptor (file_sd, SECURITY_DESCRIPTOR_REVISION))
+    return 0;
+  if (!GetFileSecurity (file, (SECURITY_INFORMATION)(OWNER_SECURITY_INFORMATION),
+    file_sd, sizeof (file_sd_buf), &sd_size)) return 0;
+  if (!GetSecurityDescriptorOwner (file_sd, &sid, &dummy)) return 0;
+  if (!IsValidSid (sid)) return 0;
+
+  uid->value = malloc (sd_size);
+  if (!uid->value) return 0;
+  if (!CopySid (sd_size, uid->value, sid)) return 0;
+
+  return 1;
+}
+
+int
+iwin32_file_get_group (const char *file, group_id_t *gid)
+{
+  char file_sd_buf [256];
+  DWORD sd_size = 256;
+  PSECURITY_DESCRIPTOR file_sd = (PSECURITY_DESCRIPTOR) &file_sd_buf;
+  PSID sid;
+  BOOL dummy;
+
+  if (!InitializeSecurityDescriptor (file_sd, SECURITY_DESCRIPTOR_REVISION))
+    return 0;
+  if (!GetFileSecurity (file, (SECURITY_INFORMATION)(GROUP_SECURITY_INFORMATION),
+    file_sd, sizeof (file_sd_buf), &sd_size)) return 0;
+  if (!GetSecurityDescriptorGroup (file_sd, &sid, &dummy)) return 0;
+  if (!IsValidSid (sid)) return 0;
+
+  gid->value = malloc (sd_size);
+  if (!gid->value) return 0;
+  if (!CopySid (sd_size, gid->value, sid)) return 0;
+
+  return 1;
+}
+
+int
 iwin32_file_get_ownership (const char *file, user_id_t *uid, group_id_t *gid)
 {
-  return 0;
+  if (!iwin32_file_get_owner (file, uid)) return 0;
+  if (!iwin32_file_get_group (file, gid)) return 0;
+  return 1;
 }
 
 int
 iwin32_file_set_mode (const char *file, permissions_t mode)
 {
-  return 1;
+  return chmod (file, mode.value) == 0;
 }
 
 int
 iwin32_file_get_mode (const char *file, permissions_t *mode)
 {
-  mode->value = 0;
+  struct stat sb;
+
+  if (stat (file, &sb) == -1) return 0;
+  mode->value = sb.st_mode & 0755;
   return 1;
 }
 

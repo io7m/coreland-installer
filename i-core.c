@@ -219,12 +219,7 @@ install_uid_free (user_id_t *uid)
 int
 install_compare_permissions (permissions_t a, permissions_t b)
 {
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return 1;
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
   return a.value == b.value;
-#endif
 }
 
 /* portability macro */
@@ -527,9 +522,9 @@ install_file_check (const char *file_src, permissions_t mode_want,
     status.status = INSTALL_STATUS_ERROR;
     return status;
   }
-  if (install_compare_permissions (mode_got, mode_want)) {
+  if (!install_compare_permissions (mode_got, mode_want)) {
     snprintf (error_buffer, sizeof (error_buffer), "mode %o not %o",
-      mode_got.value & 0755, mode_want.value & 0755);
+      mode_got.value, mode_want.value);
     status.message = error_buffer;
     status.status = INSTALL_STATUS_ERROR;
     return status;
