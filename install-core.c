@@ -1268,14 +1268,17 @@ install_suffix_sanitize (char *buffer, unsigned int size)
 }
 
 struct install_status_t
-install_init (void)
+install_init (const char *suffix_file)
 {
+  static char error_buffer [INSTALL_MAX_PATHLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
   FILE *fp;
 
-  fp = fopen ("conf-sosuffix", "rb");
+  fp = fopen (suffix_file, "rb");
   if (fp == NULL) {
-    status.message = "could not open conf-sosuffix";
+    snprintf (error_buffer, sizeof (error_buffer),
+      "could not open %s", suffix_file);
+    status.message = error_buffer;
     status.status = INSTALL_STATUS_ERROR;
     return status;
   }
@@ -1286,11 +1289,15 @@ install_init (void)
   inst_dlib_suffix [0] = '.';
   if (fread (inst_dlib_suffix + 1, 1, sizeof (inst_dlib_suffix) - 2, fp) == 0) {
     if (ferror (fp)) {
-      status.message = "error reading conf-sosuffix";
+      snprintf (error_buffer, sizeof (error_buffer),
+        "error reading %s", suffix_file);
+      status.message = error_buffer;
       status.status = INSTALL_STATUS_ERROR;
     }
     if (feof (fp)) {
-      status.message = "empty conf-sosuffix";
+      snprintf (error_buffer, sizeof (error_buffer),
+        "%s is empty", suffix_file);
+      status.message = error_buffer;
       status.status = INSTALL_STATUS_ERROR;
     }
     fclose (fp);
@@ -1300,7 +1307,9 @@ install_init (void)
   install_suffix_sanitize (inst_dlib_suffix, sizeof (inst_dlib_suffix));
 
   if (fclose (fp) != 0) {
-    status.message = "could not close conf-sosuffix";
+    snprintf (error_buffer, sizeof (error_buffer),
+      "could not close %s", suffix_file);
+    status.message = error_buffer;
     status.status = INSTALL_STATUS_ERROR;
     return status;
   }

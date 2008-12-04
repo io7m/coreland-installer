@@ -29,7 +29,7 @@ main (void)
 
   um = install_umask (022);
 
-  status = install_init ();
+  status = install_init ("conf-sosuffix");
   if (status.status != INSTALL_STATUS_OK) {
     printf ("install: init: %s\n", status.message);
     return 1;

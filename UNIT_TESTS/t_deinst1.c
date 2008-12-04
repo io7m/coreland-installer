@@ -25,7 +25,7 @@ main (void)
   unsigned long index;
   struct install_status_t status;
 
-  status = install_init ();
+  status = install_init ("conf-sosuffix");
   if (status.status != INSTALL_STATUS_OK) {
     printf ("deinstall: init: %s\n", status.message);
     return 1;

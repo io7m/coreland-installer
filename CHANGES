@@ -8,3 +8,7 @@
 20080911 code: unit tests update.
 20081203 code: rewrite. win32 "support". new copy_exec mode. install size
                checks/reports. unit tests.
+20081204 version: installer 2.0.0
+20081204 code: explicitly pass conf-sosuffix filename to init() as opposed
+               to opening being implicit.
+20081204 version: installer 2.1.0
