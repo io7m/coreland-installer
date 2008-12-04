@@ -16,7 +16,7 @@ deinstaller.ld
 install-error.c
 install-posix.c
 install-win32.c
-install.c
+install-core.c
 install.h
 install.sld
 install_os.h
@@ -29,8 +29,6 @@ mk-ctxt.c
 mk-ctxt.ld
 sd_*.h
 "
-
-IGNORE=""
 
 FILES=`ls *.c`
 FILES="$FILES `ls *.ads 2>/dev/null`"

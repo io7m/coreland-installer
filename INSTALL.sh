@@ -59,8 +59,9 @@ copy ${repos}/install-core.c
 copy ${repos}/install-error.c
 copy ${repos}/install-posix.c
 copy ${repos}/install-win32.c
-copy ${repos}/install.sld
 copy ${repos}/install.h
+copy ${repos}/install.sld
+copy ${repos}/install_os.h
 copy ${repos}/installer.c
 copy ${repos}/installer.ld
 copy ${repos}/instchk.c
