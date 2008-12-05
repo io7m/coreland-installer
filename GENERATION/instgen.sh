@@ -38,6 +38,7 @@ FILES="$FILES `ls *.h 2>/dev/null`"
 FILES="$FILES `ls *.sld 2>/dev/null`"
 FILES="$FILES `ls *.dld 2>/dev/null`"
 FILES="$FILES `ls *.ld 2>/dev/null`"
+FILES="$FILES `ls *.ald 2>/dev/null`"
 
 bindir="ctxt_bindir"
 incdir="ctxt_incdir"
@@ -73,6 +74,7 @@ do
   pre=`echo $file | awk -F. '{print $1}'`
 
   if [ "$suf" = "ld" ]; then exec=1; fi
+  if [ "$suf" = "ald" ]; then exec=1; fi
   if [ "$suf" = "sld" ]; then slib=1; fi
   if [ "$suf" = "dld" ]; then dlib=1; fi
   if [ "$suf" = "h" ]; then head=1; fi
