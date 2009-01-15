@@ -14,21 +14,21 @@ install-core.o install-error.o install-posix.o install-win32.o install.a \
 installer installer.o instchk instchk.o insthier.o
 
 # Mkf-deinstall
-deinstall: deinstaller inst-check inst-copy inst-dir inst-link
+deinstall: deinstaller conf-sosuffix
 	./deinstaller
-deinstall-dryrun: deinstaller inst-check inst-copy inst-dir inst-link
+deinstall-dryrun: deinstaller conf-sosuffix
 	./deinstaller dryrun
 
 # Mkf-install
-install: installer inst-check inst-copy inst-dir inst-link postinstall
+install: installer postinstall conf-sosuffix
 	./installer
 	./postinstall
 
-install-dryrun: installer inst-check inst-copy inst-dir inst-link
+install-dryrun: installer conf-sosuffix
 	./installer dryrun
 
 # Mkf-instchk
-install-check: instchk inst-check
+install-check: instchk conf-sosuffix
 	./instchk
 
 # Mkf-local

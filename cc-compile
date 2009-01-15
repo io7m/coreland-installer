@@ -17,10 +17,14 @@ fi
 #
 
 BASE_DIR="."
-if [ $# -eq 2 ]
+if [ $# -gt 1 ]
 then
-  BASE_DIR=`echo "$1" | sed 's/^@//g'`
-  shift
+  echo "$1" | grep '^@' >/dev/null
+  if [ $? -eq 0 ]
+  then
+    BASE_DIR=`echo "$1" | sed 's/^@//g'`
+    shift
+  fi
 fi
 
 #
