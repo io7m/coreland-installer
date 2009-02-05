@@ -309,6 +309,7 @@ install_file_copy (const char *src, const char *dst,
 {
   static char dst_tmp [INSTALL_MAX_PATHLEN];
   static char copy_buf [65536];
+  char *copy_ptr;
   FILE *fd_src;
   FILE *fd_dst;
   size_t r;
@@ -342,16 +343,18 @@ install_file_copy (const char *src, const char *dst,
         goto ERR;
       }
     }
+    copy_ptr = copy_buf;
     while (r) {
-      w = fwrite (copy_buf, 1, r, fd_dst);
+      w = fwrite (copy_ptr, 1, r, fd_dst);
       if (w == 0) {
-        if (feof (fd_src)) break;
-        if (ferror (fd_src)) {
+        if (feof (fd_dst)) break;
+        if (ferror (fd_dst)) {
           status.message = "write error";
           goto ERR;
         }
       }
       r -= w;
+      copy_ptr += w;
     }
   }
 

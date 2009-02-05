@@ -12,3 +12,5 @@
 20081204 code: explicitly pass conf-sosuffix filename to init() as opposed
                to opening being implicit.
 20081204 version: installer 2.1.0
+20090205 code: fixed bug with short fwrite(). stdio.h == error-prone.
+20090205 version: installer 2.1.1
