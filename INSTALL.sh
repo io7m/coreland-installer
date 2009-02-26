@@ -14,7 +14,7 @@ die()
 copy()
 {
   echo "copy $1 $2"
-  cp "$1" "$2" || die "could not copy"
+  cp -f "$1" "$2" || die "could not copy"
 }
 makedir()
 {
