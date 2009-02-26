@@ -15,3 +15,4 @@
 20090205 code: fixed bug with short fwrite(). stdio.h == error-prone.
 20090205 version: installer 2.1.1
 20090226 code: force copy in INSTALL.sh
+20090226 code: AMD64 fixes (compile error).
