@@ -16,3 +16,4 @@
 20090205 version: installer 2.1.1
 20090226 code: force copy in INSTALL.sh
 20090226 code: AMD64 fixes (compile error).
+20090524 code: restructure and use splint annotations for static checks.
