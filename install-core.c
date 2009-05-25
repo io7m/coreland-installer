@@ -32,6 +32,8 @@ static int have_symlinks = 0;
 int
 install_file_set_ownership (const char *file, user_id_t uid, group_id_t gid)
 {
+  assert (file != NULL);
+
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
   return iposix_file_set_ownership (file, uid, gid);
 #endif
@@ -43,6 +45,8 @@ install_file_set_ownership (const char *file, user_id_t uid, group_id_t gid)
 int
 install_file_get_ownership (const char *file, user_id_t *uid, group_id_t *gid)
 {
+  assert (file != NULL);
+ 
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
   return iposix_file_get_ownership (file, uid, gid);
 #endif
@@ -54,6 +58,9 @@ install_file_get_ownership (const char *file, user_id_t *uid, group_id_t *gid)
 int
 install_file_get_mode (const char *file, permissions_t *mode)
 {
+  assert (file != NULL);
+  assert (mode != NULL);
+
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
   return iposix_file_get_mode (file, mode);
 #endif
@@ -65,6 +72,9 @@ install_file_get_mode (const char *file, permissions_t *mode)
 int
 install_file_link (const char *src, const char *dst)
 {
+  assert (src != NULL);
+  assert (dst != NULL);
+
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
   return iposix_file_link (src, dst);
 #endif
@@ -142,6 +152,9 @@ install_fmt_uid (char *buffer, user_id_t uid)
 unsigned int
 install_scan_gid (const char *buffer, group_id_t *gid)
 {
+  assert (buffer != NULL);
+  assert (gid != NULL);
+
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
   return iposix_scan_gid (buffer, gid);
 #endif
@@ -153,6 +166,9 @@ install_scan_gid (const char *buffer, group_id_t *gid)
 unsigned int
 install_scan_uid (const char *buffer, user_id_t *uid)
 {
+  assert (buffer != NULL);
+  assert (uid != NULL);
+
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
   return iposix_scan_uid (buffer, uid);
 #endif
@@ -187,6 +203,7 @@ void
 install_gid_free (group_id_t *gid)
 {
   assert (gid != NULL);
+
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
   iwin32_gid_free (gid);
 #endif
@@ -196,6 +213,7 @@ void
 install_uid_free (user_id_t *uid)
 {
   assert (uid != NULL);
+
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
   iwin32_uid_free (uid);
 #endif
@@ -223,6 +241,8 @@ void
 install_status_assign (struct install_status_t *status,
   enum install_status_enum_t code, /*@null@*/ /*@dependent@*/ const char *message)
 {
+  assert (status != NULL);
+
   status->status = code;
   status->message = message;
 }
@@ -270,6 +290,9 @@ install_file_type (const char *file, enum install_file_type_t *type, int nofollo
   unsigned int index;
   const unsigned int last = (unsigned int) file_type_lookups_size;
 
+  assert (file != NULL);
+  assert (type != NULL);
+
 #ifdef INSTALL_HAVE_SYMLINKS
   if (nofollow != 0) {
     if (lstat (file, &sb) == -1) return 0;
@@ -294,6 +317,8 @@ install_file_type_lookup (const char *type_name, enum install_file_type_t *type)
 {
   unsigned int index;
   const unsigned int last = (unsigned int) file_type_lookups_size;
+
+  assert (type_name != NULL);
 
   for (index = 0; index < last; ++index) {
     if (strcmp (file_type_lookups [index].name, type_name) == 0) {
@@ -322,6 +347,8 @@ install_file_type_name_lookup (enum install_file_type_t type, const char **retur
 int
 install_file_set_mode (const char *file, permissions_t mode)
 {
+  assert (file != NULL);
+
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
   return iposix_file_set_mode (file, mode);
 #endif
@@ -336,12 +363,15 @@ install_file_copy (const char *src, const char *dst,
 {
   static char dst_tmp [INSTALL_MAX_PATHLEN];
   static char copy_buf [65536];
-  char *copy_ptr;
-  FILE *fd_src;
-  FILE *fd_dst;
+  char *copy_ptr = NULL;
+  FILE *fd_src = NULL;
+  FILE *fd_dst = NULL;
   size_t r;
   size_t w;
   struct install_status_t status = INSTALL_STATUS_INIT;
+
+  assert (dst != NULL);
+  assert (src != NULL);
 
   if (snprintf (dst_tmp, sizeof (dst_tmp), "%s.tmp", dst) < 0) {
     install_status_assign (&status, INSTALL_STATUS_ERROR, "could not format string");
@@ -412,8 +442,8 @@ install_file_copy (const char *src, const char *dst,
   return status;
 
   ERR:
-  (void) fclose (fd_dst);
-  (void) fclose (fd_src);
+  if (fd_dst != NULL) (void) fclose (fd_dst);
+  if (fd_src != NULL) (void) fclose (fd_src);
   (void) unlink (dst_tmp);
   return status;
 }
@@ -422,6 +452,9 @@ int
 install_file_size (const char *file, size_t *size)
 {
   struct stat sb;
+
+  assert (file != NULL);
+  assert (size != NULL);
 
   if (stat (file, &sb) == -1) return 0;
 
@@ -470,6 +503,9 @@ install_file_check (const char *file_src, permissions_t mode_want,
   size_t size_want                  = 0;
   int no_follow                     = 0;
   struct install_status_t status    = INSTALL_STATUS_INIT;
+
+  assert (file_src != NULL);
+  assert (file_dst != NULL);
 
   /* Reset errno */
   errno = 0;
@@ -596,6 +632,8 @@ install_umask (unsigned int m)
 int
 install_mkdir (const char *dir, unsigned int mode)
 {
+  assert (dir != NULL);
+
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
   return iposix_mkdir (dir, mode);
 #endif
@@ -616,6 +654,8 @@ install_rmkdir (const char *dir, unsigned int perm)
   int end;
   const char *ptr;
   char *ptr2;
+
+  assert (dir != NULL);
 
   buflen = sizeof (path_buf);
   bufpos = 0;
@@ -670,6 +710,8 @@ base_name (const char *dir, char **out)
   const char *u;
   size_t len;
   size_t nlen;
+
+  assert (dir != NULL);
 
   len = strlen (dir); 
 
@@ -734,6 +776,9 @@ libname (char *name, char *buf)
   int ret = 1;
   int clean;
 
+  assert (name != NULL);
+  assert (buf != NULL);
+
   fp = fopen (name, "rb");
   if (fp == NULL) return 0;
 
@@ -782,21 +827,21 @@ inst_copy (struct install_item *item, unsigned int flags)
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   static char uid_str [INSTALL_FMT_UID];
   static char gid_str [INSTALL_FMT_GID];
-  user_id_t uid = INSTALL_NULL_UID;
-  group_id_t gid = INSTALL_NULL_GID;
-  permissions_t perm = INSTALL_NULL_PERMISSIONS;
-  size_t size = 0;
+  user_id_t uid                  = INSTALL_NULL_UID;
+  group_id_t gid                 = INSTALL_NULL_GID;
+  permissions_t perm             = INSTALL_NULL_PERMISSIONS;
+  size_t size                    = 0;
   struct install_status_t status = INSTALL_STATUS_INIT;
+
+  assert (item != NULL);
 
   install_perms_assign (&perm, (unsigned int) item->perm);
 
   status = install_uidgid_lookup (item->owner, &uid, item->group, &gid);
   if (status.status != INSTALL_STATUS_OK) return status;
 
-  if (install_file_size (item->src, &size) == 0) {
-    install_status_assign (&status, INSTALL_STATUS_ERROR, "could not determine source file size");
-    return status;
-  }
+  /* Defer error here (attempting to copy will give actual error) */
+  (void) install_file_size (item->src, &size);
 
   uid_str [install_fmt_uid (uid_str, uid)] = (char) 0;
   gid_str [install_fmt_gid (gid_str, gid)] = (char) 0;
@@ -813,7 +858,7 @@ inst_copy (struct install_item *item, unsigned int flags)
     if (status.status != INSTALL_STATUS_OK) goto END;
   }
 
-  status.status = INSTALL_STATUS_OK;
+  install_status_assign (&status, INSTALL_STATUS_OK, NULL);
 
   END:
   install_uid_free (&uid);
@@ -827,6 +872,8 @@ inst_link (struct install_item *item, unsigned int flags)
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   static char path_buf [INSTALL_MAX_PATHLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
+
+  assert (item != NULL);
 
   /* Call info callback */
   if (install_callback_info) {
@@ -868,9 +915,11 @@ inst_mkdir (struct install_item *item, unsigned int flags)
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   static char uid_str [INSTALL_FMT_UID];
   static char gid_str [INSTALL_FMT_GID];
-  user_id_t uid = INSTALL_NULL_UID;
-  group_id_t gid = INSTALL_NULL_GID;
+  user_id_t uid                  = INSTALL_NULL_UID;
+  group_id_t gid                 = INSTALL_NULL_GID;
   struct install_status_t status = INSTALL_STATUS_INIT;
+
+  assert (item != NULL);
 
   status = install_uidgid_lookup (item->owner, &uid, item->group, &gid);
   if (status.status != INSTALL_STATUS_OK) return status;
@@ -1002,18 +1051,10 @@ ntran_copy_exec (struct install_item *item)
     return status;
   }
 
-  /* Format destination path, possibly prefixed with fake root */
-  if (inst_fake_root) {
-    if (snprintf (dst_name, sizeof (dst_name), "%s/%s%s", inst_fake_root,
-      item->dst, inst_exec_suffix) < 0) {
-      install_status_assign (&status, INSTALL_STATUS_ERROR, "could not format destination path");
-      return status;
-    }
-  } else {
-    if (snprintf (dst_name, sizeof (dst_name), "%s%s", item->dst, inst_exec_suffix) < 0) {
-      install_status_assign (&status, INSTALL_STATUS_ERROR, "could not format destination path");
-      return status;
-    }
+  /* Format destination path */
+  if (snprintf (dst_name, sizeof (dst_name), "%s%s", item->dst, inst_exec_suffix) < 0) {
+    install_status_assign (&status, INSTALL_STATUS_ERROR, "could not format destination path");
+    return status;
   }
 
   item->src = src_name;
@@ -1026,6 +1067,7 @@ ntran_copy_exec (struct install_item *item)
 static struct install_status_t
 ntran_link (struct install_item *item)
 {
+  static char dir_name [INSTALL_MAX_PATHLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
 
   assert (item != NULL);
@@ -1041,6 +1083,15 @@ ntran_link (struct install_item *item)
   if (item->dst == NULL) {
     install_status_assign (&status, INSTALL_STATUS_ERROR, "destination file undefined");
     return status;
+  }
+
+  /* Modify path if fake root was specified */
+  if (inst_fake_root != NULL) {
+    if (snprintf (dir_name, INSTALL_MAX_PATHLEN, "%s/%s", inst_fake_root, item->dir) < 0) {
+      install_status_assign (&status, INSTALL_STATUS_ERROR, "could not format destination path");
+      return status;
+    }
+    item->dir = dir_name;
   }
 
   install_status_assign (&status, INSTALL_STATUS_OK, NULL);
@@ -1107,8 +1158,21 @@ ntran_liblink (struct install_item *item)
 static struct install_status_t
 ntran_mkdir (struct install_item *item)
 {
+  static char dir_name [INSTALL_MAX_PATHLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
+
+  assert (item != NULL);
+
   if (item->dst == NULL) item->dst = item->src;
+
+  /* Modify path if fake root was specified */
+  if (inst_fake_root != NULL) {
+    if (snprintf (dir_name, INSTALL_MAX_PATHLEN, "%s/%s", inst_fake_root, item->dir) < 0) {
+      install_status_assign (&status, INSTALL_STATUS_ERROR, "could not format destination path");
+      return status;
+    }
+    item->dir = dir_name;
+  }
 
   install_status_assign (&status, INSTALL_STATUS_OK, NULL);
   return status;
@@ -1119,6 +1183,8 @@ ntran_chk_link (struct install_item *item)
 {
   static char dst_name [INSTALL_MAX_PATHLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
+
+  assert (item != NULL);
 
   status = ntran_link (item);
   if (status.status != INSTALL_STATUS_OK) return status;
@@ -1139,6 +1205,8 @@ ntran_chk_liblink (struct install_item *item)
 {
   static char dst_name [INSTALL_MAX_PATHLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
+
+  assert (item != NULL);
 
   status = ntran_liblink (item);
   if (status.status != INSTALL_STATUS_OK) return status;
@@ -1162,9 +1230,11 @@ static struct install_status_t
 instchk_copy (struct install_item *item, /*@unused@*/ unsigned int flags)
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
-  user_id_t uid = INSTALL_NULL_UID;
-  group_id_t gid = INSTALL_NULL_GID;
-  permissions_t perm = INSTALL_NULL_PERMISSIONS;
+  user_id_t uid                  = INSTALL_NULL_UID;
+  group_id_t gid                 = INSTALL_NULL_GID;
+  permissions_t perm             = INSTALL_NULL_PERMISSIONS;
+
+  assert (item != NULL);
 
   install_perms_assign (&perm, (unsigned int) item->perm);
 
@@ -1184,9 +1254,11 @@ static struct install_status_t
 instchk_link (struct install_item *item, /*@unused@*/ unsigned int flags)
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
-  user_id_t uid = INSTALL_NULL_UID;
-  group_id_t gid = INSTALL_NULL_GID;
-  permissions_t perm = INSTALL_NULL_PERMISSIONS;
+  user_id_t uid                  = INSTALL_NULL_UID;
+  group_id_t gid                 = INSTALL_NULL_GID;
+  permissions_t perm             = INSTALL_NULL_PERMISSIONS;
+
+  assert (item != NULL);
 
   install_perms_assign (&perm, (unsigned int) item->perm);
 
@@ -1206,9 +1278,11 @@ static struct install_status_t
 instchk_mkdir (struct install_item *item, /*@unused@*/ unsigned int flags)
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
-  user_id_t uid = INSTALL_NULL_UID;
-  group_id_t gid = INSTALL_NULL_GID;
-  permissions_t perm = INSTALL_NULL_PERMISSIONS;
+  user_id_t uid                  = INSTALL_NULL_UID;
+  group_id_t gid                 = INSTALL_NULL_GID;
+  permissions_t perm             = INSTALL_NULL_PERMISSIONS;
+
+  assert (item != NULL);
 
   install_perms_assign (&perm, (unsigned int) item->perm);
 
@@ -1240,6 +1314,8 @@ deinst_copy (struct install_item *item, unsigned int flags)
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
 
+  assert (item != NULL);
+
   /* Call info callback */
   if (install_callback_info) {
     (void) snprintf (msg_buffer, sizeof (msg_buffer), "unlink %s", item->dst);
@@ -1264,6 +1340,8 @@ deinst_link (struct install_item *item, unsigned int flags)
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   static char path_buf [INSTALL_MAX_PATHLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
+
+  assert (item != NULL);
 
   if (install_callback_info) {
     (void) snprintf (msg_buffer, sizeof (msg_buffer), "unlink %s/%s", item->dir, item->dst);
@@ -1292,6 +1370,8 @@ deinst_mkdir (struct install_item *item, unsigned int flags)
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
 
+  assert (item != NULL);
+
   if (install_callback_info) {
     (void) snprintf (msg_buffer, sizeof (msg_buffer), "rmdir %s", item->dir);
     install_callback_info (msg_buffer, install_callback_data);
@@ -1312,6 +1392,7 @@ deinst_mkdir (struct install_item *item, unsigned int flags)
 static struct install_status_t
 deinst_liblink (struct install_item *item, unsigned int flags)
 {
+  assert (item != NULL);
   return deinst_link (item, flags);
 }
 
@@ -1355,6 +1436,8 @@ install_suffix_sanitize (char *buffer, size_t size)
   char ch;
   size_t index;
 
+  assert (buffer != NULL);
+
   /* Sanitize suffix */
   for (index = 0; index < size; ++index) {
     ch = buffer [index];
@@ -1372,8 +1455,28 @@ install_init (const char *suffix_file)
 {
   static char error_buffer [INSTALL_MAX_PATHLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
+  struct stat sb;
   FILE *fp;
 
+  assert (suffix_file != NULL);
+
+  /* Check fake_root exists, if requested */
+  if (inst_fake_root != NULL) {
+    if (stat (inst_fake_root, &sb) == -1) {
+      (void) snprintf (error_buffer, sizeof (error_buffer),
+        "fake root %s does not exist", inst_fake_root);
+      install_status_assign (&status, INSTALL_STATUS_ERROR, error_buffer);
+      return status;
+    }
+    if (s_ifdir (sb.st_mode) == 0) {
+     (void) snprintf (error_buffer, sizeof (error_buffer),
+        "fake root %s is not a directory", inst_fake_root);
+      install_status_assign (&status, INSTALL_STATUS_ERROR, error_buffer);
+      return status;
+    }
+  }
+
+  /* Open file containing dynamic library suffix */
   fp = fopen (suffix_file, "rb");
   if (fp == NULL) {
     (void) snprintf (error_buffer, sizeof (error_buffer),
@@ -1426,6 +1529,8 @@ install (struct install_item *item, unsigned int flags)
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
 
+  assert (item != NULL);
+
   status = install_opers [item->op].trans (item);
   if (status.status != INSTALL_STATUS_OK) goto CLEANUP;
   status = install_opers [item->op].oper (item, flags);
@@ -1440,6 +1545,8 @@ install_check (struct install_item *item)
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
 
+  assert (item != NULL);
+
   status = instchk_opers [item->op].trans (item);
   if (status.status != INSTALL_STATUS_OK) goto CLEANUP;
   status = instchk_opers [item->op].oper (item, 0);
@@ -1453,6 +1560,8 @@ struct install_status_t
 deinstall (struct install_item *item, unsigned int flags)
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
+
+  assert (item != NULL);
 
   status = deinst_opers [item->op].trans (item);
   if (status.status != INSTALL_STATUS_OK) goto CLEANUP;

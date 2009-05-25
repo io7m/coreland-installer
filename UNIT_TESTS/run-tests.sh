@@ -37,6 +37,15 @@ then
   failed
 fi
 
+cleanup
+mkdir installto || fatal "could not make installto"
+
+./t_inst3.sh
+if [ $? -ne 0 ]
+then
+  failed
+fi
+
 echo
 echo "Software passed all tests."
 cleanup
