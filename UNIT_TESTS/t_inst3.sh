@@ -38,7 +38,7 @@ fi
 echo
 echo '-- testing fake root installation (not directory) ./t_inst3'
 rm -rf "installto/t3/fake_root" || die
-mkdir -p "installto/t3"         || die
+mkdir "installto/t3"            || die
 touch "installto/t3/fake_root"  || die
 ./t_inst3
 if [ $? -eq 0 ]
@@ -49,8 +49,8 @@ fi
 
 echo
 echo '-- testing fake root installation ./t_inst3'
-rm -rf "installto/t3/fake_root"   || die
-mkdir -p "installto/t3/fake_root" || die
+rm -rf "installto/t3/fake_root" || die
+mkdir "installto/t3/fake_root"  || die
 ./t_inst3
 if [ $? -ne 0 ]
 then
@@ -75,3 +75,5 @@ then
   echo "test failed, please report this bug."
   die
 fi
+
+cleanup

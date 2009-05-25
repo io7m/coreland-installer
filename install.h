@@ -3,8 +3,8 @@
 
 #include <errno.h>
 
-#define INSTALL_NO_FLAGS 0x0000
-#define INSTALL_DRYRUN   0x0001
+#define INSTALL_NO_FLAGS 0x0000u
+#define INSTALL_DRYRUN   0x0001u
 
 enum install_op_t {
   INST_COPY       = 0,
@@ -55,10 +55,10 @@ extern unsigned long install_failed;
 
 #ifdef INSTALL_IMPLEMENTATION
 
-#define INSTALL_MAX_PATHLEN 1024
-#define INSTALL_MAX_MSGLEN  8192
-#define INSTALL_NULL_USER_NAME ":"
-#define INSTALL_NULL_GROUP_NAME ":"
+#define INSTALL_MAX_PATHLEN      (size_t) 1024
+#define INSTALL_MAX_MSGLEN       (size_t) 8192
+#define INSTALL_NULL_USER_NAME   ":"
+#define INSTALL_NULL_GROUP_NAME  ":"
 #define INSTALL_NULL_PERMISSIONS {0}
 
 extern char inst_exec_suffix [16];

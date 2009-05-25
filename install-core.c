@@ -530,7 +530,7 @@ install_file_check (const char *file_src, permissions_t mode_want,
   gid_want_str [install_fmt_gid (gid_want_str, gid_want)] = (char) 0;
 
   /* Call info callback if defined */
-  if (install_callback_info) {
+  if (install_callback_info != NULL) {
     assert (type_want_name != NULL);
     (void) snprintf (msg_buffer, sizeof (msg_buffer), "check %s %s %s %s %o %s %lu",
       file_src, file_dst, uid_want_str, gid_want_str, mode_want.value,
@@ -782,7 +782,7 @@ libname (char *name, char *buf)
   fp = fopen (name, "rb");
   if (fp == NULL) return 0;
 
-  r = fread (read_buf, 1, INSTALL_MAX_PATHLEN, fp);
+  r = fread (read_buf, (size_t) 1, INSTALL_MAX_PATHLEN, fp);
   if (r < INSTALL_MAX_PATHLEN) {
     if (ferror (fp) != 0) {
       ret = 0;
@@ -847,12 +847,13 @@ inst_copy (struct install_item *item, unsigned int flags)
   gid_str [install_fmt_gid (gid_str, gid)] = (char) 0;
 
   /* Call info callback */
-  if (install_callback_info) {
+  if (install_callback_info != NULL) {
     (void) snprintf (msg_buffer, sizeof (msg_buffer), "copy %s %s %s %s %o %lu",
       item->src, item->dst, uid_str, gid_str, perm.value, (unsigned long) size);
     install_callback_info (msg_buffer, install_callback_data);
   }
 
+  /* Copy file if not performing dry run */
   if ((flags & INSTALL_DRYRUN) == INSTALL_NO_FLAGS) {
     status = install_file_copy (item->src, item->dst, uid, gid, perm);
     if (status.status != INSTALL_STATUS_OK) goto END;
@@ -876,9 +877,9 @@ inst_link (struct install_item *item, unsigned int flags)
   assert (item != NULL);
 
   /* Call info callback */
-  if (install_callback_info) {
-    (void) snprintf (msg_buffer, sizeof (msg_buffer), "symlink %s %s",
-      item->src, item->dst);
+  if (install_callback_info != NULL) {
+    (void) snprintf (msg_buffer, sizeof (msg_buffer), "symlink %s %s %s",
+      item->dir, item->src, item->dst);
     install_callback_info (msg_buffer, install_callback_data);
   }
 
@@ -928,12 +929,13 @@ inst_mkdir (struct install_item *item, unsigned int flags)
   gid_str [install_fmt_gid (gid_str, gid)] = (char) 0;
 
   /* Call info callback */
-  if (install_callback_info) {
+  if (install_callback_info != NULL) {
     (void) snprintf (msg_buffer, sizeof (msg_buffer), "mkdir %s %s %s %o", item->dir,
       uid_str, gid_str, (unsigned int) item->perm);
     install_callback_info (msg_buffer, install_callback_data);
   }
 
+  /* Create directory if not performing dry run */
   if ((flags & INSTALL_DRYRUN) == INSTALL_NO_FLAGS) {
     if (install_rmkdir (item->dir, (unsigned int) item->perm) == 0) {
       install_status_assign (&status, INSTALL_STATUS_ERROR, "could not create directory");
@@ -1010,7 +1012,7 @@ ntran_copy (struct install_item *item)
   assert (item->dst != NULL);
 
   /* Build file names, possibly prefixed with fake root */
-  if (inst_fake_root) {
+  if (inst_fake_root != NULL) {
     if (snprintf (dst_tmp, sizeof (dst_tmp), "%s/%s/%s",
       inst_fake_root, item->dir, item->dst) < 0) {
       install_status_assign (&status, INSTALL_STATUS_ERROR, "could not format destination path");
@@ -1101,6 +1103,7 @@ ntran_link (struct install_item *item)
 static struct install_status_t
 ntran_liblink (struct install_item *item)
 {
+  static char dir_name [INSTALL_MAX_PATHLEN];
   static char dst_tmp [INSTALL_MAX_PATHLEN];
   static char src_name [INSTALL_MAX_PATHLEN];
   static char src_tmp [INSTALL_MAX_PATHLEN];
@@ -1119,6 +1122,15 @@ ntran_liblink (struct install_item *item)
   if (item->dst == NULL) {
     install_status_assign (&status, INSTALL_STATUS_ERROR, "destination file undefined");
     return status;
+  }
+
+  /* Modify path if fake root was specified */
+  if (inst_fake_root != NULL) {
+    if (snprintf (dir_name, INSTALL_MAX_PATHLEN, "%s/%s", inst_fake_root, item->dir) < 0) {
+      install_status_assign (&status, INSTALL_STATUS_ERROR, "could not format destination path");
+      return status;
+    }
+    item->dir = dir_name;
   }
 
   /* If source or destination file are virtual library files, build
@@ -1317,7 +1329,7 @@ deinst_copy (struct install_item *item, unsigned int flags)
   assert (item != NULL);
 
   /* Call info callback */
-  if (install_callback_info) {
+  if (install_callback_info != NULL) {
     (void) snprintf (msg_buffer, sizeof (msg_buffer), "unlink %s", item->dst);
     install_callback_info (msg_buffer, install_callback_data);
   }
@@ -1343,7 +1355,7 @@ deinst_link (struct install_item *item, unsigned int flags)
 
   assert (item != NULL);
 
-  if (install_callback_info) {
+  if (install_callback_info != NULL) {
     (void) snprintf (msg_buffer, sizeof (msg_buffer), "unlink %s/%s", item->dir, item->dst);
     install_callback_info (msg_buffer, install_callback_data);
   }
@@ -1354,7 +1366,7 @@ deinst_link (struct install_item *item, unsigned int flags)
     install_status_assign (&status, INSTALL_STATUS_ERROR, "could not format string");
     return status;
   }
-  if (unlink(path_buf) == -1) {
+  if (unlink (path_buf) == -1) {
     install_status_assign (&status, INSTALL_STATUS_ERROR, "could not unlink");
     return status;
   }
@@ -1372,7 +1384,7 @@ deinst_mkdir (struct install_item *item, unsigned int flags)
 
   assert (item != NULL);
 
-  if (install_callback_info) {
+  if (install_callback_info != NULL) {
     (void) snprintf (msg_buffer, sizeof (msg_buffer), "rmdir %s", item->dir);
     install_callback_info (msg_buffer, install_callback_data);
   }

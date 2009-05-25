@@ -1,1 +1,2 @@
 repos.o
+fakeroot.o

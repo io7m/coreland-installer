@@ -4,3 +4,7 @@ local_clean:
 ctxt/repos.c: mk-ctxt conf-repos
 	rm -f ctxt/repos.c
 	./mk-ctxt ctxt_repos < conf-repos > ctxt/repos.c
+
+ctxt/fakeroot.c: mk-ctxt conf-fakeroot
+	rm -f ctxt/fakeroot.c
+	./mk-ctxt ctxt_fakeroot < conf-fakeroot > ctxt/fakeroot.c
