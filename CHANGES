@@ -18,3 +18,4 @@
 20090226 code: AMD64 fixes (compile error).
 20090524 code: restructure and use splint annotations for static checks.
 20090525 code: install_fake_root and tests.
+20090526 version: installer 2.2.0
