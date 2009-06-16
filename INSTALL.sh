@@ -70,7 +70,7 @@ copy ${repos}/insthier.c
 copy ${repos}/postinstall
 
 makedir ctxt
-for f in bindir dlibdir incdir repos slibdir
+for f in bindir dlibdir incdir repos slibdir fakeroot
 do
   make_fragment "${f}" "conf-${f}"
 done
@@ -82,6 +82,7 @@ then
   (cat <<EOF
 bindir.o
 dlibdir.o
+fakeroot.o
 incdir.o
 repos.o
 slibdir.o
@@ -96,14 +97,15 @@ then
 #ifndef CTXT_H
 #define CTXT_H
 
-extern char ctxt_version[];
 extern char ctxt_bindir[];
 extern char ctxt_dlibdir[];
-extern char ctxt_slibdir[];
-extern char ctxt_incdir[];
-extern char ctxt_repos[];
-extern char ctxt_owner[];
+extern char ctxt_fakeroot[];
 extern char ctxt_group[];
+extern char ctxt_incdir[];
+extern char ctxt_owner[];
+extern char ctxt_repos[];
+extern char ctxt_slibdir[];
+extern char ctxt_version[];
 
 #endif
 EOF
