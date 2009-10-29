@@ -216,14 +216,14 @@ iwin32_uid_lookup (const char *user, user_id_t *uid)
 static int
 iwin32_uid_current (user_id_t *uid)
 {
-  char *name;
+  const char *name;
 
   assert (uid != NULL);
 
   name = iwin32_user_name_current ();
   if (name == NULL) return 0;
 
-  return iwin32_uid_lookup (name, &uid->value);
+  return iwin32_uid_lookup (name, uid->value);
 }
 
 static void
