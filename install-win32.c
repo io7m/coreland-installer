@@ -24,6 +24,8 @@ iwin32_get_sid (const char *name, PSID *ext_sid)
   SID *sid;
   SID_NAME_USE account_type;
 
+  assert (ext_sid != NULL);
+
   sid = malloc (sid_size);
   if (!sid) return 0;
 
@@ -210,7 +212,7 @@ static int
 iwin32_uid_lookup (const char *user, user_id_t *uid)
 {
   assert (uid != NULL);
-  return iwin32_get_sid (user, uid->value);
+  return iwin32_get_sid (user, &uid->value);
 }
 
 static int
