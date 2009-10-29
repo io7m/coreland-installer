@@ -26,6 +26,21 @@ static int have_symlinks = 0;
 #endif
 
 /*
+ * Error message.
+ */
+
+const char *
+install_error_message (void)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
+  return iposix_error_message ();
+#endif
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return iwin32_error_message ();
+#endif
+}
+
+/*
  * Credential functions
  */
 
@@ -245,7 +260,7 @@ install_status_assign (struct install_status_t *status,
 
   status->status        = code;
   status->message       = message;
-  status->error_message = install_error_get ();
+  status->error_message = install_error_message ();
 }
 
 /* Portability macro */
@@ -1607,4 +1622,10 @@ void
 install_fake_root (const char *path)
 {
   inst_fake_root = path;
+}
+
+const char *
+install_error (int i)
+{
+  return strerror (i);
 }

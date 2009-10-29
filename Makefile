@@ -15,8 +15,8 @@ UNIT_TESTS/t_instchk2 UNIT_TESTS/t_instchk2.o UNIT_TESTS/t_instchk3 \
 UNIT_TESTS/t_instchk3.o UNIT_TESTS/t_instchk4 UNIT_TESTS/t_instchk4.o \
 UNIT_TESTS/t_instchkpre UNIT_TESTS/t_instchkpre.o ctxt/ctxt.a ctxt/fakeroot.o \
 ctxt/repos.o deinstaller deinstaller.o generic-conf.o install-core.o \
-install-error.o install-posix.o install-win32.o install.a installer installer.o \
-instchk instchk.o insthier.o
+install-posix.o install-win32.o install.a installer installer.o instchk \
+instchk.o insthier.o
 
 # Mkf-deinstall
 deinstall: deinstaller conf-sosuffix
@@ -220,11 +220,11 @@ cc-slib:\
 conf-systype
 
 conf-cctype:\
-conf-cc mk-cctype
+conf-cc conf-cc mk-cctype
 	./mk-cctype > conf-cctype.tmp && mv conf-cctype.tmp conf-cctype
 
 conf-ldtype:\
-conf-ld mk-ldtype
+conf-ld conf-ld mk-ldtype
 	./mk-ldtype > conf-ldtype.tmp && mv conf-ldtype.tmp conf-ldtype
 
 conf-sosuffix:\
@@ -263,10 +263,6 @@ install-core.o:\
 cc-compile install-core.c install.h
 	./cc-compile install-core.c
 
-install-error.o:\
-cc-compile install-error.c install.h
-	./cc-compile install-error.c
-
 install-posix.o:\
 cc-compile install-posix.c install.h
 	./cc-compile install-posix.c
@@ -276,10 +272,8 @@ cc-compile install-win32.c install.h
 	./cc-compile install-win32.c
 
 install.a:\
-cc-slib install.sld install-core.o install-posix.o install-win32.o \
-install-error.o
-	./cc-slib install install-core.o install-posix.o install-win32.o \
-	install-error.o
+cc-slib install.sld install-core.o install-posix.o install-win32.o
+	./cc-slib install install-core.o install-posix.o install-win32.o
 
 install.h:\
 install_os.h
@@ -338,8 +332,8 @@ obj_clean:
 	UNIT_TESTS/t_instchk3.o UNIT_TESTS/t_instchk4 UNIT_TESTS/t_instchk4.o \
 	UNIT_TESTS/t_instchkpre UNIT_TESTS/t_instchkpre.o ctxt/ctxt.a ctxt/fakeroot.c \
 	ctxt/fakeroot.o ctxt/repos.c ctxt/repos.o deinstaller deinstaller.o \
-	generic-conf.o install-core.o install-error.o install-posix.o install-win32.o \
-	install.a installer installer.o instchk instchk.o insthier.o
+	generic-conf.o install-core.o install-posix.o install-win32.o install.a \
+	installer installer.o instchk instchk.o insthier.o
 ext_clean:
 	rm -f conf-cctype conf-ldtype conf-sosuffix conf-systype mk-ctxt
 

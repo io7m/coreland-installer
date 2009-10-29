@@ -8,6 +8,7 @@
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 int
@@ -157,6 +158,13 @@ int
 iposix_mkdir (const char *dir, unsigned int mode)
 {
   return mkdir (dir, mode) == 0;
+}
+
+const char *
+iposix_error_message (void)
+  /*@globals errno @*/
+{
+  return strerror (errno);
 }
 
 #endif

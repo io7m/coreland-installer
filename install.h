@@ -84,7 +84,7 @@ enum install_file_type_t {
   INSTALL_FILE_TYPE_FIFO
 };
 
-const char * install_error_get (void);
+const char * install_error_message (void);
 void install_status_assign (struct install_status_t *, enum install_status_enum_t, /*@null@*/ /*@dependent@*/ const char *);
 void install_perms_assign (permissions_t *, unsigned int);
 int install_compare_gid (group_id_t, group_id_t);

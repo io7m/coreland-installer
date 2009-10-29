@@ -282,4 +282,22 @@ iwin32_gid_free (group_id_t *gid)
   free (gid->value);
 }
 
+const char *
+iwin32_error_message (void)
+{
+  static char buffer [8192];
+  DWORD error_code = GetLastError ();
+
+  FormatMessage
+   (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+    NULL,
+    error_code,
+    0,
+    (LPTSTR) buffer,
+    sizeof (buffer),
+    0);
+
+  return buffer;
+}
+
 #endif

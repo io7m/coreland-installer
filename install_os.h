@@ -64,6 +64,7 @@ unsigned int iwin32_umask (unsigned int);
 void iwin32_gid_free (group_id_t *);
 void iwin32_uid_free (user_id_t *);
 void iwin32_uidgid_current (user_id_t *, group_id_t *);
+const char * iwin32_error_message (void);
 #endif
 
 #if INSTALL_OS_TYPE == INSTALL_OS_POSIX
@@ -97,6 +98,7 @@ unsigned int iposix_scan_gid (const char *, group_id_t *);
 unsigned int iposix_scan_uid (const char *, user_id_t *);
 unsigned int iposix_umask (unsigned int);
 void iposix_uidgid_current (user_id_t *, group_id_t *);
+const char * iposix_error_message (void);
 #endif
 
 #endif
