@@ -425,7 +425,7 @@ iwin32_init (void)
   return status;
 }
 
-const struct install_platform_callbacks_t install_platform_posix = {
+const struct install_platform_callbacks_t install_platform_win32 = {
   &iwin32_init,
 
   &iwin32_error_message,
