@@ -225,7 +225,7 @@ iwin32_uid_current (user_id_t *uid)
   name = iwin32_user_name_current ();
   if (name == NULL) return 0;
 
-  return iwin32_uid_lookup (name, uid->value);
+  return iwin32_uid_lookup (name, uid);
 }
 
 static void
