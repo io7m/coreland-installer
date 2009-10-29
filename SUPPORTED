@@ -25,6 +25,7 @@ linux 2.6.5-7.257-smp gcc 4.0.0 x86_64
 linux 2.6.8-3-mckinley-smp gcc 3.3.5 ia64
 linux 2.6.9-34.0.1.el gcc 4.1.0 ia64
 linux 2.6.9-34.0.1.elsmp 4.1.0 gcc x86
+ms_windows 5.1 mingw32 3.16.0 x86
 netbsd 3.0 gcc 3.3.3 x86
 openbsd 3.7 gcc 2.9.5 x86
 openbsd 3.8 gcc 3.3.5 x86
