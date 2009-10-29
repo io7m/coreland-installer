@@ -52,7 +52,7 @@ install_permissions_assign (permissions_t *perm, int mode)
 int
 install_permissions_compare (permissions_t a, permissions_t b)
 {
-  return a.value == b.value;
+  return (int) (a.value == b.value);
 }
 
 /* Portability macro */
@@ -93,6 +93,8 @@ static const size_t file_type_lookups_size =
 
 int
 install_file_type (const char *file, enum install_file_type_t *type, int nofollow)
+  /*@globals errno, file_type_lookups_size, file_type_lookups; @*/
+  /*@modifies errno, type; @*/
 {
   struct stat sb;
   unsigned int index;
@@ -153,8 +155,10 @@ install_file_type_name_lookup (enum install_file_type_t type, const char **retur
 }
 
 struct install_status_t
-install_file_copy (const char *src, const char *dst,
-  user_id_t uid, group_id_t gid, permissions_t mode)
+install_file_copy
+  (const char *src, const char *dst, user_id_t uid, group_id_t gid, permissions_t mode)
+  /*@globals errno, platform; @*/
+  /*@modifies errno; @*/
 {
   static char dst_tmp [INSTALL_MAX_PATHLEN];
   static char copy_buf [65536];
@@ -169,7 +173,7 @@ install_file_copy (const char *src, const char *dst,
   assert (dst != NULL);
   assert (src != NULL);
 
-  if (!platform->uid_current (&process_uid)) {
+  if (platform->uid_current (&process_uid) == 0) {
     install_status_assign (&status, INSTALL_STATUS_ERROR, "could not fetch current user ID");
     return status;
   }
@@ -203,7 +207,7 @@ install_file_copy (const char *src, const char *dst,
     while (r > 0) {
       w = fwrite (copy_ptr, 1, r, fd_dst);
       if (w == 0) {
-        if (feof (fd_dst) != 0) break;
+        if (feof (fd_dst) != 0) /*@innerbreak@*/ break;
         if (ferror (fd_dst) != 0) {
           install_status_assign (&status, INSTALL_STATUS_ERROR, "write error");
           goto ERR;
@@ -267,6 +271,7 @@ install_file_copy (const char *src, const char *dst,
 static struct install_status_t
 install_uidgid_lookup (const char *user, user_id_t *uid,
   const char *group, group_id_t *gid)
+  /*@globals errno, platform; @*/
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
 
@@ -304,10 +309,11 @@ install_uidgid_lookup (const char *user, user_id_t *uid,
 }
 
 static struct install_status_t
-install_file_check (const char *file_src, permissions_t mode_want,
-  enum install_file_type_t type_want, user_id_t uid_want, group_id_t gid_want,
-  const char *file_dst)
-  /*@globals errno; @*/
+install_file_check
+  (const char *file_src, permissions_t mode_want, enum install_file_type_t type_want,
+   user_id_t uid_want, group_id_t gid_want, const char *file_dst)
+  /*@globals errno, platform, install_callback_data, have_symlinks; @*/
+  /*@modifies errno; @*/
 {
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   static char uid_want_str [INSTALL_FMT_UID];
@@ -446,7 +452,8 @@ install_umask (unsigned int m)
 
 static int
 install_rmkdir (const char *dir, permissions_t perm)
-  /*@globals errno; @*/
+  /*@globals errno, platform; @*/
+  /*@modifies errno; @*/
 {
   char path_buf [INSTALL_MAX_PATHLEN];
   size_t len;
@@ -570,6 +577,8 @@ str_ends (const char *s, const char *end)
 
 static int
 libname (char *name, char *buf)
+  /*@globals errno; @*/
+  /*@modifies errno, buf; @*/
 {
   static char read_buf [INSTALL_MAX_PATHLEN];
   FILE *fp;
@@ -671,6 +680,8 @@ inst_copy (struct install_item *item, unsigned int flags)
 
 static struct install_status_t
 inst_link (struct install_item *item, unsigned int flags)
+  /*@globals errno, platform, install_callback_data; @*/
+  /*@modifies errno; @*/
 {
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   static char path_buf [INSTALL_MAX_PATHLEN];
@@ -714,6 +725,8 @@ inst_link (struct install_item *item, unsigned int flags)
 
 static struct install_status_t
 inst_mkdir (struct install_item *item, unsigned int flags)
+  /*@globals errno, platform, install_callback_data; @*/
+  /*@modifies errno; @*/
 {
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   static char uid_str [INSTALL_FMT_UID];
@@ -741,7 +754,7 @@ inst_mkdir (struct install_item *item, unsigned int flags)
 
   install_permissions_assign (&perms, item->perm);
 
-  if (!platform->uid_current (&process_uid)) {
+  if (platform->uid_current (&process_uid) == 0) {
     install_status_assign (&status, INSTALL_STATUS_ERROR, "could not fetch current user ID");
     goto END;
   }
@@ -780,6 +793,8 @@ inst_mkdir (struct install_item *item, unsigned int flags)
 
 static struct install_status_t
 inst_liblink (struct install_item *item, unsigned int flags)
+  /*@globals errno; @*/
+  /*@modifies errno; @*/
 {
   return inst_link (item, flags);
 }
@@ -790,6 +805,8 @@ inst_liblink (struct install_item *item, unsigned int flags)
 
 static struct install_status_t
 ntran_copy (struct install_item *item)
+  /*@globals errno, inst_fake_root; @*/
+  /*@modifies errno, item; @*/
 {
   static char src_name [INSTALL_MAX_PATHLEN];
   static char dst_name [INSTALL_MAX_PATHLEN];
@@ -857,6 +874,8 @@ ntran_copy (struct install_item *item)
 
 static struct install_status_t
 ntran_copy_exec (struct install_item *item)
+  /*@globals errno, inst_exec_suffix; @*/
+  /*@modifies errno, item; @*/
 {
   static char src_name [INSTALL_MAX_PATHLEN];
   static char dst_name [INSTALL_MAX_PATHLEN];
@@ -926,6 +945,8 @@ ntran_link (struct install_item *item)
 
 static struct install_status_t
 ntran_liblink (struct install_item *item)
+  /*@globals errno, inst_fake_root, inst_dlib_suffix; @*/
+  /*@modifies errno, item; @*/
 {
   static char dir_name [INSTALL_MAX_PATHLEN];
   static char dst_tmp [INSTALL_MAX_PATHLEN];
@@ -1038,6 +1059,8 @@ ntran_chk_link (struct install_item *item)
 
 static struct install_status_t
 ntran_chk_liblink (struct install_item *item)
+  /*@globals errno; @*/
+  /*@modifies errno, item; @*/
 {
   static char dst_name [INSTALL_MAX_PATHLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
@@ -1112,6 +1135,8 @@ instchk_link (struct install_item *item, /*@unused@*/ unsigned int flags)
 
 static struct install_status_t
 instchk_mkdir (struct install_item *item, /*@unused@*/ unsigned int flags)
+  /*@globals errno, platform, install_failed; @*/
+  /*@modifies errno, install_failed; @*/
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
   user_id_t uid                  = INSTALL_NULL_UID;
@@ -1146,6 +1171,8 @@ instchk_liblink (struct install_item *item, unsigned int flags)
 
 static struct install_status_t
 deinst_copy (struct install_item *item, unsigned int flags)
+  /*@globals errno, install_callback_data; @*/
+  /*@modifies errno; @*/
 {
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
@@ -1172,6 +1199,8 @@ deinst_copy (struct install_item *item, unsigned int flags)
 
 static struct install_status_t
 deinst_link (struct install_item *item, unsigned int flags)
+  /*@globals errno, install_callback_data; @*/
+  /*@modifies errno; @*/
 {
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   static char path_buf [INSTALL_MAX_PATHLEN];
@@ -1202,6 +1231,8 @@ deinst_link (struct install_item *item, unsigned int flags)
 
 static struct install_status_t
 deinst_mkdir (struct install_item *item, unsigned int flags)
+  /*@globals errno, install_callback_data; @*/
+  /*@modifies errno; @*/
 {
   static char msg_buffer [INSTALL_MAX_MSGLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
@@ -1227,6 +1258,8 @@ deinst_mkdir (struct install_item *item, unsigned int flags)
 
 static struct install_status_t
 deinst_liblink (struct install_item *item, unsigned int flags)
+  /*@globals errno; @*/
+  /*@modifies errno; @*/
 {
   assert (item != NULL);
   return deinst_link (item, flags);
@@ -1288,6 +1321,8 @@ install_suffix_sanitize (char *buffer, size_t size)
 
 struct install_status_t
 install_init (const char *suffix_file)
+  /*@globals errno, inst_fake_root, inst_dlib_suffix, inst_exec_suffix, platform; @*/
+  /*@modifies errno, inst_dlib_suffix; @*/
 {
   static char error_buffer [INSTALL_MAX_PATHLEN];
   struct install_status_t status = INSTALL_STATUS_INIT;
@@ -1357,6 +1392,8 @@ install_init (const char *suffix_file)
 
 struct install_status_t
 install (struct install_item *item, unsigned int flags)
+  /*@globals errno, install_opers; @*/
+  /*@modifies errno; @*/
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
 
@@ -1373,6 +1410,8 @@ install (struct install_item *item, unsigned int flags)
 
 struct install_status_t
 install_check (struct install_item *item)
+  /*@globals errno, instchk_opers; @*/
+  /*@modifies errno; @*/
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
 
@@ -1389,6 +1428,8 @@ install_check (struct install_item *item)
 
 struct install_status_t
 deinstall (struct install_item *item, unsigned int flags)
+  /*@globals errno, deinst_opers; @*/
+  /*@modifies errno; @*/
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
 
