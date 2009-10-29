@@ -1,14 +1,26 @@
 #!/bin/sh
 
+PROGRAM_NAME="cc-compile"
+
+warning()
+{
+  echo "${PROGRAM_NAME}: warn: $1" 1>&2
+}
+
+error()
+{
+  echo "${PROGRAM_NAME}: error: $1" 1>&2
+}
+
 fatal()
 {
-  echo "cc-compile: fatal: $1" 1>&2
+  echo "${PROGRAM_NAME}: fatal: $1" 1>&2
   exit 1
 }
 
 if [ $# -lt 1 ]
 then
-  echo "cc-compile: usage: [@dir] source" 1>&2
+  echo "${PROGRAM_NAME}: usage: [@dir] source" 1>&2
   exit 1
 fi
 
@@ -42,41 +54,51 @@ shift
 
 if [ -f "${BASE_DIR}/conf-x-cc" ]
 then
+  ok=1
+
   CC=`head -n 1 "${BASE_DIR}/conf-x-cc"`
   if [ $? -ne 0 ]
   then
-    fatal "could not read ${BASE_DIR}/conf-x-cc"
+    error "could not read ${BASE_DIR}/conf-x-cc"
+    ok=0
   fi
-  SYSTYPE=`head -n 1 "${BASE_DIR}/conf-x-systype"`
+  SYS_TYPE=`head -n 1 "${BASE_DIR}/conf-x-systype"`
   if [ $? -ne 0 ]
   then
-    fatal "could not read ${BASE_DIR}/conf-x-systype"
+    error "could not read ${BASE_DIR}/conf-x-systype"
+    ok=0
   fi
-  CCTYPE=`head -n 1 "${BASE_DIR}/conf-x-cctype"`
+  CC_TYPE=`head -n 1 "${BASE_DIR}/conf-x-cctype"`
   if [ $? -ne 0 ]
   then
-    fatal "could not read ${BASE_DIR}/conf-x-cctype"
+    error "could not read ${BASE_DIR}/conf-x-cctype"
+    ok=0
   fi
-  CFLAGS="${CFLAGS} `head -n 1 "${BASE_DIR}/conf-x-cflags" 2>/dev/null`"
+  CC_FLAGS="${CC_FLAGS} `head -n 1 "${BASE_DIR}/conf-x-cflags" 2>/dev/null`"
+
+  if [ $ok -eq 0 ]
+  then
+    fatal "could not read required configuration files for cross compilation"
+  fi
 else
   CC=`head -n 1 "${BASE_DIR}/conf-cc"`
   if [ $? -ne 0 ]
   then
     fatal "could not read ${BASE_DIR}/conf-cc"
   fi
-  SYSTYPE=`head -n 1 "${BASE_DIR}/conf-systype"`
+  SYS_TYPE=`head -n 1 "${BASE_DIR}/conf-systype"`
   if [ $? -ne 0 ]
   then
     fatal "could not read ${BASE_DIR}/conf-systype"
   fi
-  CCTYPE=`head -n 1 "${BASE_DIR}/conf-cctype"`
+  CC_TYPE=`head -n 1 "${BASE_DIR}/conf-cctype"`
   if [ $? -ne 0 ]
   then
     fatal "could not read ${BASE_DIR}/conf-cctype"
   fi
 fi
 
-CFLAGS="${CFLAGS} `head -n 1 ${BASE_DIR}/conf-cflags 2>/dev/null`"
+CC_FLAGS="${CC_FLAGS} `head -n 1 ${BASE_DIR}/conf-cflags 2>/dev/null`"
 
 #
 # Read global flag file list, if present.
@@ -87,7 +109,7 @@ then
   for f in `cat "${BASE_DIR}/conf-ccfflist"`
   do
     FLAGS=`cat $f 2>/dev/null`
-    CFLAGS="${CFLAGS} ${FLAGS}"
+    CC_FLAGS="${CC_FLAGS} ${FLAGS}"
   done
 fi
 
@@ -101,7 +123,7 @@ then
   do
     targ="`dirname $out`/`dirname $f`/`basename $f`"
     FLAGS="`cat $targ 2>/dev/null`"
-    CFLAGS="${CFLAGS} ${FLAGS}"
+    CC_FLAGS="${CC_FLAGS} ${FLAGS}"
   done
 fi
 
@@ -109,11 +131,11 @@ fi
 # compensate for any compiler bugs
 #
 
-case ${SYSTYPE} in
+case ${SYS_TYPE} in
   DARWIN)
-    case ${CCTYPE} in
+    case ${CC_TYPE} in
       GCC)
-        CFLAGS="${CFLAGS} -fno-common"  # darwin linker bug workaround
+        CC_FLAGS="${CC_FLAGS} -fno-common"  # darwin linker bug workaround
         ;;
       *)
         ;;
@@ -123,4 +145,4 @@ case ${SYSTYPE} in
     ;;
 esac
 
-exec ${CC} -o ${out}.o -c ${src} ${1+"$@"} ${CFLAGS}
+exec ${CC} -o ${out}.o -c ${src} ${1+"$@"} ${CC_FLAGS}
