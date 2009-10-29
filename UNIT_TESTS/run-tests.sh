@@ -29,13 +29,19 @@ try()
   mkdir installto || fatal "could not make installto"
 
   TEST_COUNT=`expr ${TEST_COUNT} + 1` || fatal "could not increment test count"
+
+  cat <<EOF
+
+#
+# TEST ${TEST_COUNT}
+#
+EOF
+
   ${TEST} || failed
 }
 
 cleanup
 mkdir installto || fatal "could not make installto"
-
-echo "-- Running basic tests"
 
 try ./t_inst1.sh 
 try ./t_inst2.sh
