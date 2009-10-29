@@ -11,6 +11,8 @@
 
 #define BUFFER_SIZE 256
 
+static user_id_t administrator_id = INSTALL_NULL_UID;
+
 static int
 iwin32_get_sid (const char *name, PSID *ext_sid)
 {
@@ -30,260 +32,18 @@ iwin32_get_sid (const char *name, PSID *ext_sid)
   return 1;
 }
 
-static int
-iwin32_user_primary_group (group_id_t *gid)
+/*
+ * Error.
+ */
+
+static error_t
+iwin32_error_current (void)
 {
-  HANDLE thread_tok;
-  DWORD needed;
-  TOKEN_PRIMARY_GROUP *group;
-
-  if (!OpenProcessToken (GetCurrentProcess(),
-    STANDARD_RIGHTS_READ | READ_CONTROL | TOKEN_QUERY, &thread_tok)) return 0;
-
-  if (!GetTokenInformation (thread_tok, TokenPrimaryGroup, NULL, 0, &needed)) {
-    if (!GetLastError () == ERROR_INSUFFICIENT_BUFFER) {
-      group = malloc (needed);
-      if (!group) return 0;
-      if (GetTokenInformation (thread_tok, TokenPrimaryGroup, group, needed, &needed)) {
-        gid->value = group->PrimaryGroup;
-      }
-      free (group);
-    }
-  }
-  return 1;
+  return GetLastError ();
 }
 
-int
-iwin32_compare_gid (group_id_t a, group_id_t b)
-{
-  return EqualSid (a.value, b.value);
-}
-
-int
-iwin32_compare_uid (user_id_t a, user_id_t b)
-{
-  return EqualSid (a.value, b.value);
-}
-
-int
-iwin32_gid_current (group_id_t *gid)
-{
-  return iwin32_user_primary_group (gid);
-}
-
-int
-iwin32_gid_lookup (const char *name, group_id_t *gid)
-{
-  if (name) {
-    return iwin32_get_sid (name, &gid->value);
-  } else {
-    return iwin32_get_sid ("None", &gid->value);
-  }
-}
-
-int
-iwin32_uid_current (user_id_t *uid)
-{
-  return iwin32_get_sid ("Administrator", &uid->value);
-}
-
-int
-iwin32_uid_lookup (const char *name, user_id_t *uid)
-{
-  if (name) {
-    return iwin32_get_sid (name, &uid->value);
-  } else {
-    return iwin32_get_sid ("Administrator", &uid->value);
-  }
-}
-
-int
-iwin32_file_set_sid (const char *file, PSID sid)
-{
-  char file_sd_buf [256];
-  PSECURITY_DESCRIPTOR file_sd = (PSECURITY_DESCRIPTOR) &file_sd_buf;
-
-  if (!InitializeSecurityDescriptor (file_sd, SECURITY_DESCRIPTOR_REVISION)) return 0;
-  if (!SetSecurityDescriptorOwner (file_sd, sid, FALSE)) return 0;
-  if (!IsValidSecurityDescriptor (file_sd)) return 0;
-  if (!SetFileSecurity (file, (SECURITY_INFORMATION)(OWNER_SECURITY_INFORMATION),
-    file_sd)) return 0;
-
-  return 1;
-}
-
-int
-iwin32_file_set_ownership (const char *file, user_id_t uid, group_id_t gid)
-{
-  if (!iwin32_file_set_sid (file, uid.value)) return 0;
-  return 1;
-}
-
-int
-iwin32_file_get_owner (const char *file, user_id_t *uid)
-{
-  char file_sd_buf [256];
-  DWORD sd_size = 256;
-  PSECURITY_DESCRIPTOR file_sd = (PSECURITY_DESCRIPTOR) &file_sd_buf;
-  PSID sid;
-  BOOL dummy;
-
-  if (!InitializeSecurityDescriptor (file_sd, SECURITY_DESCRIPTOR_REVISION))
-    return 0;
-  if (!GetFileSecurity (file, (SECURITY_INFORMATION)(OWNER_SECURITY_INFORMATION),
-    file_sd, sizeof (file_sd_buf), &sd_size)) return 0;
-  if (!GetSecurityDescriptorOwner (file_sd, &sid, &dummy)) return 0;
-  if (!IsValidSid (sid)) return 0;
-
-  uid->value = malloc (sd_size);
-  if (!uid->value) return 0;
-  if (!CopySid (sd_size, uid->value, sid)) return 0;
-
-  return 1;
-}
-
-int
-iwin32_file_get_group (const char *file, group_id_t *gid)
-{
-  char file_sd_buf [256];
-  DWORD sd_size = 256;
-  PSECURITY_DESCRIPTOR file_sd = (PSECURITY_DESCRIPTOR) &file_sd_buf;
-  PSID sid;
-  BOOL dummy;
-
-  if (!InitializeSecurityDescriptor (file_sd, SECURITY_DESCRIPTOR_REVISION))
-    return 0;
-  if (!GetFileSecurity (file, (SECURITY_INFORMATION)(GROUP_SECURITY_INFORMATION),
-    file_sd, sizeof (file_sd_buf), &sd_size)) return 0;
-  if (!GetSecurityDescriptorGroup (file_sd, &sid, &dummy)) return 0;
-  if (!IsValidSid (sid)) return 0;
-
-  gid->value = malloc (sd_size);
-  if (!gid->value) return 0;
-  if (!CopySid (sd_size, gid->value, sid)) return 0;
-
-  return 1;
-}
-
-int
-iwin32_file_get_ownership (const char *file, user_id_t *uid, group_id_t *gid)
-{
-  if (!iwin32_file_get_owner (file, uid)) return 0;
-  if (!iwin32_file_get_group (file, gid)) return 0;
-  return 1;
-}
-
-int
-iwin32_file_set_mode (const char *file, permissions_t mode)
-{
-  return chmod (file, mode.value) == 0;
-}
-
-int
-iwin32_file_get_mode (const char *file, permissions_t *mode)
-{
-  struct stat sb;
-
-  if (stat (file, &sb) == -1) return 0;
-  mode->value = sb.st_mode & 0755;
-  return 1;
-}
-
-int
-iwin32_file_link (const char *src, const char *dst)
-{
-  user_id_t uid;
-  group_id_t gid;
-  permissions_t mode;
-  struct install_status_t status = INSTALL_STATUS_INIT;
-
-  if (install_callback_warn) {
-    install_callback_warn ("filesystem does not support symlinks - copying",
-      install_callback_data);
-  }
-
-  /* only vista supports symlinks */
-  if (!iwin32_file_get_ownership (src, &uid, &gid)) return 0;
-  if (!iwin32_file_get_mode (src, &mode)) return 0;
-
-  status = install_file_copy (src, dst, uid, gid, mode);
-  return status.status == INSTALL_STATUS_OK;
-}
-
-struct install_status_t
-iwin32_install_init (void)
-{
-  struct install_status_t status = INSTALL_STATUS_INIT;
-  status.status = INSTALL_STATUS_OK;
-
-  memcpy (inst_exec_suffix, ".exe", 4);
-  return status; 
-}
-
-unsigned int
-iwin32_fmt_gid (char *buffer, group_id_t gid)
-{
-  char *sid_str;
-  unsigned long len;
-  if (!ConvertSidToStringSid (gid.value, &sid_str)) return 0;
-  len = strlen (sid_str);
-  memcpy (buffer, sid_str, len);
-  LocalFree (sid_str);
-  return len;
-}
-
-unsigned int
-iwin32_fmt_uid (char *buffer, user_id_t uid)
-{
-  char *sid_str;
-  unsigned long len;
-  if (!ConvertSidToStringSid (uid.value, &sid_str)) return 0;
-  len = strlen (sid_str);
-  memcpy (buffer, sid_str, len);
-  LocalFree (sid_str);
-  return len;
-}
-
-unsigned int
-iwin32_scan_gid (const char *buffer, group_id_t *gid)
-{
-  if (!ConvertStringSidToSid ((char *) buffer, &gid->value)) return 0;
-  return strlen (buffer);
-}
-
-unsigned int
-iwin32_scan_uid (const char *buffer, user_id_t *uid)
-{
-  if (!ConvertStringSidToSid ((char *) buffer, &uid->value)) return 0;
-  return strlen (buffer);
-}
-
-unsigned int
-iwin32_umask (unsigned int m)
-{
-  return m;
-}
-
-int
-iwin32_mkdir (const char *dir, unsigned int mode)
-{
-  return mkdir (dir);
-}
-
-void
-iwin32_uid_free (user_id_t *uid)
-{
-  free (uid->value);
-}
-
-void
-iwin32_gid_free (group_id_t *gid)
-{
-  free (gid->value);
-}
-
-const char *
-iwin32_error_message (void)
+static const char *
+iwin32_error_message (error_t error)
 {
   static char buffer [8192];
   DWORD error_code = GetLastError ();
@@ -303,5 +63,400 @@ iwin32_error_message (void)
 
   return buffer;
 }
+
+static const char *
+iwin32_error_message_current (void)
+{
+  return iwin32_error_message (iwin32_error_current ());
+}
+
+static void
+iwin32_error_reset (void)
+{
+  SetLastError (0);
+}
+
+/*
+ * GID.
+ */
+
+static int
+iwin32_gid_compare (group_id_t a, group_id_t b)
+{
+  return EqualSid (a.value, b.value);
+}
+
+static unsigned int
+iwin32_gid_format (char *buffer, group_id_t gid)
+{
+  char *sid_str;
+  unsigned long len;
+
+  assert (buffer != NULL);
+
+  if (!ConvertSidToStringSid (gid.value, &sid_str)) return 0;
+  len = strlen (sid_str);
+  memcpy (buffer, sid_str, len);
+  LocalFree (sid_str);
+  return len;
+}
+
+static unsigned int
+iwin32_gid_scan (const char *buffer, group_id_t *gid)
+{
+  assert (buffer != NULL);
+  assert (gid    != NULL);
+
+  if (!ConvertStringSidToSid ((char *) buffer, &gid->value)) return 0;
+  return strlen (buffer);
+}
+
+static int
+iwin32_gid_current (group_id_t *gid)
+{
+  HANDLE thread_tok;
+  DWORD needed;
+  TOKEN_PRIMARY_GROUP *group;
+
+  assert (gid != NULL);
+
+  if (!OpenProcessToken (GetCurrentProcess(),
+    STANDARD_RIGHTS_READ | READ_CONTROL | TOKEN_QUERY, &thread_tok)) return 0;
+
+  if (!GetTokenInformation (thread_tok, TokenPrimaryGroup, NULL, 0, &needed)) {
+    if (!GetLastError () == ERROR_INSUFFICIENT_BUFFER) {
+      group = malloc (needed);
+      if (!group) return 0;
+      if (GetTokenInformation (thread_tok, TokenPrimaryGroup, group, needed, &needed)) {
+        gid->value = group->PrimaryGroup;
+      }
+      free (group);
+    }
+  }
+
+  return 1;
+}
+
+static int
+iwin32_gid_lookup (const char *group, group_id_t *gid)
+{
+  struct group *grp;
+
+  assert (group != NULL);
+  assert (gid   != NULL);
+
+  return iwin32_get_sid (name, &gid->value);
+}
+
+static void
+iwin32_gid_free (group_id_t *gid)
+{
+  assert (gid != NULL);
+  free (gid->value);
+}
+
+/*
+ * UID.
+ */
+
+static int
+iwin32_uid_compare (user_id_t a, user_id_t b)
+{
+  return EqualSid (a.value, b.value);
+}
+
+static unsigned int
+iwin32_uid_format (char *buffer, user_id_t uid)
+{
+  char *sid_str;
+  unsigned long len;
+
+  assert (buffer != NULL);
+
+  if (!ConvertSidToStringSid (uid.value, &sid_str)) return 0;
+  len = strlen (sid_str);
+  memcpy (buffer, sid_str, len);
+  LocalFree (sid_str);
+  return len;
+}
+
+static unsigned int
+iwin32_uid_scan (const char *buffer, user_id_t *uid)
+{
+  assert (buffer != NULL);
+  assert (uid    != NULL);
+
+  if (!ConvertStringSidToSid ((char *) buffer, &uid->value)) return 0;
+  return strlen (buffer);
+}
+
+static int
+iwin32_uid_current (user_id_t *uid)
+{
+  char *name;
+
+  assert (uid != NULL);
+
+  name = iwin32_user_name_current ();
+  if (name == NULL) return 0;
+
+  return iwin32_uid_lookup (user, &uid->value);
+}
+
+static int
+iwin32_uid_lookup (const char *user, user_id_t *uid)
+{
+  return iwin32_get_sid (user, &uid->value);
+}
+
+static void
+iwin32_uid_free (user_id_t *uid)
+{
+  assert (uid != NULL);
+  free (uid->value);
+}
+
+/*
+ * User name.
+ */
+
+const char *
+iwin32_user_name_current (void)
+{
+  static char buffer [8192];
+  DWORD buffer_size;
+
+  if (!GetUserName (buffer, &buffer_size)) return NULL;
+  return buffer;
+}
+
+/*
+ * Directory.
+ */
+
+static int
+iwin32_mkdir (const char *dir, permissions_t mode)
+{
+  assert (dir != NULL);
+  return mkdir (dir) == 0;
+}
+
+/*
+ * File.
+ */
+
+static int
+iwin32_file_mode_set (const char *file, permissions_t mode)
+{
+  assert (file != NULL);
+  return chmod (file, mode.value) == 0;
+}
+
+static int
+iwin32_file_mode_get (const char *file, permissions_t *mode)
+{
+  struct stat sb;
+
+  assert (file != NULL);
+  assert (mode != NULL);
+
+  if (stat (file, &sb) == -1) return 0;
+  mode->value = sb.st_mode & 0755;
+  return 1;
+}
+
+static int
+iwin32_file_set_sid (const char *file, PSID sid)
+{
+  char file_sd_buf [256];
+  PSECURITY_DESCRIPTOR file_sd = (PSECURITY_DESCRIPTOR) &file_sd_buf;
+
+  if (!InitializeSecurityDescriptor (file_sd, SECURITY_DESCRIPTOR_REVISION)) return 0;
+  if (!SetSecurityDescriptorOwner (file_sd, sid, FALSE)) return 0;
+  if (!IsValidSecurityDescriptor (file_sd)) return 0;
+  if (!SetFileSecurity (file, (SECURITY_INFORMATION)(OWNER_SECURITY_INFORMATION),
+    file_sd)) return 0;
+
+  return 1;
+}
+
+static int
+iwin32_file_ownership_set (const char *file, user_id_t uid, group_id_t gid)
+{
+  assert (file != NULL);
+
+  if (!iwin32_file_set_sid (file, uid.value)) return 0;
+  return 1;
+}
+
+static int
+iwin32_file_get_owner (const char *file, user_id_t *uid)
+{
+  char file_sd_buf [256];
+  DWORD sd_size = 256;
+  PSECURITY_DESCRIPTOR file_sd = (PSECURITY_DESCRIPTOR) &file_sd_buf;
+  PSID sid;
+  BOOL dummy;
+
+  assert (file != NULL);
+  assert (uid  != NULL);
+
+  if (!InitializeSecurityDescriptor (file_sd, SECURITY_DESCRIPTOR_REVISION))
+    return 0;
+  if (!GetFileSecurity (file, (SECURITY_INFORMATION)(OWNER_SECURITY_INFORMATION),
+    file_sd, sizeof (file_sd_buf), &sd_size)) return 0;
+  if (!GetSecurityDescriptorOwner (file_sd, &sid, &dummy)) return 0;
+  if (!IsValidSid (sid)) return 0;
+
+  uid->value = malloc (sd_size);
+  if (!uid->value) return 0;
+  if (!CopySid (sd_size, uid->value, sid)) return 0;
+
+  return 1;
+}
+
+static int
+iwin32_file_get_group (const char *file, group_id_t *gid)
+{
+  char file_sd_buf [256];
+  DWORD sd_size = 256;
+  PSECURITY_DESCRIPTOR file_sd = (PSECURITY_DESCRIPTOR) &file_sd_buf;
+  PSID sid;
+  BOOL dummy;
+
+  assert (file != NULL);
+  assert (gid  != NULL);
+
+  if (!InitializeSecurityDescriptor (file_sd, SECURITY_DESCRIPTOR_REVISION))
+    return 0;
+  if (!GetFileSecurity (file, (SECURITY_INFORMATION)(GROUP_SECURITY_INFORMATION),
+    file_sd, sizeof (file_sd_buf), &sd_size)) return 0;
+  if (!GetSecurityDescriptorGroup (file_sd, &sid, &dummy)) return 0;
+  if (!IsValidSid (sid)) return 0;
+
+  gid->value = malloc (sd_size);
+  if (!gid->value) return 0;
+  if (!CopySid (sd_size, gid->value, sid)) return 0;
+
+  return 1;
+}
+
+static int
+iwin32_file_ownership_get (const char *file, user_id_t *uid, group_id_t *gid)
+{
+  assert (file != NULL);
+  assert (uid  != NULL);
+  assert (gid  != NULL);
+
+  if (!iwin32_file_get_owner (file, uid)) return 0;
+  if (!iwin32_file_get_group (file, gid)) return 0;
+  return 1;
+}
+
+static int
+iwin32_file_size (const char *file, size_t *size)
+{
+  struct stat sb;
+
+  assert (file != NULL);
+  assert (size != NULL);
+
+  if (stat (file, &sb) == -1) return 0;
+
+  *size = sb.st_size;
+  return 1;
+}
+
+static int
+iwin32_file_link (const char *src, const char *dst)
+{
+  permissions_t mode;
+  user_id_t uid                  = INSTALL_NULL_UID;
+  group_id_t gid                 = INSTALL_NULL_GID;
+  struct install_status_t status = INSTALL_STATUS_INIT;
+
+  assert (src != NULL);
+  assert (dst != NULL);
+
+  if (install_callback_warn) {
+    install_callback_warn ("Filesystem does not support symlinks - copying",
+      install_callback_data);
+  }
+
+  /* Only >= Vista supports symlinks */
+  if (!iwin32_file_get_ownership (src, &uid, &gid)) return 0;
+  if (!iwin32_file_get_mode      (src, &mode)) return 0;
+
+  status = install_file_copy (src, dst, uid, gid, mode);
+  return status.status == INSTALL_STATUS_OK;
+}
+
+/*
+ * Misc.
+ */
+
+static unsigned int
+iwin32_umask (unsigned int m)
+{
+  return m;
+}
+
+static int
+iwin32_can_set_ownership (user_id_t uid)
+{
+  return iwin32_uid_compare (uid, administrator_id) == 1;
+}
+
+static struct install_status_t
+iwin32_init (void)
+{
+  struct install_status_t status = INSTALL_STATUS_INIT;
+  status.status = INSTALL_STATUS_OK;
+
+  if (!iwin32_uid_lookup ("Administrator", &administrator_id)) {
+    install_status_assign (&status, INSTALL_STATUS_ERROR,
+      "could not fetch Administrator user ID");
+  }
+
+  memcpy (inst_exec_suffix, ".exe", 4);
+  return status;
+}
+
+const struct install_platform_callbacks_t install_platform_posix = {
+  &iwin32_init,
+
+  &iwin32_error_message,
+  &iwin32_error_message_current,
+  &iwin32_error_current,
+  &iwin32_error_reset,
+
+  &iwin32_gid_compare,
+  &iwin32_gid_format,
+  &iwin32_gid_scan,
+  &iwin32_gid_current,
+  &iwin32_gid_lookup,
+  &iwin32_gid_free,
+
+  &iwin32_uid_compare,
+  &iwin32_uid_format,
+  &iwin32_uid_scan,
+  &iwin32_uid_current,
+  &iwin32_uid_lookup,
+  &iwin32_uid_free,
+
+  &iwin32_user_name_current,
+
+  &iwin32_mkdir,
+
+  &iwin32_file_mode_get,
+  &iwin32_file_mode_set,
+  &iwin32_file_ownership_get,
+  &iwin32_file_ownership_set,
+  &iwin32_file_size,
+  &iwin32_file_link,
+
+  &iwin32_can_set_ownership,
+  &iwin32_umask,
+};
 
 #endif
