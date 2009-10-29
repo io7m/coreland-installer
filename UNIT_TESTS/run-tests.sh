@@ -1,6 +1,8 @@
 #!/bin/sh
 
 EXIT_CODE=0
+TEST_COUNT=0
+TEST_FAIL=0
 
 fatal()
 {
@@ -16,34 +18,36 @@ cleanup()
 failed()
 {
   EXIT_CODE=1
+  TEST_FAIL=`expr ${TEST_FAIL} + 1` || fatal "could not increment test count"
+}
+
+try()
+{
+  TEST="$1"
+
+  cleanup
+  mkdir installto || fatal "could not make installto"
+
+  TEST_COUNT=`expr ${TEST_COUNT} + 1` || fatal "could not increment test count"
+  ${TEST} || failed
 }
 
 cleanup
 mkdir installto || fatal "could not make installto"
 
-echo "-- running basic tests"
-./t_inst1.sh || failed
-cleanup
-mkdir installto || fatal "could not make installto"
+echo "-- Running basic tests"
 
-./t_inst2.sh || failed
-cleanup
-mkdir installto || fatal "could not make installto"
+try ./t_inst1.sh 
+try ./t_inst2.sh
+try ./t_inst3.sh
+try ./t_inst4.sh
 
-./t_inst3.sh || failed
-cleanup
-mkdir installto || fatal "could not make installto"
-
-./t_inst4.sh || failed
-
-echo
 cleanup
 
-if [ ${EXIT_CODE} -eq 0 ]
-then
-  echo "Software passed all tests."
-else
-  echo "Software failed one or more tests."
-fi
+cat <<EOF
+
+Tests  : ${TEST_COUNT}
+Failed : ${TEST_FAIL}
+EOF
 
 exit ${EXIT_CODE}

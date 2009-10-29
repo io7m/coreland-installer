@@ -16,7 +16,7 @@ die()
 exec 2>&1
 
 echo
-echo '-- creating fake executable'
+echo '-- Creating fake executable'
 systype="`cat conf-systype`" || die
 if [ "${systype}" = "MS_WINDOWS" ]
 then
@@ -26,51 +26,27 @@ echo 'Joy!peffpwpc' > "${fake_exec}" || die
 echo "${fake_exec}"
 
 echo
-echo '-- files do not exist before testing ./t_instchkpre'
-./t_instchkpre
-if [ $? -ne 0 ]
-then
-  die
-fi
+echo '-- Files do not exist before testing ./t_instchkpre'
+./t_instchkpre || die
 
 echo
-echo '-- deinstaller objects to removing nonexistant files ./t_deinst12'
-./t_deinst12
-if [ $? -ne 0 ]
-then
-  die
-fi
+echo '-- Deinstaller objects to removing nonexistant files ./t_deinst12'
+./t_deinst12 || die
 
 echo
-echo '-- installer installs files, directories and symlinks ./t_inst1'
-./t_inst1
-if [ $? -ne 0 ]
-then
-  die
-fi
+echo '-- Installer installs files, directories and symlinks ./t_inst1'
+./t_inst1 || die
 
 echo
 echo '-- instchk checks existence and attributes ./t_instchk1'
-./t_instchk1
-if [ $? -ne 0 ]
-then
-  die
-fi
+./t_instchk1 || die
 
 echo
-echo '-- deinstaller removes files, directories and symlinks ./t_deinst1'
-./t_deinst1
-if [ $? -ne 0 ]
-then
-  die
-fi
+echo '-- Deinstaller removes files, directories and symlinks ./t_deinst1'
+./t_deinst1 || die
 
 echo
-echo '-- files have definitely been removed ./t_deinst12'
-./t_deinst12
-if [ $? -ne 0 ]
-then
-  die
-fi
+echo '-- Files have definitely been removed ./t_deinst12'
+./t_deinst12 || die
 
 cleanup
