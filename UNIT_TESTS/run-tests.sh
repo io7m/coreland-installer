@@ -1,5 +1,7 @@
 #!/bin/sh
 
+EXIT_CODE=0
+
 fatal()
 {
   echo "fatal: $1" 1>&2
@@ -13,49 +15,35 @@ cleanup()
 
 failed()
 {
-  echo "Software failed one or more tests."
-  cleanup
-  exit 112
+  EXIT_CODE=1
 }
 
 cleanup
 mkdir installto || fatal "could not make installto"
 
 echo "-- running basic tests"
-./t_inst1.sh
-if [ $? -ne 0 ]
-then
-  failed
-fi
-
+./t_inst1.sh || failed
 cleanup
 mkdir installto || fatal "could not make installto"
 
-./t_inst2.sh
-if [ $? -ne 0 ]
-then
-  failed
-fi
-
+./t_inst2.sh || failed
 cleanup
 mkdir installto || fatal "could not make installto"
 
-./t_inst3.sh
-if [ $? -ne 0 ]
-then
-  failed
-fi
-
+./t_inst3.sh || failed
 cleanup
 mkdir installto || fatal "could not make installto"
 
-./t_inst4.sh
-if [ $? -ne 0 ]
-then
-  failed
-fi
+./t_inst4.sh || failed
 
 echo
-echo "Software passed all tests."
 cleanup
-exit 0
+
+if [ ${EXIT_CODE} -eq 0 ]
+then
+  echo "Software passed all tests."
+else
+  echo "Software failed one or more tests."
+fi
+
+exit ${EXIT_CODE}
