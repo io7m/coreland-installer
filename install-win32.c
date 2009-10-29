@@ -41,7 +41,9 @@ iwin32_get_sid (const char *name, PSID *ext_sid)
 static error_t
 iwin32_error_current (void)
 {
-  return GetLastError ();
+  error_t e;
+  e.value = GetLastError ();
+  return e;
 }
 
 static const char *
