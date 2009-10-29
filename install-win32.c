@@ -144,12 +144,10 @@ iwin32_gid_current (group_id_t *gid)
 static int
 iwin32_gid_lookup (const char *group, group_id_t *gid)
 {
-  struct group *grp;
-
   assert (group != NULL);
   assert (gid   != NULL);
 
-  return iwin32_get_sid (name, &gid->value);
+  return iwin32_get_sid (group, &gid->value);
 }
 
 static void
@@ -204,7 +202,7 @@ iwin32_uid_current (user_id_t *uid)
   name = iwin32_user_name_current ();
   if (name == NULL) return 0;
 
-  return iwin32_uid_lookup (user, &uid->value);
+  return iwin32_uid_lookup (name, &uid->value);
 }
 
 static int
