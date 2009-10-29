@@ -210,7 +210,7 @@ static int
 iwin32_uid_lookup (const char *user, user_id_t *uid)
 {
   assert (uid != NULL);
-  return iwin32_get_sid (user, uid);
+  return iwin32_get_sid (user, uid->value);
 }
 
 static int
@@ -387,8 +387,8 @@ iwin32_file_link (const char *src, const char *dst)
   }
 
   /* Only >= Vista supports symlinks */
-  if (!iwin32_file_get_ownership (src, &uid, &gid)) return 0;
-  if (!iwin32_file_get_mode      (src, &mode)) return 0;
+  if (!iwin32_file_ownership_get (src, &uid, &gid)) return 0;
+  if (!iwin32_file_mode_get      (src, &mode)) return 0;
 
   status = install_file_copy (src, dst, uid, gid, mode);
   return status.status == INSTALL_STATUS_OK;
