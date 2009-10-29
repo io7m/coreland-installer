@@ -1,3 +1,0 @@
-This package provides a simple, portable, embeddable installer written
-in ISO C and POSIX (with Win32 support). It is distributed as the installer
-for every <a href="http://coreland.ath.cx">coreland</a> package.
