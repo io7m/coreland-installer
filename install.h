@@ -106,6 +106,7 @@ struct install_platform_callbacks_t {
   const char * (*error_message) (error_t);
   const char * (*error_message_current) (void);
   error_t      (*error_current) (void);
+  void         (*error_reset) (void);
 
   int          (*gid_compare) (group_id_t, group_id_t);
   unsigned int (*gid_format) (char *, group_id_t);
@@ -135,6 +136,9 @@ struct install_platform_callbacks_t {
   int          (*can_set_ownership) (user_id_t);
   unsigned int (*umask) (unsigned int);
 };
+
+extern const struct install_platform_callbacks_t install_platform_posix;
+extern const struct install_platform_callbacks_t install_platform_win32;
 
 #endif /* INSTALL_IMPLEMENTATION */
 

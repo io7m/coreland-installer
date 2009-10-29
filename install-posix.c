@@ -45,6 +45,12 @@ iposix_error_message_current (void)
   return iposix_error_message (iposix_error_current ());
 }
 
+static void
+iposix_error_reset (void)
+{
+  errno = 0;
+}
+
 /*
  * GID.
  */
@@ -274,12 +280,13 @@ iposix_can_set_ownership (user_id_t uid)
   return uid.value == 0; /* Only the superuser can chown() files. */
 }
 
-static const struct install_platform_callbacks_t iposix_platform = {
+const struct install_platform_callbacks_t install_platform_posix = {
   &iposix_init,
 
   &iposix_error_message,
   &iposix_error_message_current,  
   &iposix_error_current,
+  &iposix_error_reset,
 
   &iposix_gid_compare,
   &iposix_gid_format,
