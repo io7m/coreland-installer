@@ -33,7 +33,7 @@ main (void)
 
   status = install_init ("conf-sosuffix");
   if (status.status != INSTALL_STATUS_OK) {
-    printf ("install: init: %s\n", status.message);
+    printf ("install: init: %s - %s\n", status.message, status.error_message);
     return 1;
   }
 
