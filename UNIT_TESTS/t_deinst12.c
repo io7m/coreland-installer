@@ -39,7 +39,7 @@ main (void)
         status.status, INSTALL_STATUS_ERROR);
       return 1;
     }
-    printf ("deinstall: %s - %s\n", status.message, install_error (errno));
+    printf ("deinstall: %s - %s\n", status.message, status.error_message);
     if (index == 0) break;
   }
 

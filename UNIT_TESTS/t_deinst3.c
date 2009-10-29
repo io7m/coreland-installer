@@ -45,7 +45,7 @@ main (void)
       return 1;
     }
     if (status.message)
-      printf ("deinstall: %s - %s\n", status.message, install_error (errno));
+      printf ("deinstall: %s - %s\n", status.message, status.error_message);
     if (index == 0) break;
   }
 

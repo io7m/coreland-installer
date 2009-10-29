@@ -243,8 +243,9 @@ install_status_assign (struct install_status_t *status,
 {
   assert (status != NULL);
 
-  status->status = code;
-  status->message = message;
+  status->status        = code;
+  status->message       = message;
+  status->error_message = install_error_get ();
 }
 
 /* Portability macro */

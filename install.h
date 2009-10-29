@@ -23,9 +23,10 @@ enum install_status_enum_t {
 struct install_status_t {
   enum install_status_enum_t status;
   /*@dependent@*/ /*@null@*/ const char *message;
+  /*@dependent@*/ /*@null@*/ const char *error_message;
 };
 
-#define INSTALL_STATUS_INIT {INSTALL_STATUS_FATAL,0}
+#define INSTALL_STATUS_INIT {INSTALL_STATUS_FATAL,0,0}
 
 struct install_item {
   enum install_op_t op;
@@ -83,6 +84,7 @@ enum install_file_type_t {
   INSTALL_FILE_TYPE_FIFO
 };
 
+const char * install_error_get (void);
 void install_status_assign (struct install_status_t *, enum install_status_enum_t, /*@null@*/ /*@dependent@*/ const char *);
 void install_perms_assign (permissions_t *, unsigned int);
 int install_compare_gid (group_id_t, group_id_t);
@@ -110,6 +112,7 @@ unsigned int install_scan_uid (const char *, user_id_t *);
 unsigned int install_umask (unsigned int);
 void install_gid_free (group_id_t *);
 void install_uid_free (user_id_t *);
+
 #endif
 
 #endif

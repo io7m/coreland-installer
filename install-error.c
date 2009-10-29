@@ -1,7 +1,7 @@
-/* $Rev$ */
+#define INSTALL_IMPLEMENTATION
+#include "install.h"
 
 #include <errno.h>
-#include "install.h"
 
 #define X(e,s) if (i == e) return s;
 
@@ -124,7 +124,8 @@ EOVERFLOW;
 -84;
 #endif
 
-const char *install_error(int i)
+const char *
+install_error_posix (int i)
 {
   X(0,"no error")
   X(error_intr,"interrupted system call")
@@ -391,4 +392,32 @@ const char *install_error(int i)
   X(EREMCHG,"remote address changed")
 #endif
   return "unknown error";
+}
+
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+const char *
+install_error_win32 (void)
+{
+  return "DEFAULT ERROR MESSAGE";
+}
+#endif
+
+/*
+ * Compatibility.
+ */
+
+const char *
+install_error (int i)
+{
+  return install_error_posix (i);
+}
+
+const char *
+install_error_get (void)
+{
+#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
+  return install_error_win32 (void);
+#else
+  return install_error_posix (errno);
+#endif
 }

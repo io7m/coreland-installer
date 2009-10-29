@@ -44,12 +44,12 @@ main (void)
       printf ("install [%lu] returned %d expected %d\n", index,
         status.status, return_codes [index]);
       if (status.message)
-        printf ("install: %s - %s\n", status.message, install_error (errno));
+        printf ("install: %s - %s\n", status.message, status.error_message);
       install_umask (um);
       return 1;
     }
     if (status.message)
-      printf ("install: %s - %s\n", status.message, install_error (errno));
+      printf ("install: %s - %s\n", status.message, status.error_message);
   }
 
   install_umask (um);
