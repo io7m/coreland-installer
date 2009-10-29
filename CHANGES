@@ -19,3 +19,7 @@
 20090524 code: restructure and use splint annotations for static checks.
 20090525 code: install_fake_root and tests.
 20090526 version: installer 2.2.0
+20091029 code: install_error() has been obsoleted (and the behaviour is
+               no longer system-independent). Use status.error_message
+               instead.
+20091029 code: install-error.c is gone.
