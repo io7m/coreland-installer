@@ -209,7 +209,8 @@ iwin32_uid_scan (const char *buffer, user_id_t *uid)
 static int
 iwin32_uid_lookup (const char *user, user_id_t *uid)
 {
-  return iwin32_get_sid (user, &uid->value);
+  assert (uid != NULL);
+  return iwin32_get_sid (user, uid);
 }
 
 static int
