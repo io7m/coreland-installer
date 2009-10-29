@@ -288,14 +288,18 @@ iwin32_error_message (void)
   static char buffer [8192];
   DWORD error_code = GetLastError ();
 
-  FormatMessage
-   (FORMAT_MESSAGE_FROM_SYSTEM,
-    NULL,
-    error_code,
-    0,
-    (LPTSTR) buffer,
-    sizeof (buffer),
-    0);
+  if (error_code != 0) {
+    FormatMessage
+     (FORMAT_MESSAGE_FROM_SYSTEM,
+      NULL,
+      error_code,
+      0,
+      (LPTSTR) buffer,
+      sizeof (buffer),
+      0);
+  } else {
+    buffer [0] = 0;
+  }
 
   return buffer;
 }
