@@ -11,107 +11,8 @@
 #include <string.h>
 #include <unistd.h>
 
-int
-iposix_uid_lookup (const char *user, user_id_t *uid)
-{
-  struct passwd *pwd;
-
-  if (user) {
-    pwd = getpwnam (user);
-    if (!pwd) return 0;
-    uid->value = pwd->pw_uid;
-  } else {
-    uid->value = getuid ();
-  }
-
-  return 1;
-}
-
-int
-iposix_gid_lookup (const char *group, group_id_t *gid)
-{
-  struct group *grp;
-
-  if (group) {
-    grp = getgrnam (group);
-    if (!grp) return 0;
-    gid->value = grp->gr_gid;
-  } else {
-    gid->value = getgid ();
-  }
-  return 1;
-}
-
-int
-iposix_gid_current (group_id_t *gid)
-{
-  gid->value = getgid ();
-  return 1;
-}
-
-int
-iposix_uid_current (user_id_t *uid)
-{
-  uid->value = getuid ();
-  return 1;
-}
-
-int
-iposix_file_set_ownership (const char *file, user_id_t uid, group_id_t gid)
-{
-  if (chown (file, uid.value, gid.value) == -1) return 0;
-  return 1;
-}
-
-int
-iposix_file_get_ownership (const char *file, user_id_t *uid, group_id_t *gid)
-{
-  struct stat sb;
-
-  if (stat (file, &sb) == -1) return 0;
-
-  uid->value = sb.st_uid;
-  gid->value = sb.st_gid;
-  return 1;
-}
-
-int
-iposix_file_set_mode (const char *file, permissions_t mode)
-{
-  return chmod (file, mode.value) == 0;
-}
-
-int
-iposix_file_get_mode (const char *file, permissions_t *mode)
-{
-  struct stat sb;
-
-  if (stat (file, &sb) == -1) return 0;
-  mode->value = sb.st_mode & 0755;
-  return 1;
-}
-
-int
-iposix_file_link (const char *src, const char *dst)
-{
-  if (symlink (src, dst) == -1) return 0;
-  return 1;
-}
-
-int
-iposix_compare_uid (user_id_t a, user_id_t b)
-{
-  return a.value == b.value;
-}
-
-int
-iposix_compare_gid (group_id_t a, group_id_t b)
-{
-  return a.value == b.value;
-}
-
-struct install_status_t
-iposix_install_init (void)
+static struct install_status_t
+iposix_init (void)
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
   status.status = INSTALL_STATUS_OK;
@@ -120,51 +21,282 @@ iposix_install_init (void)
   return status;
 }
 
-unsigned int
-iposix_fmt_gid (char *buffer, group_id_t gid)
+/*
+ * Error.
+ */
+
+static error_t
+iposix_error_current (void)
 {
+  error_t e;
+  e.value = (unsigned long) errno;
+  return e;
+}
+
+static const char *
+iposix_error_message (error_t error)
+{
+  return strerror (error.value);
+}
+
+static const char *
+iposix_error_message_current (void)
+{
+  return iposix_error_message (iposix_error_current ());
+}
+
+/*
+ * GID.
+ */
+
+static int
+iposix_gid_compare (group_id_t a, group_id_t b)
+{
+  return a.value == b.value;
+}
+
+static unsigned int
+iposix_gid_format (char *buffer, group_id_t gid)
+{
+  assert (buffer != NULL);
+
   unsigned int size = snprintf (buffer, INSTALL_FMT_GID, "%d", gid.value);
   return size;
 }
 
-unsigned int
-iposix_fmt_uid (char *buffer, user_id_t uid)
+static unsigned int
+iposix_gid_scan (const char *buffer, group_id_t *gid)
 {
-  unsigned int size = snprintf (buffer, INSTALL_FMT_UID, "%d", uid.value);
-  return size;
-}
+  assert (buffer != NULL);
+  assert (gid    != NULL);
 
-unsigned int
-iposix_scan_gid (const char *buffer, group_id_t *gid)
-{
   unsigned int size = sscanf (buffer, "%d", &gid->value);
   return size;
 }
 
-unsigned int
-iposix_scan_uid (const char *buffer, user_id_t *uid)
+static int
+iposix_gid_current (group_id_t *gid)
 {
+  assert (gid != NULL);
+
+  gid->value = getgid ();
+  return 1;
+}
+
+static int
+iposix_gid_lookup (const char *group, group_id_t *gid)
+{
+  struct group *grp;
+
+  assert (group != NULL);
+  assert (gid   != NULL);
+
+  grp = getgrnam (group);
+  if (!grp) return 0;
+  gid->value = grp->gr_gid;
+
+  return 1;
+}
+
+static void
+iposix_gid_free (group_id_t *gid)
+{
+  assert (gid != NULL);
+}
+
+/*
+ * UID.
+ */
+
+static int
+iposix_uid_compare (user_id_t a, user_id_t b)
+{
+  return a.value == b.value;
+}
+
+static unsigned int
+iposix_uid_format (char *buffer, user_id_t uid)
+{
+  assert (buffer != NULL);
+
+  unsigned int size = snprintf (buffer, INSTALL_FMT_UID, "%d", uid.value);
+  return size;
+}
+
+static unsigned int
+iposix_uid_scan (const char *buffer, user_id_t *uid)
+{
+  assert (buffer != NULL);
+  assert (uid    != NULL);
+
   unsigned int size = sscanf (buffer, "%d", &uid->value);
   return size;
 }
 
-unsigned int
+static int
+iposix_uid_current (user_id_t *uid)
+{
+  assert (uid != NULL);
+
+  uid->value = getuid ();
+  return 1;
+}
+
+static int
+iposix_uid_lookup (const char *user, user_id_t *uid)
+{
+  struct passwd *pwd;
+
+  assert (user != NULL);
+  assert (uid  != NULL);
+
+  pwd = getpwnam (user);
+  if (!pwd) return 0;
+  uid->value = pwd->pw_uid;
+
+  return 1;
+}
+
+static void
+iposix_uid_free (user_id_t *uid)
+{
+  assert (uid != NULL);
+}
+
+/*
+ * User name.
+ */
+
+const char *
+iposix_user_name_current (void)
+{
+  return getlogin ();
+}
+
+/*
+ * Directory.
+ */
+
+static int
+iposix_mkdir (const char *dir, permissions_t mode)
+{
+  assert (dir != NULL);
+  return mkdir (dir, mode.value) == 0;
+}
+
+/*
+ * File.
+ */
+
+static int
+iposix_file_mode_set (const char *file, permissions_t mode)
+{
+  assert (file != NULL);
+
+  return chmod (file, mode.value) == 0;
+}
+
+static int
+iposix_file_mode_get (const char *file, permissions_t *mode)
+{
+  struct stat sb;
+
+  assert (file != NULL);
+  assert (mode != NULL);
+
+  if (stat (file, &sb) == -1) return 0;
+  mode->value = sb.st_mode & 0755;
+  return 1;
+}
+
+static int
+iposix_file_ownership_set (const char *file, user_id_t uid, group_id_t gid)
+{
+  assert (file != NULL);
+
+  if (chown (file, uid.value, gid.value) == -1) return 0;
+  return 1;
+}
+
+static int
+iposix_file_ownership_get (const char *file, user_id_t *uid, group_id_t *gid)
+{
+  struct stat sb;
+
+  assert (file != NULL);
+  assert (uid  != NULL);
+  assert (gid  != NULL);
+
+  if (stat (file, &sb) == -1) return 0;
+
+  uid->value = sb.st_uid;
+  gid->value = sb.st_gid;
+  return 1;
+}
+
+static int
+iposix_file_size (const char *file, size_t *size)
+{
+  struct stat sb;
+
+  assert (file != NULL);
+  assert (size != NULL);
+
+  if (stat (file, &sb) == -1) return 0;
+
+  *size = sb.st_size;
+  return 1;
+}
+
+static int
+iposix_file_link (const char *src, const char *dst)
+{
+  assert (src != NULL);
+  assert (dst != NULL);
+
+  if (symlink (src, dst) == -1) return 0;
+  return 1;
+}
+
+static unsigned int
 iposix_umask (unsigned int m)
 {
   return umask (m);
 }
 
-int
-iposix_mkdir (const char *dir, unsigned int mode)
-{
-  return mkdir (dir, mode) == 0;
-}
+static const struct install_platform_callbacks_t iposix_platform = {
+  &iposix_init,
 
-const char *
-iposix_error_message (void)
-  /*@globals errno @*/
-{
-  return strerror (errno);
-}
+  &iposix_error_message,
+  &iposix_error_message_current,  
+  &iposix_error_current,
+
+  &iposix_gid_compare,
+  &iposix_gid_format,
+  &iposix_gid_scan,
+  &iposix_gid_current,
+  &iposix_gid_lookup,
+  &iposix_gid_free,
+
+  &iposix_uid_compare,
+  &iposix_uid_format,
+  &iposix_uid_scan,
+  &iposix_uid_current,
+  &iposix_uid_lookup,
+  &iposix_uid_free,
+
+  &iposix_user_name_current,
+
+  &iposix_mkdir,
+
+  &iposix_file_mode_get,
+  &iposix_file_mode_set,
+  &iposix_file_ownership_get,
+  &iposix_file_ownership_set,
+  &iposix_file_size,
+  &iposix_file_link,
+
+  &iposix_umask,
+};
 
 #endif

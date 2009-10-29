@@ -79,26 +79,6 @@ typedef struct { int value; } group_id_t;
 #define INSTALL_FMT_GID (sizeof (int) << 3)
 #define INSTALL_HAVE_SYMLINKS
 
-int iposix_compare_gid (group_id_t, group_id_t);
-int iposix_compare_uid (user_id_t, user_id_t);
-int iposix_file_set_mode (const char *, permissions_t);
-int iposix_file_get_mode (const char *, permissions_t *);
-int iposix_file_get_ownership (const char *, user_id_t *, group_id_t *);
-int iposix_file_link (const char *, const char *);
-int iposix_file_set_ownership (const char *, user_id_t, group_id_t);
-int iposix_gid_current (group_id_t *);
-int iposix_gid_lookup (const char *, group_id_t *);
-int iposix_mkdir (const char *, unsigned int);
-int iposix_uid_current (user_id_t *);
-int iposix_uid_lookup (const char *, user_id_t *);
-struct install_status_t iposix_install_init (void);
-unsigned int iposix_fmt_gid (char *, group_id_t);
-unsigned int iposix_fmt_uid (char *, user_id_t);
-unsigned int iposix_scan_gid (const char *, group_id_t *);
-unsigned int iposix_scan_uid (const char *, user_id_t *);
-unsigned int iposix_umask (unsigned int);
-void iposix_uidgid_current (user_id_t *, group_id_t *);
-const char * iposix_error_message (void);
-#endif
+#endif /* INSTALL_OS_TYPE == INSTALL_OS_POSIX */
 
 #endif
