@@ -56,7 +56,6 @@ copy ${repos}/deinstaller.c
 copy ${repos}/deinstaller.ld
 copy ${repos}/generic-conf.c
 copy ${repos}/install-core.c
-copy ${repos}/install-error.c
 copy ${repos}/install-posix.c
 copy ${repos}/install-win32.c
 copy ${repos}/install.h
