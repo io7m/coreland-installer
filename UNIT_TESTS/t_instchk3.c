@@ -11,13 +11,13 @@ extern unsigned int return_codes[5];
 void
 cb_info (const char *str, void *data)
 {
-  printf ("%s\n", str);
+  printf ("%s: %s\n", progname, str);
 }
 
 void
 cb_warn (const char *str, void *data)
 {
-  printf ("%s\n", str);
+  printf ("%s: %s\n", progname, str);
 }
 
 int
