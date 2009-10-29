@@ -289,7 +289,7 @@ iwin32_error_message (void)
   DWORD error_code = GetLastError ();
 
   FormatMessage
-   (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+   (FORMAT_MESSAGE_FROM_SYSTEM,
     NULL,
     error_code,
     0,
