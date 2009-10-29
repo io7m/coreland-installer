@@ -258,10 +258,20 @@ iposix_file_link (const char *src, const char *dst)
   return 1;
 }
 
+/*
+ * Misc.
+ */
+
 static unsigned int
 iposix_umask (unsigned int m)
 {
   return umask (m);
+}
+
+static int
+iposix_can_set_ownership (user_id_t uid)
+{
+  return uid.value == 0; /* Only the superuser can chown() files. */
 }
 
 static const struct install_platform_callbacks_t iposix_platform = {
@@ -296,6 +306,7 @@ static const struct install_platform_callbacks_t iposix_platform = {
   &iposix_file_size,
   &iposix_file_link,
 
+  &iposix_can_set_ownership,
   &iposix_umask,
 };
 

@@ -132,6 +132,7 @@ struct install_platform_callbacks_t {
   int          (*file_size) (const char *, size_t *);
   int          (*file_link) (const char *, const char *);
 
+  int          (*can_set_ownership) (user_id_t);
   unsigned int (*umask) (unsigned int);
 };
 
