@@ -19,6 +19,7 @@ failed()
 {
   EXIT_CODE=1
   TEST_FAIL=`expr ${TEST_FAIL} + 1` || fatal "could not increment test count"
+  echo "# TEST ${TEST_COUNT} FAILED"
 }
 
 try()

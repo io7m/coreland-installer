@@ -9,7 +9,6 @@ cleanup()
 
 die()
 {
-  echo "FAILED!"
   cleanup
   exit 1
 }
