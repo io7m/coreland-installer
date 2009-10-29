@@ -86,7 +86,7 @@ extern void (*install_callback_warn)(const char *, void *);
 extern void (*install_callback_info)(const char *, void *);
 extern void  *install_callback_data;
 
-void install_permissions_assign (permissions_t, int);
+void install_permissions_assign (permissions_t *, int);
 int  install_permissions_compare (permissions_t, permissions_t);
 
 unsigned int install_umask (unsigned int);

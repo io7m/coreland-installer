@@ -3,6 +3,8 @@
 
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
 
+#include <assert.h>
+
 #include <sys/stat.h>
 #include <windows.h>
 #include <sddl.h>

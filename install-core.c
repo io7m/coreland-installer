@@ -39,7 +39,20 @@ install_status_assign (struct install_status_t *status,
 
   status->status        = code;
   status->message       = message;
-  status->error_message = install_error_message ();
+  status->error_message = platform->error_message_current ();
+}
+
+void
+install_permissions_assign (permissions_t *perm, int mode)
+{
+  assert (perm != NULL);
+  perm->value = mode;
+}
+
+int
+install_permissions_compare (permissions_t a, permissions_t b)
+{
+  return a.value == b.value;
 }
 
 /* Portability macro */
@@ -315,8 +328,7 @@ install_file_check (const char *file_src, permissions_t mode_want,
   assert (file_src != NULL);
   assert (file_dst != NULL);
 
-  /* Reset errno */
-  errno = 0;
+  platform->error_reset ();
 
   /* Get source file types and type names */
   if (type_want == INSTALL_FILE_TYPE_SYMLINK) no_follow = 1;
@@ -383,12 +395,12 @@ install_file_check (const char *file_src, permissions_t mode_want,
   }
 
   /* Check file permissions */
-  if (install_file_get_mode (file_dst, &mode_got) == 0) {
+  if (platform->file_mode_get (file_dst, &mode_got) == 0) {
     install_status_assign (&status, INSTALL_STATUS_ERROR, "could not determine destination file mode");
     return status;
   }
 
-  if (install_compare_permissions (mode_got, mode_want) == 0) {
+  if (install_permissions_compare (mode_got, mode_want) == 0) {
     (void) snprintf (msg_buffer, sizeof (msg_buffer), "mode %o not %o",
       mode_got.value, mode_want.value);
 
@@ -397,21 +409,21 @@ install_file_check (const char *file_src, permissions_t mode_want,
   }
  
   /* Check file ownership */
-  if (install_file_get_ownership (file_dst, &uid_got, &gid_got) == 0) {
+  if (platform->file_ownership_get (file_dst, &uid_got, &gid_got) == 0) {
     install_status_assign (&status, INSTALL_STATUS_ERROR, "could not determine destination file ownership");
     goto END;
   }
   uid_got_str [platform->uid_format (uid_got_str, uid_got)] = (char) 0;
   gid_got_str [platform->gid_format (gid_got_str, gid_got)] = (char) 0;
 
-  if (install_compare_uid (uid_want, uid_got) == 0) {
+  if (platform->uid_compare (uid_want, uid_got) == 0) {
     (void) snprintf (msg_buffer, sizeof (msg_buffer), "uid %s not %s",
       uid_got_str, uid_want_str);
 
     install_status_assign (&status, INSTALL_STATUS_ERROR, msg_buffer);
     goto END;
   }
-  if (install_compare_gid (gid_want, gid_got) == 0) {
+  if (platform->gid_compare (gid_want, gid_got) == 0) {
     (void) snprintf (msg_buffer, sizeof (msg_buffer), "gid %s not %s",
       gid_got_str, gid_want_str);
 
@@ -429,16 +441,11 @@ install_file_check (const char *file_src, permissions_t mode_want,
 unsigned int
 install_umask (unsigned int m)
 {
-#if INSTALL_OS_TYPE == INSTALL_OS_POSIX
-  return iposix_umask (m);
-#endif
-#if INSTALL_OS_TYPE == INSTALL_OS_WIN32
-  return iwin32_umask (m);
-#endif
+  return platform->umask (m);
 }
 
 static int
-install_rmkdir (const char *dir, unsigned int perm)
+install_rmkdir (const char *dir, permissions_t perm)
   /*@globals errno; @*/
 {
   char path_buf [INSTALL_MAX_PATHLEN];
@@ -475,7 +482,7 @@ install_rmkdir (const char *dir, unsigned int perm)
     ++bufpos;
     --buflen;
     path_buf [bufpos] = (char) 0;
-    if (install_mkdir (path_buf, perm) == -1) {
+    if (platform->make_dir (path_buf, perm) == -1) {
       if (end == 0) {
         if (errno != EEXIST && errno != EISDIR) return 0;
       } else return 0;
@@ -630,7 +637,7 @@ inst_copy (struct install_item *item, unsigned int flags)
 
   assert (item != NULL);
 
-  install_perms_assign (&perm, (unsigned int) item->perm);
+  install_permissions_assign (&perm, (unsigned int) item->perm);
 
   status = install_uidgid_lookup (item->owner, &uid, item->group, &gid);
   if (status.status != INSTALL_STATUS_OK) return status;
@@ -715,6 +722,7 @@ inst_mkdir (struct install_item *item, unsigned int flags)
   group_id_t gid                 = INSTALL_NULL_GID;
   struct install_status_t status = INSTALL_STATUS_INIT;
   user_id_t process_uid          = INSTALL_NULL_UID;
+  permissions_t perms;
 
   assert (item != NULL);
 
@@ -731,9 +739,16 @@ inst_mkdir (struct install_item *item, unsigned int flags)
     install_callback_info (msg_buffer, install_callback_data);
   }
 
+  install_permissions_assign (&perms, item->perm);
+
+  if (!platform->uid_current (&process_uid)) {
+    install_status_assign (&status, INSTALL_STATUS_ERROR, "could not fetch current user ID");
+    goto END;
+  }
+
   /* Create directory if not performing dry run */
   if ((flags & INSTALL_DRYRUN) == INSTALL_NO_FLAGS) {
-    if (install_rmkdir (item->dir, (unsigned int) item->perm) == 0) {
+    if (install_rmkdir (item->dir, perms) == 0) {
       install_status_assign (&status, INSTALL_STATUS_ERROR, "could not create directory");
       goto END;
     }
@@ -1057,7 +1072,7 @@ instchk_copy (struct install_item *item, /*@unused@*/ unsigned int flags)
 
   assert (item != NULL);
 
-  install_perms_assign (&perm, (unsigned int) item->perm);
+  install_permissions_assign (&perm, (unsigned int) item->perm);
 
   status = install_uidgid_lookup (item->owner, &uid, item->group, &gid);
   if (status.status != INSTALL_STATUS_OK) return status;
@@ -1081,7 +1096,7 @@ instchk_link (struct install_item *item, /*@unused@*/ unsigned int flags)
 
   assert (item != NULL);
 
-  install_perms_assign (&perm, (unsigned int) item->perm);
+  install_permissions_assign (&perm, (unsigned int) item->perm);
 
   status = install_uidgid_lookup (item->owner, &uid, item->group, &gid);
   if (status.status != INSTALL_STATUS_OK) return status;
@@ -1105,7 +1120,7 @@ instchk_mkdir (struct install_item *item, /*@unused@*/ unsigned int flags)
 
   assert (item != NULL);
 
-  install_perms_assign (&perm, (unsigned int) item->perm);
+  install_permissions_assign (&perm, (unsigned int) item->perm);
 
   status = install_uidgid_lookup (item->owner, &uid, item->group, &gid);
   if (status.status != INSTALL_STATUS_OK) return status;
