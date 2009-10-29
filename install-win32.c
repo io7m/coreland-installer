@@ -35,6 +35,20 @@ iwin32_get_sid (const char *name, PSID *ext_sid)
 }
 
 /*
+ * User name.
+ */
+
+const char *
+iwin32_user_name_current (void)
+{
+  static char buffer [8192];
+  DWORD buffer_size;
+
+  if (!GetUserName (buffer, &buffer_size)) return NULL;
+  return buffer;
+}
+
+/*
  * Error.
  */
 
@@ -193,6 +207,12 @@ iwin32_uid_scan (const char *buffer, user_id_t *uid)
 }
 
 static int
+iwin32_uid_lookup (const char *user, user_id_t *uid)
+{
+  return iwin32_get_sid (user, &uid->value);
+}
+
+static int
 iwin32_uid_current (user_id_t *uid)
 {
   char *name;
@@ -205,31 +225,11 @@ iwin32_uid_current (user_id_t *uid)
   return iwin32_uid_lookup (name, &uid->value);
 }
 
-static int
-iwin32_uid_lookup (const char *user, user_id_t *uid)
-{
-  return iwin32_get_sid (user, &uid->value);
-}
-
 static void
 iwin32_uid_free (user_id_t *uid)
 {
   assert (uid != NULL);
   free (uid->value);
-}
-
-/*
- * User name.
- */
-
-const char *
-iwin32_user_name_current (void)
-{
-  static char buffer [8192];
-  DWORD buffer_size;
-
-  if (!GetUserName (buffer, &buffer_size)) return NULL;
-  return buffer;
 }
 
 /*
