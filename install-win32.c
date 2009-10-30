@@ -25,7 +25,7 @@ iwin32_get_sid (const char *name, PSID *ext_sid)
 {
   char domain [BUFFER_SIZE];
   DWORD domain_size = BUFFER_SIZE;
-  DWORD sid_size = BUFFER_SIZE;
+  DWORD sid_size    = BUFFER_SIZE;
   SID *sid;
   SID_NAME_USE account_type;
 
@@ -148,9 +148,10 @@ iwin32_gid_scan (const char *buffer, group_id_t *gid)
 static int
 iwin32_gid_current (group_id_t *gid)
 {
-  HANDLE thread_tok;
-  DWORD needed;
+  HANDLE               thread_tok;
+  DWORD                needed;
   TOKEN_PRIMARY_GROUP *group;
+  DWORD                sid_size;
 
   assert (gid        != NULL);
   assert (gid->value == NULL);
@@ -158,12 +159,26 @@ iwin32_gid_current (group_id_t *gid)
   if (!OpenProcessToken (GetCurrentProcess(),
     STANDARD_RIGHTS_READ | READ_CONTROL | TOKEN_QUERY, &thread_tok)) return 0;
 
+  /*
+   * Is this _really_ correct?
+   */
+
   if (!GetTokenInformation (thread_tok, TokenPrimaryGroup, NULL, 0, &needed)) {
     if (GetLastError () == ERROR_INSUFFICIENT_BUFFER) {
       group = malloc (needed);
-      if (!group) return 0;
+      if (group == NULL) return 0;
       if (GetTokenInformation (thread_tok, TokenPrimaryGroup, group, needed, &needed)) {
-        gid->value = group->PrimaryGroup;
+        sid_size   = GetLengthSid (group->PrimaryGroup);
+        gid->value = malloc (sid_size);
+        if (gid->value == NULL) {
+          free (group);
+          return 0;
+        }
+        if (!CopySid (sid_size, gid->value, group->PrimaryGroup)) {
+          free (gid->value);
+          free (group);
+          return 0;
+        }
       }
       free (group);
     } else {
