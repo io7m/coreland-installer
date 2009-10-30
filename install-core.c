@@ -293,13 +293,13 @@ install_uidgid_lookup (const char *user, user_id_t *uid,
   if (group != NULL) {
     if (platform->gid_lookup (group, gid) == 0) {
       install_status_assign (&status, INSTALL_STATUS_ERROR, "could not lookup group ID");
-      platform->uid_free (uid);
+      platform->gid_free (gid);
       return status;
     }
   } else {
     if (platform->gid_current (gid) == 0) {
       install_status_assign (&status, INSTALL_STATUS_ERROR, "could not fetch current group ID");
-      platform->uid_free (uid);
+      platform->gid_free (gid);
       return status;
     }
   }
