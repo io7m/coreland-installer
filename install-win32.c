@@ -8,12 +8,17 @@
 #include <sys/stat.h>
 #include <windows.h>
 #include <sddl.h>
+#include <lmcons.h>
 #include <io.h>
 #include <stdio.h>
 
 #define BUFFER_SIZE 256
 
 static user_id_t administrator_id = INSTALL_NULL_UID;
+
+static char  user_name [UNLEN + 1];
+static DWORD user_name_size = sizeof (user_name);
+static int   user_name_fetched;
 
 static int
 iwin32_get_sid (const char *name, PSID *ext_sid)
@@ -44,11 +49,14 @@ iwin32_get_sid (const char *name, PSID *ext_sid)
 const char *
 iwin32_user_name_current (void)
 {
-  static char buffer [8192];
-  DWORD buffer_size;
+  if (user_name_fetched) return user_name;
+  if (!GetUserName (user_name, &user_name_size)) return NULL;
 
-  if (!GetUserName (buffer, &buffer_size)) return NULL;
-  return buffer;
+  assert (user_name_size > 0);
+  assert (user_name_size <= sizeof (user_name));
+
+  user_name_fetched = 1;
+  return user_name;
 }
 
 /*
