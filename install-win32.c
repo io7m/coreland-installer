@@ -24,6 +24,7 @@ iwin32_get_sid (const char *name, PSID *ext_sid)
   SID *sid;
   SID_NAME_USE account_type;
 
+  assert (name    != NULL);
   assert (ext_sid != NULL);
 
   sid = malloc (sid_size);
@@ -103,6 +104,9 @@ iwin32_error_reset (void)
 static int
 iwin32_gid_compare (group_id_t a, group_id_t b)
 {
+  assert (a.value != NULL);
+  assert (b.value != NULL);
+
   return EqualSid (a.value, b.value);
 }
 
@@ -112,7 +116,8 @@ iwin32_gid_format (char *buffer, group_id_t gid)
   char *sid_str;
   unsigned long len;
 
-  assert (buffer != NULL);
+  assert (buffer     != NULL);
+  assert (gid->value != NULL);
 
   if (!ConvertSidToStringSid (gid.value, &sid_str)) return 0;
   len = strlen (sid_str);
@@ -124,8 +129,9 @@ iwin32_gid_format (char *buffer, group_id_t gid)
 static unsigned int
 iwin32_gid_scan (const char *buffer, group_id_t *gid)
 {
-  assert (buffer != NULL);
-  assert (gid    != NULL);
+  assert (buffer     != NULL);
+  assert (gid        != NULL);
+  assert (gid->value == NULL);
 
   if (!ConvertStringSidToSid ((char *) buffer, &gid->value)) return 0;
   return strlen (buffer);
@@ -138,7 +144,8 @@ iwin32_gid_current (group_id_t *gid)
   DWORD needed;
   TOKEN_PRIMARY_GROUP *group;
 
-  assert (gid != NULL);
+  assert (gid        != NULL);
+  assert (gid->value == NULL);
 
   if (!OpenProcessToken (GetCurrentProcess(),
     STANDARD_RIGHTS_READ | READ_CONTROL | TOKEN_QUERY, &thread_tok)) return 0;
@@ -160,8 +167,9 @@ iwin32_gid_current (group_id_t *gid)
 static int
 iwin32_gid_lookup (const char *group, group_id_t *gid)
 {
-  assert (group != NULL);
-  assert (gid   != NULL);
+  assert (group      != NULL);
+  assert (gid        != NULL);
+  assert (gid->value == NULL);
 
   return iwin32_get_sid (group, &gid->value);
 }
@@ -181,6 +189,9 @@ iwin32_gid_free (group_id_t *gid)
 static int
 iwin32_uid_compare (user_id_t a, user_id_t b)
 {
+  assert (a.value != NULL);
+  assert (b.value != NULL);
+
   return EqualSid (a.value, b.value);
 }
 
@@ -190,7 +201,8 @@ iwin32_uid_format (char *buffer, user_id_t uid)
   char *sid_str;
   unsigned long len;
 
-  assert (buffer != NULL);
+  assert (buffer    != NULL);
+  assert (uid.value != NULL);
 
   if (!ConvertSidToStringSid (uid.value, &sid_str)) return 0;
   len = strlen (sid_str);
@@ -202,8 +214,9 @@ iwin32_uid_format (char *buffer, user_id_t uid)
 static unsigned int
 iwin32_uid_scan (const char *buffer, user_id_t *uid)
 {
-  assert (buffer != NULL);
-  assert (uid    != NULL);
+  assert (buffer     != NULL);
+  assert (uid        != NULL);
+  assert (uid->value == NULL);
 
   if (!ConvertStringSidToSid ((char *) buffer, &uid->value)) return 0;
   return strlen (buffer);
@@ -212,7 +225,9 @@ iwin32_uid_scan (const char *buffer, user_id_t *uid)
 static int
 iwin32_uid_lookup (const char *user, user_id_t *uid)
 {
-  assert (uid != NULL);
+  assert (uid        != NULL);
+  assert (uid->value == NULL);
+
   return iwin32_get_sid (user, &uid->value);
 }
 
@@ -222,6 +237,7 @@ iwin32_uid_current (user_id_t *uid)
   const char *name;
 
   assert (uid != NULL);
+  assert (uid->value == NULL);
 
   name = iwin32_user_name_current ();
   if (name == NULL) return 0;
