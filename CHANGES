@@ -26,3 +26,4 @@
 20091030 code: refactored into 'table' based implementation.
 20091030 code: disable permission setting/checking on win32.
 20091030 code: disable ownership setting/checking on win32 for non-administrators.
+20091030 version: installer 2.3.0
