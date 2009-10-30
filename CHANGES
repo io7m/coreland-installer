@@ -23,3 +23,6 @@
                no longer system-independent). Use status.error_message
                instead.
 20091029 code: install-error.c is gone.
+20091030 code: refactored into 'table' based implementation.
+20091030 code: disable permission setting/checking on win32.
+20091030 code: disable ownership setting/checking on win32 for non-administrators.
