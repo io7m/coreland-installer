@@ -109,7 +109,7 @@ iposix_gid_lookup (const char *group, group_id_t *gid)
 static int
 iposix_gid_valid (group_id_t gid)
 {
-  return 1;
+  return gid.value != -1;
 }
 
 static void
@@ -174,7 +174,7 @@ iposix_uid_lookup (const char *user, user_id_t *uid)
 static int
 iposix_uid_valid (user_id_t uid)
 {
-  return 1;
+  return uid.value != -1;
 }
 
 static void
