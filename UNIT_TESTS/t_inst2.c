@@ -32,18 +32,17 @@ main (void)
 
   status = install_init ("conf-sosuffix");
   if (status.status != INSTALL_STATUS_OK) {
-    printf ("install: init: %s - %s\n", status.message, status.error_message);
+    printf ("%s: init: %s - %s\n", progname, status.message, status.error_message);
     return 1;
   }
 
   install_callback_warn_set (cb_warn);
   install_callback_info_set (cb_info);
 
-  printf("installing...\n");
   for (i = 0; i < insthier_len; ++i) {
     status = install (&insthier[i], 0);
     if (status.status != INSTALL_STATUS_OK) {
-      printf ("install %lu failed\n", i);
+      printf ("%s: install %lu failed: %s - %s\n", progname, i, status.message. status.error_message);
       tret = 1;
     }
   }
