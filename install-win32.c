@@ -174,6 +174,12 @@ iwin32_gid_lookup (const char *group, group_id_t *gid)
   return iwin32_get_sid (group, &gid->value);
 }
 
+static int
+iwin32_gid_valid (group_id_t gid)
+{
+  return gid.value != NULL;
+}
+
 static void
 iwin32_gid_free (group_id_t *gid)
 {
@@ -243,6 +249,12 @@ iwin32_uid_current (user_id_t *uid)
   if (name == NULL) return 0;
 
   return iwin32_uid_lookup (name, uid);
+}
+
+static int
+iwin32_uid_valid (user_id_t uid)
+{
+  return uid.value != NULL;
 }
 
 static void
@@ -458,6 +470,7 @@ const struct install_platform_callbacks_t install_platform_win32 = {
   &iwin32_gid_scan,
   &iwin32_gid_current,
   &iwin32_gid_lookup,
+  &iwin32_gid_valid,
   &iwin32_gid_free,
 
   &iwin32_uid_compare,
@@ -465,6 +478,7 @@ const struct install_platform_callbacks_t install_platform_win32 = {
   &iwin32_uid_scan,
   &iwin32_uid_current,
   &iwin32_uid_lookup,
+  &iwin32_uid_valid,
   &iwin32_uid_free,
 
   &iwin32_user_name_current,

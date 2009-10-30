@@ -178,6 +178,8 @@ install_file_copy
     return status;
   }
 
+  assert (platform->uid_valid (process_uid));
+
   if (snprintf (dst_tmp, sizeof (dst_tmp), "%s.tmp", dst) < 0) {
     install_status_assign (&status, INSTALL_STATUS_ERROR, "could not format string");
     return status;
@@ -303,6 +305,9 @@ install_uidgid_lookup (const char *user, user_id_t *uid,
       return status;
     }
   }
+
+  assert (platform->uid_valid (*uid));
+  assert (platform->gid_valid (*gid));
 
   install_status_assign (&status, INSTALL_STATUS_OK, NULL);
   return status;

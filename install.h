@@ -113,6 +113,7 @@ struct install_platform_callbacks_t {
   unsigned int (*gid_scan) (const char *, group_id_t *);
   int          (*gid_current) (group_id_t *);
   int          (*gid_lookup) (const char *, group_id_t *);
+  int          (*gid_valid) (group_id_t);
   void         (*gid_free) (group_id_t *);
 
   int          (*uid_compare) (user_id_t,  user_id_t);
@@ -120,6 +121,7 @@ struct install_platform_callbacks_t {
   unsigned int (*uid_scan) (const char *, user_id_t *);
   int          (*uid_current) (user_id_t *);
   int          (*uid_lookup) (const char *, user_id_t *);
+  int          (*uid_valid) (user_id_t);
   void         (*uid_free) (user_id_t *);
 
   const char * (*user_name_current) (void);

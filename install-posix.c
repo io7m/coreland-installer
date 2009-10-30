@@ -106,6 +106,12 @@ iposix_gid_lookup (const char *group, group_id_t *gid)
   return 1;
 }
 
+static int
+iposix_gid_valid (group_id_t gid)
+{
+  return 1;
+}
+
 static void
 iposix_gid_free (group_id_t *gid)
 {
@@ -162,6 +168,12 @@ iposix_uid_lookup (const char *user, user_id_t *uid)
   if (!pwd) return 0;
   uid->value = pwd->pw_uid;
 
+  return 1;
+}
+
+static int
+iposix_uid_valid (user_id_t uid)
+{
   return 1;
 }
 
@@ -295,6 +307,7 @@ const struct install_platform_callbacks_t install_platform_posix = {
   &iposix_gid_scan,
   &iposix_gid_current,
   &iposix_gid_lookup,
+  &iposix_gid_valid,
   &iposix_gid_free,
 
   &iposix_uid_compare,
@@ -302,6 +315,7 @@ const struct install_platform_callbacks_t install_platform_posix = {
   &iposix_uid_scan,
   &iposix_uid_current,
   &iposix_uid_lookup,
+  &iposix_uid_valid,
   &iposix_uid_free,
 
   &iposix_user_name_current,
