@@ -449,7 +449,14 @@ iwin32_umask (unsigned int m)
 static int
 iwin32_can_set_ownership (user_id_t uid)
 {
+  assert (uid.value != NULL);
   return iwin32_uid_compare (uid, administrator_id) == 1;
+}
+
+static int
+iwin32_supports_symlinks (void);
+{
+  return 0;
 }
 
 static struct install_status_t
@@ -503,6 +510,7 @@ const struct install_platform_callbacks_t install_platform_win32 = {
   &iwin32_file_link,
 
   &iwin32_can_set_ownership,
+  &iwin32_supports_symlinks,
   &iwin32_umask,
 };
 
