@@ -1,0 +1,8 @@
+platform->rename_atomic
+
+On certain platforms... win32... the standard idiom of writing to
+a temporary file and renaming the temporary to replace an actual
+won't work with the rename() system call.
+
+On Win32 the file should just be written directly and reliability
+should be basically forsaken.
