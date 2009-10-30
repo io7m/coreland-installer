@@ -279,6 +279,8 @@ install_uidgid_lookup (const char *user, user_id_t *uid,
 
   assert (uid != NULL);
   assert (gid != NULL);
+  assert (platform->uid_valid (*uid) == 0);
+  assert (platform->gid_valid (*gid) == 0);
 
   if (user != NULL) {
     if (platform->uid_lookup (user, uid) == 0) {
