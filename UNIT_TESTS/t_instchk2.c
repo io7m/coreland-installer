@@ -22,30 +22,33 @@ cb_warn (const char *str, void *data)
 int
 main (void)
 {
-  unsigned long i;
-  unsigned int um;
-  int tret;
+  unsigned long index;
+  unsigned int mask;
+  int return_code;
   struct install_status_t status;
 
-  um = install_umask (022);
-  tret = 0;
+  mask = install_umask (022);
+  return_code = 0;
 
   status = install_init ("conf-sosuffix");
   if (status.status != INSTALL_STATUS_OK) {
-    printf ("check: init: %s - %s\n", status.message, status.error_message);
+    printf ("%s: init: %s - %s\n", progname, status.message, status.error_message);
     return 1;
   }
 
   install_callback_warn_set (cb_warn);
   install_callback_info_set (cb_info);
 
-  printf("checking...\n");
-  for (i = 0; i < insthier_len; ++i) {
-    status = install_check (&insthier[i]);
-    if (status.status != INSTALL_STATUS_OK) tret = 1;
+  for (index = 0; index < insthier_len; ++index) {
+    status = install_check (&insthier [index]);
+    if (status.status != INSTALL_STATUS_OK) {
+      printf ("%s: check %lu failed: %s - %s\n", progname, index,
+        status.message, status.error_message);
+      return_code = 1;
+    }
   }
 
   fflush (0);
-  install_umask (um);
-  return tret;
+  install_umask (mask);
+  return return_code;
 }
