@@ -116,8 +116,8 @@ iwin32_gid_format (char *buffer, group_id_t gid)
   char *sid_str;
   unsigned long len;
 
-  assert (buffer     != NULL);
-  assert (gid->value != NULL);
+  assert (buffer    != NULL);
+  assert (gid.value != NULL);
 
   if (!ConvertSidToStringSid (gid.value, &sid_str)) return 0;
   len = strlen (sid_str);
