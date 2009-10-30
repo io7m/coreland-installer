@@ -137,6 +137,7 @@ struct install_platform_callbacks_t {
 
   int          (*can_set_ownership) (user_id_t);
   int          (*supports_symlinks) (void);
+  int          (*supports_posix_modes) (void);
   unsigned int (*umask) (unsigned int);
 };
 

@@ -309,7 +309,7 @@ static int
 iwin32_file_mode_set (const char *file, permissions_t mode)
 {
   assert (file != NULL);
-  return chmod (file, mode.value) == 0;
+  return 1;
 }
 
 static int
@@ -320,8 +320,7 @@ iwin32_file_mode_get (const char *file, permissions_t *mode)
   assert (file != NULL);
   assert (mode != NULL);
 
-  if (stat (file, &sb) == -1) return 0;
-  mode->value = sb.st_mode & 0755;
+  mode->value = 0;
   return 1;
 }
 
@@ -474,6 +473,12 @@ iwin32_supports_symlinks (void)
   return 0;
 }
 
+static int
+iwin32_supports_posix_modes (void)
+{
+  return 0;
+}
+
 static struct install_status_t
 iwin32_init (void)
 {
@@ -526,6 +531,7 @@ const struct install_platform_callbacks_t install_platform_win32 = {
 
   &iwin32_can_set_ownership,
   &iwin32_supports_symlinks,
+  &iwin32_supports_posix_modes,
   &iwin32_umask,
 };
 

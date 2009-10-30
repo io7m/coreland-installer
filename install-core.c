@@ -218,9 +218,12 @@ install_file_copy
     install_status_assign (&status, INSTALL_STATUS_ERROR, "write error");
     goto ERR;
   }
-  if (platform->file_mode_set (dst_tmp, mode) == 0) {
-    install_status_assign (&status, INSTALL_STATUS_ERROR, "could not set file permissions");
-    goto ERR;
+
+  if (platform->supports_posix_modes) {
+    if (platform->file_mode_set (dst_tmp, mode) == 0) {
+      install_status_assign (&status, INSTALL_STATUS_ERROR, "could not set file permissions");
+      goto ERR;
+    }
   }
 
   /* If target UID != current UID ... */
@@ -407,17 +410,18 @@ install_file_check
   }
 
   /* Check file permissions */
-  if (platform->file_mode_get (file_dst, &mode_got) == 0) {
-    install_status_assign (&status, INSTALL_STATUS_ERROR, "could not determine destination file mode");
-    return status;
-  }
+  if (platform->supports_posix_modes) {
+    if (platform->file_mode_get (file_dst, &mode_got) == 0) {
+      install_status_assign (&status, INSTALL_STATUS_ERROR, "could not determine destination file mode");
+      return status;
+    }
+    if (install_permissions_compare (mode_got, mode_want) == 0) {
+      (void) snprintf (msg_buffer, sizeof (msg_buffer), "mode %o not %o",
+        mode_got.value, mode_want.value);
 
-  if (install_permissions_compare (mode_got, mode_want) == 0) {
-    (void) snprintf (msg_buffer, sizeof (msg_buffer), "mode %o not %o",
-      mode_got.value, mode_want.value);
-
-    install_status_assign (&status, INSTALL_STATUS_ERROR, msg_buffer);
-    return status;
+      install_status_assign (&status, INSTALL_STATUS_ERROR, msg_buffer);
+      return status;
+    }
   }
  
   /* Check file ownership */

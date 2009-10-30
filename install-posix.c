@@ -301,6 +301,12 @@ iposix_supports_symlinks (void)
   return 1;
 }
 
+static int
+iposix_supports_posix_modes (void)
+{
+  return 1;
+}
+
 const struct install_platform_callbacks_t install_platform_posix = {
   &iposix_init,
 
@@ -338,6 +344,7 @@ const struct install_platform_callbacks_t install_platform_posix = {
 
   &iposix_can_set_ownership,
   &iposix_supports_symlinks,
+  &iposix_supports_posix_modes,
   &iposix_umask,
 };
 
