@@ -469,7 +469,7 @@ iwin32_can_set_ownership (user_id_t uid)
 }
 
 static int
-iwin32_supports_symlinks (void);
+iwin32_supports_symlinks (void)
 {
   return 0;
 }
