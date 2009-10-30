@@ -781,9 +781,8 @@ inst_mkdir (struct install_item *item, unsigned int flags)
     }
   }
 
-  platform->uid_free (&process_uid);
-
   install_status_assign (&status, INSTALL_STATUS_OK, NULL);
+
   END:
   platform->uid_free (&uid);
   platform->gid_free (&gid);
