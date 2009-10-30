@@ -315,8 +315,6 @@ iwin32_file_mode_set (const char *file, permissions_t mode)
 static int
 iwin32_file_mode_get (const char *file, permissions_t *mode)
 {
-  struct stat sb;
-
   assert (file != NULL);
   assert (mode != NULL);
 
