@@ -19,12 +19,6 @@ void  *install_callback_data;
 
 /*@null@*/ static const char *inst_fake_root = NULL;
 
-#ifdef INSTALL_HAVE_SYMLINKS
-static int have_symlinks = 1;
-#else
-static int have_symlinks = 0;
-#endif
-
 #if INSTALL_OS_TYPE == INSTALL_OS_WIN32
 static const struct install_platform_callbacks_t *platform = &install_platform_win32;
 #else
@@ -319,7 +313,7 @@ static struct install_status_t
 install_file_check
   (const char *file_src, permissions_t mode_want, enum install_file_type_t type_want,
    user_id_t uid_want, group_id_t gid_want, const char *file_dst)
-  /*@globals errno, platform, install_callback_data, have_symlinks; @*/
+  /*@globals errno, platform, install_callback_data; @*/
   /*@modifies errno; @*/
 {
   static char msg_buffer [INSTALL_MAX_MSGLEN];
@@ -380,7 +374,12 @@ install_file_check
     install_status_assign (&status, INSTALL_STATUS_ERROR, "unknown destination file type");
     return status;
   }
-  if ((have_symlinks == 0) && (type_want != INSTALL_FILE_TYPE_SYMLINK)) {
+
+  /* Do not check file type if expected type is symlink and the current platform
+   * does not support them.
+   */
+
+  if ((platform->supports_symlinks () == 0) && (type_want != INSTALL_FILE_TYPE_SYMLINK)) {
     if (type_want != type_got) {
       assert (type_want_name != NULL);
       assert (type_got_name != NULL);

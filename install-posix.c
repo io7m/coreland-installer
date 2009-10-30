@@ -291,7 +291,14 @@ iposix_umask (unsigned int m)
 static int
 iposix_can_set_ownership (user_id_t uid)
 {
+  assert (uid.value != -1);
   return uid.value == 0; /* Only the superuser can chown() files. */
+}
+
+static int
+iposix_supports_symlinks (void)
+{
+  return 1;
 }
 
 const struct install_platform_callbacks_t install_platform_posix = {
@@ -330,6 +337,7 @@ const struct install_platform_callbacks_t install_platform_posix = {
   &iposix_file_link,
 
   &iposix_can_set_ownership,
+  &iposix_supports_symlinks,
   &iposix_umask,
 };
 
