@@ -171,6 +171,7 @@ iwin32_gid_free (group_id_t *gid)
 {
   assert (gid != NULL);
   free (gid->value);
+  gid->value = NULL;
 }
 
 /*
@@ -233,6 +234,7 @@ iwin32_uid_free (user_id_t *uid)
 {
   assert (uid != NULL);
   free (uid->value);
+  uid->value = NULL;
 }
 
 /*
