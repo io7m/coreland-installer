@@ -163,6 +163,8 @@ install_file_copy
   size_t w;
   struct install_status_t status = INSTALL_STATUS_INIT;
   user_id_t process_uid          = INSTALL_NULL_UID;
+  int can_change_owner;
+  int want_change_owner;
 
   assert (dst != NULL);
   assert (src != NULL);
@@ -226,16 +228,18 @@ install_file_copy
     }
   }
 
+  /* If the current UID is able to set file ownership... */
+  can_change_owner  = platform->can_set_ownership (process_uid);
   /* If target UID != current UID ... */
-  if (platform->uid_compare (process_uid, uid) == 0) {
-    /* If the current UID is able to set file ownership... */
-    if (platform->can_set_ownership (process_uid) == 1) {
-      if (platform->file_ownership_set (dst_tmp, uid, gid) == 0) {
-        install_status_assign (&status, INSTALL_STATUS_ERROR, "could not set file ownership");
-        goto ERR;
-      }
-    } else {
-      install_status_assign (&status, INSTALL_STATUS_ERROR, "current user ID is restricted from setting file ownership");
+  want_change_owner = platform->uid_compare (process_uid, uid) == 0;
+
+  if ((can_change_owner == 0) && (want_change_owner == 1)) {
+    install_status_assign (&status, INSTALL_STATUS_ERROR, "current user ID is restricted from setting file ownership");
+    goto ERR;
+  }
+  if ((can_change_owner == 1) && (want_change_owner == 1)) {
+    if (platform->file_ownership_set (dst_tmp, uid, gid) == 0) {
+      install_status_assign (&status, INSTALL_STATUS_ERROR, "could not set file ownership");
       goto ERR;
     }
   }
