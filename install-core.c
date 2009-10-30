@@ -1401,6 +1401,8 @@ install (struct install_item *item, unsigned int flags)
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
 
+  platform->error_reset ();
+
   assert (item != NULL);
 
   status = install_opers [item->op].trans (item);
@@ -1419,6 +1421,8 @@ install_check (struct install_item *item)
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
 
+  platform->error_reset ();
+
   assert (item != NULL);
 
   status = instchk_opers [item->op].trans (item);
@@ -1436,6 +1440,8 @@ deinstall (struct install_item *item, unsigned int flags)
   /*@modifies errno; @*/
 {
   struct install_status_t status = INSTALL_STATUS_INIT;
+
+  platform->error_reset ();
 
   assert (item != NULL);
 
