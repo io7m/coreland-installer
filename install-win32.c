@@ -151,13 +151,15 @@ iwin32_gid_current (group_id_t *gid)
     STANDARD_RIGHTS_READ | READ_CONTROL | TOKEN_QUERY, &thread_tok)) return 0;
 
   if (!GetTokenInformation (thread_tok, TokenPrimaryGroup, NULL, 0, &needed)) {
-    if (!GetLastError () == ERROR_INSUFFICIENT_BUFFER) {
+    if (GetLastError () == ERROR_INSUFFICIENT_BUFFER) {
       group = malloc (needed);
       if (!group) return 0;
       if (GetTokenInformation (thread_tok, TokenPrimaryGroup, group, needed, &needed)) {
         gid->value = group->PrimaryGroup;
       }
       free (group);
+    } else {
+      return 0;
     }
   }
 
