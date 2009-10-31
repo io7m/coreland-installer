@@ -27,3 +27,5 @@
 20091030 code: disable permission setting/checking on win32.
 20091030 code: disable ownership setting/checking on win32 for non-administrators.
 20091030 version: installer 2.3.0
+20091031 code: error_t conflicts with something in GNU libc.
+20091031 version: installer 2.3.1
