@@ -29,3 +29,4 @@
 20091030 version: installer 2.3.0
 20091031 code: error_t conflicts with something in GNU libc.
 20091031 version: installer 2.3.1
+20100311 code: c90 fixes.
