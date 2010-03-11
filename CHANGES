@@ -30,3 +30,4 @@
 20091031 code: error_t conflicts with something in GNU libc.
 20091031 version: installer 2.3.1
 20100311 code: c90 fixes.
+20100311 code: version string now present in source (as comment).
