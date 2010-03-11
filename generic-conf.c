@@ -1,3 +1,7 @@
+/*
+ * version: installer 2.3.2
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "ctxt.h"

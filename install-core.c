@@ -1,3 +1,7 @@
+/*
+ * version: installer 2.3.2
+ */
+
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>

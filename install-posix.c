@@ -1,3 +1,7 @@
+/*
+ * version: installer 2.3.2
+ */
+
 #define INSTALL_IMPLEMENTATION
 #include "install.h"
 

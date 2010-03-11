@@ -1,3 +1,7 @@
+/*
+ * version: installer 2.3.2
+ */
+
 #ifndef INSTALL_H
 #define INSTALL_H
 
